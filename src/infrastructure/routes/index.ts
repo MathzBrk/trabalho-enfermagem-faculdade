@@ -1,5 +1,6 @@
 import { Router } from "express";
 import userRoutes from "./user.routes";
+import { getCurrentTimestamp } from "@shared/helpers/timeHelper";
 
 /**
  * Main Routes Index
@@ -15,7 +16,7 @@ const routes = Router();
 routes.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
-    timestamp: new Date().toISOString(),
+    timestamp: getCurrentTimestamp(),
   });
 });
 

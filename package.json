@@ -27,10 +27,14 @@
     "docker:reset": "docker compose down -v && docker compose up -d",
     "db:reset": "npm run docker:reset && npm run prisma:generate",
     "db:setup": "npm run docker:up && npm run prisma:generate && npx prisma migrate dev",
+    "db:shell": "docker exec -it univas-enfermagem-db psql -U postgres -d univas_enfermagem",
+    "db:tables": "docker exec univas-enfermagem-db psql -U postgres -d univas_enfermagem -c '\\dt'",
+    "db:users": "docker exec univas-enfermagem-db psql -U postgres -d univas_enfermagem -c 'SELECT * FROM users;'",
     "dev": "npm run docker:up && npm run start:dev"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@types/bcrypt": "^6.0.0",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.13.1",
@@ -49,6 +53,7 @@
     "@prisma/client": "^6.18.0",
     "@types/express": "^5.0.3",
     "bcrypt": "^6.0.0",
+    "dayjs": "^1.11.18",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",

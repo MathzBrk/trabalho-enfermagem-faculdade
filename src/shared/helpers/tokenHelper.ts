@@ -6,8 +6,8 @@
  */
 
 import * as jwt from 'jsonwebtoken';
+import { env } from 'node:process';
 import { TokenPayload } from '../../@types/express';
-import { env } from './envHelper';
 
 /**
  * Custom error for token validation failures

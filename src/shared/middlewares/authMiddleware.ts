@@ -9,7 +9,7 @@
 import { verifyToken, TokenValidationError } from "@shared/helpers/tokenHelper";
 import { NextFunction, Response, Request } from "express";
 import { TokenExpiredError, JsonWebTokenError } from "jsonwebtoken";
-import { env } from "@shared/helpers/envHelper";
+import { env } from 'node:process';
 
 interface AuthErrorResponse {
   error: string;
