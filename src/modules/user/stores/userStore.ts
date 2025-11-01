@@ -1,5 +1,5 @@
-import { BaseStore } from "@shared/stores/BaseStore";
 import type { User, Prisma } from "@infrastructure/database";
+import { BaseStore } from "@shared/stores/baseStore";
 
 /**
  * UserStore - Store responsável por operações de banco de dados relacionadas a usuários
