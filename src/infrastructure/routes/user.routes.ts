@@ -1,13 +1,18 @@
 import { Router } from "express";
 import { UserController } from "@modules/user/controllers/userController";
+import { container } from "@infrastructure/di/container";
 
 /**
  * User Routes
  *
- * Defines all HTTP endpoints for user-related operations
+ * Defines all HTTP endpoints for user-related operations.
+ * Controller is resolved from DI container to ensure all dependencies
+ * are properly injected.
  */
 const userRoutes = Router();
-const userController = new UserController();
+
+// Resolve UserController from DI container
+const userController = container.resolve(UserController);
 
 /**
  * POST /users

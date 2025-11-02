@@ -1,12 +1,21 @@
 import type { NextFunction, Request, Response } from "express";
 import { AuthService } from "../services/authService";
+import { injectable } from "tsyringe";
 
+/**
+ * AuthController - HTTP layer for authentication endpoints
+ *
+ * Handles HTTP requests/responses for authentication operations.
+ * Delegates business logic to AuthService.
+ *
+ * Dependencies:
+ * - AuthService: Injected via constructor for authentication logic
+ */
+@injectable()
 export class AuthController {
-  private authService: AuthService;
-
-  constructor() {
-    this.authService = new AuthService();
-  }
+  constructor(
+    private readonly authService: AuthService
+  ) {}
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

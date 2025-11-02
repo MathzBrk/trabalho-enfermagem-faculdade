@@ -1,9 +1,11 @@
-import { UserStore } from "@modules/user/stores/userStore";
+import { IUserStore } from "@shared/interfaces/user";
 import { hashPassword } from "@shared/helpers/passwordHelper";
 import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
 import type { CreateUserDTO, UserResponse } from "@shared/models/user";
 import dayjs from "dayjs";
 import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError, ValidationError } from "../errors";
+import { inject, injectable } from "tsyringe";
+import { TOKENS } from "@infrastructure/di/tokens";
 
 /**
  * UserService - Service layer for user business logic
@@ -16,13 +18,16 @@ import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError
  *
  * This service handles all business logic related to users,
  * keeping the controller thin and focused on HTTP concerns.
+ *
+ * Dependencies:
+ * - IUserStore: Injected via constructor for data access operations
+ *   Allows switching between Prisma (production) and Mock (testing)
  */
+@injectable()
 export class UserService {
-  private userStore: UserStore;
-
-  constructor() {
-    this.userStore = new UserStore();
-  }
+  constructor(
+    @inject(TOKENS.IUserStore) private readonly userStore: IUserStore
+  ) {}
 
   /**
    * Creates a new user in the system

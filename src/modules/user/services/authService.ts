@@ -1,5 +1,5 @@
 import { comparePassword } from "@shared/helpers/passwordHelper";
-import { UserStore } from "../stores/userStore";
+import { IUserStore } from "@shared/interfaces/user";
 import { User } from "@infrastructure/database";
 import type { TokenPayload } from "../../../@types/express";
 import { generateToken } from "@shared/helpers/tokenHelper";
@@ -8,15 +8,27 @@ import type { RegisterDTO } from "../validators/registerValidator";
 import { UserService } from "./userService";
 import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
 import { InvalidCredentialsError } from "../errors";
+import { inject, injectable } from "tsyringe";
+import { TOKENS } from "@infrastructure/di/tokens";
 
+/**
+ * AuthService - Service layer for authentication operations
+ *
+ * Handles:
+ * - User login with credential validation
+ * - User registration via UserService
+ * - JWT token generation
+ *
+ * Dependencies:
+ * - IUserStore: For direct user lookups during login
+ * - UserService: For user creation during registration
+ */
+@injectable()
 export class AuthService {
-  private userStore: UserStore;
-  private userService: UserService;
-
-  constructor() {
-    this.userStore = new UserStore();
-    this.userService = new UserService();
-  }
+  constructor(
+    @inject(TOKENS.IUserStore) private readonly userStore: IUserStore,
+    private readonly userService: UserService
+  ) {}
 
   async login(email: string, password: string): Promise<AuthResponse> {
     const normalizedEmail = normalizeEmail(email);

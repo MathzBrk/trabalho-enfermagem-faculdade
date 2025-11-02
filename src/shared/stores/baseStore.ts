@@ -1,6 +1,17 @@
 import prisma from "@infrastructure/database";
 
-export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput> {
+export interface IBaseStore<TModel, TCreateInput, TUpdateInput> {
+  findById(id: string): Promise<TModel | null>;
+  findAll(): Promise<TModel[]>;
+  create(data: TCreateInput): Promise<TModel>;
+  update(id: string, data: TUpdateInput): Promise<TModel>;
+  delete(id: string): Promise<TModel>;
+  softDelete(id: string): Promise<TModel>;
+  count(where?: any): Promise<number>;
+  exists(where: any): Promise<boolean>;
+}
+
+export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  implements IBaseStore<TModel, TCreateInput, TUpdateInput> {
   protected readonly prisma: typeof prisma;
   protected abstract readonly model: TDelegate;
 
