@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { UserService } from "@modules/user/services/userService";
 import { UserRole, type CreateUserDTO } from "@shared/models/user";
+import { injectable } from "tsyringe";
 
 /**
  * UserController - HTTP request handler for user endpoints
@@ -14,13 +15,15 @@ import { UserRole, type CreateUserDTO } from "@shared/models/user";
  *
  * This controller stays thin by delegating business logic to UserService.
  * It focuses solely on HTTP concerns and request/response transformation.
+ *
+ * Dependencies:
+ * - UserService: Injected via constructor for user business logic
  */
+@injectable()
 export class UserController {
-  private userService: UserService;
-
-  constructor() {
-    this.userService = new UserService();
-  }
+  constructor(
+    private readonly userService: UserService
+  ) {}
 
   /**
    * Creates a new user

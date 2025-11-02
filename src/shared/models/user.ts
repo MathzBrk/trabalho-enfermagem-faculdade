@@ -1,4 +1,5 @@
-import type { User as PrismaUser, Role } from "@infrastructure/database";
+import type { User as PrismaUser, Role, Prisma } from "@infrastructure/database";
+
 
 /**
  * User model type from Prisma
@@ -42,3 +43,7 @@ export interface UserResponse {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type UserCreateInput = Prisma.UserCreateInput;
+export type UserUpdateInput = Prisma.UserUpdateInput;
+export type UserDelegate = Prisma.UserDelegate;

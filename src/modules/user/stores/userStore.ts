@@ -1,8 +1,14 @@
-import type { User, Prisma } from "@infrastructure/database";
+import type { User} from "@infrastructure/database";
 import { BaseStore } from "@shared/stores/baseStore";
+import { IUserStore } from "@shared/interfaces/user";
+import { injectable } from "tsyringe";
+import { UserDelegate, UserUpdateInput, UserCreateInput } from "@shared/models/user";
 
 /**
- * UserStore - Store responsável por operações de banco de dados relacionadas a usuários
+ * UserStore - Prisma-based implementation of IUserStore
+ *
+ * This is the production implementation that uses Prisma ORM for database operations.
+ * Registered as singleton in DI container to maintain connection pooling and caching.
  *
  * Herda métodos CRUD básicos do BaseStore:
  * - findById(id)
@@ -17,7 +23,8 @@ import { BaseStore } from "@shared/stores/baseStore";
  * E adiciona métodos específicos para User
  */
 
-export class UserStore extends BaseStore<User, Prisma.UserDelegate, Prisma.UserCreateInput, Prisma.UserUpdateInput> {
+@injectable()
+export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, UserUpdateInput> implements IUserStore {
   // Define o model que será usado pela classe base
   protected readonly model = this.prisma.user;
 

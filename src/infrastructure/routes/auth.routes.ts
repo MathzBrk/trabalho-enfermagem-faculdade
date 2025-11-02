@@ -4,14 +4,20 @@ import { validateRequest } from "@shared/middlewares/validateRequest";
 import { loginRateLimiter, registerRateLimiter } from "@shared/middlewares/rateLimiter";
 import { LoginSchema } from "@modules/user/validators/loginValidator";
 import { RegisterSchema } from "@modules/user/validators/registerValidator";
+import { container } from "@infrastructure/di/container";
 
 /**
  * Authentication Routes
  *
- * Defines all HTTP endpoints for authentication operations
+ * Defines all HTTP endpoints for authentication operations.
+ * Controller is resolved from DI container to ensure all dependencies
+ * are properly injected.
  */
 const authRoutes = Router();
-const authController = new AuthController();
+
+// Resolve AuthController from DI container
+// This ensures all dependencies (AuthService, UserStore, etc.) are injected
+const authController = container.resolve(AuthController);
 
 /**
  * POST /auth/login
