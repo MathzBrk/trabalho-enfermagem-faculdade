@@ -3,3 +3,5 @@ node_modules
 
 # Prisma
 src/infrastructure/database/generated/
+
+tsbuild.tsbuildinfo
