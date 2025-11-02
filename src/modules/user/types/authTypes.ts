@@ -1,6 +1,4 @@
-import { User } from '@infrastructure/database';
-
-export interface UserResponse extends Omit<User, 'password'> {}
+import { UserResponse } from '@shared/models/user';
 
 export interface AuthResponse {
   user: UserResponse;

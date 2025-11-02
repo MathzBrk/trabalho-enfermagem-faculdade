@@ -17,7 +17,7 @@ import { BaseStore } from "@shared/stores/baseStore";
  * E adiciona métodos específicos para User
  */
 
-export class UserStore extends BaseStore<User, Prisma.UserDelegate> {
+export class UserStore extends BaseStore<User, Prisma.UserDelegate, Prisma.UserCreateInput, Prisma.UserUpdateInput> {
   // Define o model que será usado pela classe base
   protected readonly model = this.prisma.user;
 
