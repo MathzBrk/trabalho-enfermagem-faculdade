@@ -33,7 +33,23 @@ export const RegisterSchema = z.object({
   coren: z
     .string()
     .optional()
-    .refine((val) => !val || val.length > 0, 'COREN cannot be empty if provided')
-});
+})
+  .superRefine((data, ctx) => {
+    if (data.role === 'NURSE') {
+      if (!data.coren || data.coren.trim().length === 0) {
+        ctx.addIssue({
+          path: ['coren'],
+          code: z.ZodIssueCode.custom,
+          message: 'COREN is required for NURSE role',
+        });
+      }
+    } else if (data.coren && data.coren.trim().length === 0) {
+      ctx.addIssue({
+        path: ['coren'],
+        code: z.ZodIssueCode.custom,
+        message: 'COREN cannot be empty if provided',
+      });
+    }
+  });
 
 export type RegisterDTO = z.infer<typeof RegisterSchema>;
