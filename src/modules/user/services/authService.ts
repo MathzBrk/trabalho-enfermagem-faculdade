@@ -51,7 +51,7 @@ export class AuthService {
 
     const user = await this.userStore.create({
       name: data.name,
-      email: data.email.toLowerCase().trim(),
+      email: data.email,
       password: hashedPassword,
       cpf: data.cpf,
       phone: data.phone,
@@ -71,7 +71,7 @@ export class AuthService {
   }
 
   private async validateRegistration(data: RegisterDTO): Promise<void> {
-    if (await this.userStore.emailExists(data.email)) {
+    if (await this.userStore.emailExists(data.email.toLowerCase().trim())) {
       throw new EmailAlreadyExistsError();
     }
 
