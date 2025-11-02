@@ -3,7 +3,7 @@ import { hashPassword } from "@shared/helpers/passwordHelper";
 import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
 import type { CreateUserDTO, UserResponse } from "@shared/models/user";
 import dayjs from "dayjs";
-import { CPFAlreadyExistsError, EmailAlreadyExistsError, ValidationError } from "../errors";
+import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError, ValidationError } from "../errors";
 
 /**
  * UserService - Service layer for user business logic
@@ -90,7 +90,7 @@ export class UserService {
 
       const corenExists = await this.userStore.corenExists(data.coren);
       if (corenExists) {
-        throw new CPFAlreadyExistsError();
+        throw new CORENAlreadyExistsError();
       }
     }
   }

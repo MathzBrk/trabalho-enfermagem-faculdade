@@ -44,7 +44,6 @@ export class AuthService {
   async register(data: RegisterDTO): Promise<AuthResponse> {
     const user = await this.userService.createUser({
       ...data,
-      email: data.email,
     });
 
     const token = this.generateToken(user);
