@@ -1,7 +1,9 @@
 import { UserStore } from "@modules/user/stores/userStore";
 import { hashPassword } from "@shared/helpers/passwordHelper";
+import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
 import type { CreateUserDTO, UserResponse } from "@shared/models/user";
 import dayjs from "dayjs";
+import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError, ValidationError } from "../errors";
 
 /**
  * UserService - Service layer for user business logic
@@ -47,32 +49,13 @@ export class UserService {
    */
   async createUser(data: CreateUserDTO): Promise<UserResponse> {
     try {
-      const emailExists = await this.userStore.emailExists(data.email);
-      if (emailExists) {
-        throw new Error("Email already registered");
-      }
-
-      const cpfExists = await this.userStore.cpfExists(data.cpf);
-      if (cpfExists) {
-        throw new Error("CPF already registered");
-      }
-
-      if (data.role === "NURSE") {
-        if (!data.coren) {
-          throw new Error("COREN is required for NURSE role");
-        }
-
-        const corenExists = await this.userStore.corenExists(data.coren);
-        if (corenExists) {
-          throw new Error("COREN already registered");
-        }
-      }
+      await this.validateUserUniqueness(data);
 
       const hashedPassword = await hashPassword(data.password);
 
       const user = await this.userStore.create({
         name: data.name,
-        email: data.email,
+        email: normalizeEmail(data.email),
         password: hashedPassword,
         cpf: data.cpf,
         phone: data.phone,
@@ -81,21 +64,34 @@ export class UserService {
         updatedAt: dayjs().toDate(),
       });
 
-      return {
-        name: user.name,
-        email: user.email,
-        cpf: user.cpf,
-        phone: user.phone,
-        role: user.role,
-        coren: user.coren,
-        id: user.id,
-        isActive: user.isActive,
-        updatedAt: user.updatedAt,
-        createdAt: user.createdAt,
-      };
+      return toUserResponse(user);
     } catch (error) {
       console.log('Error creating user:', error);
       throw error;
+    }
+  }
+
+  private async validateUserUniqueness(data: CreateUserDTO): Promise<void> {
+    const normalizedEmail = normalizeEmail(data.email);
+    const emailExists = await this.userStore.emailExists(normalizedEmail);
+    if (emailExists) {
+      throw new EmailAlreadyExistsError();
+    }
+
+    const cpfExists = await this.userStore.cpfExists(data.cpf);
+    if (cpfExists) {
+      throw new CPFAlreadyExistsError();
+    }
+
+    if (data.role === "NURSE") {
+      if (!data.coren) {
+        throw new ValidationError("COREN is required for NURSE role");
+      }
+
+      const corenExists = await this.userStore.corenExists(data.coren);
+      if (corenExists) {
+        throw new CORENAlreadyExistsError();
+      }
     }
   }
 }
