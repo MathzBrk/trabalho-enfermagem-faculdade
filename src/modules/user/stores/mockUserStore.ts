@@ -349,9 +349,12 @@ export class MockUserStore
    * @returns Número de usuários ativos
    */
   async countActive(): Promise<number> {
-    return this.count({
-      isActive: true,
-      deletedAt: null,
-    });
+    let count = 0;
+    for (const user of this.data.values()) {
+      if (user.isActive && user.deletedAt == null) {
+        count++;
+      }
+    }
+    return count;
   }
 }

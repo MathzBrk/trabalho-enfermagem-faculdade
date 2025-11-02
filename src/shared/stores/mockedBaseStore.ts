@@ -284,10 +284,10 @@ export abstract class MockedBaseStore<
       ...model,
       deletedAt: new Date(),
       updatedAt: new Date(),
-      isActive: false,
     } as TModel;
 
     this.data.set(id, softDeleted);
+    this.updateIndices(id, softDeleted, model);
 
     return softDeleted;
   }
