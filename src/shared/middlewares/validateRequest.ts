@@ -55,12 +55,7 @@ export const validateRequest = (options: ValidationOptions | ZodTypeAny) => {
       if (validationOptions.body) {
         const validatedBody = await validationOptions.body.parseAsync(req.body);
         // Override body property to ensure validated data is used
-        Object.defineProperty(req, 'body', {
-          value: validatedBody,
-          writable: true,
-          enumerable: true,
-          configurable: true
-        });
+        overrideRequestProperty(req, 'body', validatedBody);
       }
 
       // Validate query parameters if schema provided
@@ -68,12 +63,7 @@ export const validateRequest = (options: ValidationOptions | ZodTypeAny) => {
         // Create a plain object copy to avoid read-only issues
         const queryData = { ...req.query };
         const validatedQuery = await validationOptions.query.parseAsync(queryData);
-        Object.defineProperty(req, 'query', {
-          value: validatedQuery,
-          writable: true,
-          enumerable: true,
-          configurable: true
-        });
+        overrideRequestProperty(req, 'query', validatedQuery);
       }
 
       // Validate route parameters if schema provided
@@ -81,12 +71,7 @@ export const validateRequest = (options: ValidationOptions | ZodTypeAny) => {
         const paramsData = { ...req.params };
         const validatedParams = await validationOptions.params.parseAsync(paramsData);
         // Override params property for consistency
-        Object.defineProperty(req, 'params', {
-          value: validatedParams,
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        });
+        overrideRequestProperty(req, 'params', validatedParams);
       }
 
       next();
@@ -105,4 +90,13 @@ export const validateRequest = (options: ValidationOptions | ZodTypeAny) => {
       next(error);
     }
   };
+};
+
+const overrideRequestProperty = (req: Request, property: 'body' | 'query' | 'params', value: unknown) => {
+  Object.defineProperty(req, property, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
 };
