@@ -190,10 +190,10 @@ export class MockUserStore
   // ============================================
 
   /**
-   * Busca usuário por email
+   * Finds user by email
    *
-   * @param email - Email do usuário
-   * @returns User ou null se não encontrado
+   * @param email - User's email
+   * @returns User or null if not found
    */
   async findByEmail(email: string): Promise<User | null> {
     const userId = this.emailIndex.get(email);
@@ -202,10 +202,10 @@ export class MockUserStore
   }
 
   /**
-   * Busca usuário por CPF
+   * Finds user by CPF
    *
-   * @param cpf - CPF do usuário (11 dígitos)
-   * @returns User ou null se não encontrado
+   * @param cpf - User's CPF (11 digits)
+   * @returns User or null if not found
    */
   async findByCPF(cpf: string): Promise<User | null> {
     const userId = this.cpfIndex.get(cpf);
@@ -214,10 +214,10 @@ export class MockUserStore
   }
 
   /**
-   * Busca usuário por COREN (registro de enfermeiro)
+   * Finds user by COREN (nurse registration number)
    *
-   * @param coren - Número do COREN
-   * @returns User ou null se não encontrado
+   * @param coren - COREN number
+   * @returns User or null if not found
    */
   async findByCOREN(coren: string): Promise<User | null> {
     const userId = this.corenIndex.get(coren);
@@ -226,19 +226,19 @@ export class MockUserStore
   }
 
   /**
-   * Busca usuários por role (perfil)
+   * Finds users by role (profile)
    *
    * @param role - EMPLOYEE | NURSE | MANAGER
-   * @returns Array de usuários
+   * @returns Array of users
    */
   async findByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<User[]> {
     return Array.from(this.data.values()).filter(user => user.role === role);
   }
 
   /**
-   * Busca apenas usuários ativos (não deletados)
+   * Finds only active users (not deleted)
    *
-   * @returns Array de usuários ativos
+   * @returns Array of active users
    */
   async findAllActive(): Promise<User[]> {
     return Array.from(this.data.values()).filter(
@@ -247,11 +247,11 @@ export class MockUserStore
   }
 
   /**
-   * Busca enfermeiros ativos
+   * Finds active nurses
    *
-   * Útil para listar enfermeiros disponíveis para aplicar vacinas
+   * Useful for listing available nurses to administer vaccines
    *
-   * @returns Array de enfermeiros ativos
+   * @returns Array of active nurses
    */
   async findActiveNurses(): Promise<User[]> {
     return Array.from(this.data.values()).filter(
@@ -260,9 +260,9 @@ export class MockUserStore
   }
 
   /**
-   * Busca gestores ativos
+   * Finds active managers
    *
-   * @returns Array de gestores ativos
+   * @returns Array of active managers
    */
   async findActiveManagers(): Promise<User[]> {
     return Array.from(this.data.values()).filter(
@@ -271,10 +271,10 @@ export class MockUserStore
   }
 
   /**
-   * Busca usuário com todos os relacionamentos incluídos
+   * Finds user with all relationships included
    *
-   * @param id - ID do usuário
-   * @returns User com relacionamentos ou null
+   * @param id - User's ID
+   * @returns User with relationships or null
    */
   async findByIdWithRelations(id: string): Promise<User | null> {
     // Mock implementation doesn't support relations
@@ -283,71 +283,71 @@ export class MockUserStore
   }
 
   /**
-   * Verifica se email já está em uso
+   * Checks if email is already in use
    *
-   * @param email - Email a verificar
-   * @returns true se já existe
+   * @param email - Email to check
+   * @returns true if already exists
    */
   async emailExists(email: string): Promise<boolean> {
     return this.emailIndex.has(email);
   }
 
   /**
-   * Verifica se CPF já está em uso
+   * Checks if CPF is already in use
    *
-   * @param cpf - CPF a verificar
-   * @returns true se já existe
+   * @param cpf - CPF to check
+   * @returns true if already exists
    */
   async cpfExists(cpf: string): Promise<boolean> {
     return this.cpfIndex.has(cpf);
   }
 
   /**
-   * Verifica se COREN já está em uso
+   * Checks if COREN is already in use
    *
-   * @param coren - COREN a verificar
-   * @returns true se já existe
+   * @param coren - COREN to check
+   * @returns true if already exists
    */
   async corenExists(coren: string): Promise<boolean> {
     return this.corenIndex.has(coren);
   }
 
   /**
-   * Atualiza a senha de um usuário
+   * Updates a user's password
    *
-   * @param id - ID do usuário
-   * @param hashedPassword - Senha já hasheada
-   * @returns User atualizado
+   * @param id - User's ID
+   * @param hashedPassword - Already hashed password
+   * @returns Updated User
    */
   async updatePassword(id: string, hashedPassword: string): Promise<User> {
     return this.update(id, { password: hashedPassword });
   }
 
   /**
-   * Ativa ou desativa um usuário
+   * Activates or deactivates a user
    *
-   * @param id - ID do usuário
-   * @param isActive - true para ativar, false para desativar
-   * @returns User atualizado
+   * @param id - User's ID
+   * @param isActive - true to activate, false to deactivate
+   * @returns Updated User
    */
   async toggleActive(id: string, isActive: boolean): Promise<User> {
     return this.update(id, { isActive });
   }
 
   /**
-   * Conta usuários por role
+   * Counts users by role
    *
    * @param role - EMPLOYEE | NURSE | MANAGER
-   * @returns Número de usuários com essa role
+   * @returns Number of users with this role
    */
   async countByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<number> {
     return this.count({ role });
   }
 
   /**
-   * Conta usuários ativos
+   * Counts active users
    *
-   * @returns Número de usuários ativos
+   * @returns Number of active users
    */
   async countActive(): Promise<number> {
     let count = 0;

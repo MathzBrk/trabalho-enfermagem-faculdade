@@ -1,143 +1,143 @@
-### Setup Inicial (apenas primeira vez)
+### Initial Setup (first time only)
 
 ```bash
-# 1. Instalar dependências
+# 1. Install dependencies
 npm install
 
-# 2. Subir PostgreSQL
+# 2. Start PostgreSQL
 npm run docker:up
 
-# 3. Gerar Prisma Client
+# 3. Generate Prisma Client
 npm run prisma:generate
 
-# 4. Criar migration inicial
+# 4. Create initial migration
 npx prisma migrate dev --name init
 
-# 5. Iniciar aplicação
+# 5. Start application
 npm run start:dev
 ```
 
-### Uso Diário
+### Daily Usage
 
 ```bash
-# Subir banco
+# Start database
 npm run docker:up
 
-# Desenvolver
+# Develop
 npm run start:dev
 
-# Visualizar banco
+# View database
 npm run prisma:studio
 
-# Parar banco
+# Stop database
 npm run docker:down
 ```
 
 ---
 
-## Outros Problemas Comuns
+## Other Common Issues
 
-### Porta 5432 já em uso
+### Port 5432 already in use
 
-**Se você já tem PostgreSQL rodando localmente:**
+**If you already have PostgreSQL running locally:**
 
-1. Altere no [.env](.env):
+1. Change in [.env](.env):
 ```env
 POSTGRES_PORT=5433
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/univas_enfermagem?schema=public"
 ```
 
-2. Reinicie:
+2. Restart:
 ```bash
 npm run docker:down
 npm run docker:up
 ```
 
-### Erro de conexão com banco
+### Database connection error
 
 ```bash
-# Verificar se container está rodando
+# Check if container is running
 docker ps
 
-# Ver logs
+# View logs
 npm run docker:logs
 
-# Reiniciar
+# Restart
 npm run docker:down
 npm run docker:up
 ```
 
-### Resetar banco completamente
+### Completely reset database
 
 ```bash
-# CUIDADO: Apaga todos os dados!
+# WARNING: Deletes all data!
 npm run docker:reset
 
-# Recriar schema
+# Recreate schema
 npx prisma migrate dev --name init
 ```
 
-### Prisma Client desatualizado
+### Outdated Prisma Client
 
 ```bash
-# Sempre que alterar schema.prisma
+# Whenever you change schema.prisma
 npm run prisma:generate
 ```
 
 ---
 
-## Como Usar o Prisma Client
+## How to Use Prisma Client
 
-Exemplo de uso no código:
+Example usage in code:
 
 ```typescript
-// Opção 1: Import direto do módulo database
+// Option 1: Direct import from database module
 import prisma from "@infrastructure/database";
 
-// Opção 2: Import usando path relativo
+// Option 2: Import using relative path
 import prisma from "@/infrastructure/database";
 
-// Buscar por email
+// Find by email
 const user = await prisma.employee.findUnique({
   where: { email: "joao@example.com" },
 });
 ```
 
-## Comandos Úteis
+## Useful Commands
 
 ```bash
 # Docker
-npm run docker:up          # Iniciar PostgreSQL
-npm run docker:down        # Parar containers
-npm run docker:logs        # Ver logs
-npm run docker:reset       # Resetar tudo (apaga dados!)
+npm run docker:up          # Start PostgreSQL
+npm run docker:down        # Stop containers
+npm run docker:logs        # View logs
+npm run docker:reset       # Reset everything (deletes data!)
 
 # Prisma
-npm run prisma:generate    # Gerar client
-npm run prisma:studio      # Interface visual
-npx prisma migrate dev --name <nome>  # Nova migration
-npx prisma migrate deploy  # Deploy migrations (produção)
+npm run prisma:generate    # Generate client
+npm run prisma:studio      # Visual interface
+npx prisma migrate dev --name <name>  # New migration
+npx prisma migrate deploy  # Deploy migrations (production)
 
 # App
-npm run start:dev          # Desenvolvimento
-npm run build              # Build para produção
-npm start                  # Rodar produção
-npm test                   # Testes
+npm run start:dev          # Development
+npm run build              # Build for production
+npm start                  # Run production
+npm test                   # Tests
 ```
 
 ---
 
-## Links Úteis
+## Useful Links
 
-- [Documentação do Prisma](https://www.prisma.io/docs)
+- [Prisma Documentation](https://www.prisma.io/docs)
 - [Docker Compose](https://docs.docker.com/compose/)
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
 
 ---
 
-## Precisando de Ajuda?
+## Need Help?
 
-1. Verifique os logs: `npm run docker:logs`
-2. Consulte a [documentação Docker](README.Docker.md)
-3. Consulte o [guia rápido](QUICK_START.md)
-4. Reinicie tudo: `npm run docker:reset`
+1. Check the logs: `npm run docker:logs`
+2. Consult the [Docker documentation](README.Docker.md)
+3. Consult the [quick start guide](QUICK_START.md)
+4. Restart everything: `npm run docker:reset`

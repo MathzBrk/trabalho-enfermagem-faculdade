@@ -1,113 +1,113 @@
 # Docker Setup - Univas Enfermagem
 
-## Pré-requisitos
+## Prerequisites
 
 - Docker
 - Docker Compose
-- Node.js 20+ (para desenvolvimento local)
+- Node.js 20+ (for local development)
 
-## Configuração Inicial
+## Initial Setup
 
-### 1. Configurar variáveis de ambiente
+### 1. Configure environment variables
 
-Copie o arquivo `.env.example` para `.env`:
+Copy the `.env.example` file to `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Edite o `.env` conforme necessário. A configuração padrão já funciona para desenvolvimento local.
+Edit the `.env` file as needed. The default configuration already works for local development.
 
-### 2. Iniciar o PostgreSQL via Docker
+### 2. Start PostgreSQL via Docker
 
 ```bash
 npm run docker:up
 ```
 
-Ou diretamente:
+Or directly:
 
 ```bash
 docker compose up -d
 ```
 
-### 3. Gerar o Prisma Client
+### 3. Generate the Prisma Client
 
 ```bash
 npm run prisma:generate
 ```
 
-### 4. Executar as migrations
+### 4. Run migrations
 
 ```bash
 npm run prisma:migrate
 ```
 
-Se for a primeira vez, será solicitado um nome para a migration, ex: `init`
+If this is the first time, you will be prompted for a migration name, e.g., `init`
 
-### 5. Iniciar a aplicação em modo de desenvolvimento
+### 5. Start the application in development mode
 
 ```bash
 npm run start:dev
 ```
 
-## Scripts Disponíveis
+## Available Scripts
 
 ### Docker
 
-- `npm run docker:up` - Inicia os containers
-- `npm run docker:down` - Para os containers
-- `npm run docker:logs` - Visualiza os logs
-- `npm run docker:reset` - Remove volumes e reinicia (CUIDADO: apaga dados!)
+- `npm run docker:up` - Starts the containers
+- `npm run docker:down` - Stops the containers
+- `npm run docker:logs` - Views the logs
+- `npm run docker:reset` - Removes volumes and restarts (CAUTION: deletes data!)
 
 ### Prisma
 
-- `npm run prisma:generate` - Gera o Prisma Client
-- `npm run prisma:migrate` - Cria e aplica migrations em desenvolvimento
-- `npm run prisma:migrate:deploy` - Aplica migrations em produção
-- `npm run prisma:studio` - Abre interface visual do banco
-- `npm run prisma:seed` - Executa seed (quando implementado)
+- `npm run prisma:generate` - Generates the Prisma Client
+- `npm run prisma:migrate` - Creates and applies migrations in development
+- `npm run prisma:migrate:deploy` - Applies migrations in production
+- `npm run prisma:studio` - Opens visual database interface
+- `npm run prisma:seed` - Runs seed (when implemented)
 
-## Modos de Execução
+## Execution Modes
 
-### Opção 1: Apenas PostgreSQL no Docker (Recomendado para desenvolvimento)
+### Option 1: PostgreSQL only in Docker (Recommended for development)
 
-Este é o modo padrão configurado. O PostgreSQL roda no Docker, mas você executa a aplicação localmente com hot-reload:
+This is the default configured mode. PostgreSQL runs in Docker, but you run the application locally with hot-reload:
 
 ```bash
-# Inicia apenas o PostgreSQL
+# Start PostgreSQL only
 npm run docker:up
 
-# Em outro terminal, executa a aplicação
+# In another terminal, run the application
 npm run start:dev
 ```
 
-**Vantagens:**
-- Hot-reload funcionando
-- Debug mais fácil
-- Melhor performance
+**Advantages:**
+- Hot-reload working
+- Easier debugging
+- Better performance
 
-### Opção 2: Tudo no Docker
+### Option 2: Everything in Docker
 
-Para rodar tanto o PostgreSQL quanto a aplicação no Docker, descomente a seção `app` no [docker compose.yml](docker compose.yml) e execute:
+To run both PostgreSQL and the application in Docker, uncomment the `app` section in [docker compose.yml](docker compose.yml) and run:
 
 ```bash
 docker compose up -d
 ```
 
-**Importante:** Lembre-se de alterar a `DATABASE_URL` no `.env` de `localhost` para `postgres`:
+**Important:** Remember to change the `DATABASE_URL` in `.env` from `localhost` to `postgres`:
 ```
 DATABASE_URL="postgresql://postgres:postgres@postgres:5432/univas_enfermagem?schema=public"
 ```
 
-## Acessar o Banco de Dados
+## Access the Database
 
-### Via Prisma Studio (Recomendado)
+### Via Prisma Studio (Recommended)
 
 ```bash
 npm run prisma:studio
 ```
 
-Acesse: http://localhost:5555
+Access: http://localhost:5555
 
 ### Via psql
 
@@ -115,7 +115,7 @@ Acesse: http://localhost:5555
 docker exec -it univas-enfermagem-db psql -U postgres -d univas_enfermagem
 ```
 
-### Via cliente externo (DBeaver, pgAdmin, etc)
+### Via external client (DBeaver, pgAdmin, etc.)
 
 - Host: `localhost`
 - Port: `5432`
@@ -125,56 +125,56 @@ docker exec -it univas-enfermagem-db psql -U postgres -d univas_enfermagem
 
 ## Troubleshooting
 
-### Porta 5432 já está em uso
+### Port 5432 is already in use
 
-Se você já tem PostgreSQL rodando localmente, altere a porta no `.env`:
+If you already have PostgreSQL running locally, change the port in `.env`:
 
 ```
 POSTGRES_PORT=5433
 ```
 
-E atualize a `DATABASE_URL`:
+And update the `DATABASE_URL`:
 ```
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/univas_enfermagem?schema=public"
 ```
 
-### Erro de conexão com o banco
+### Database connection error
 
-Verifique se o container está rodando:
+Check if the container is running:
 
 ```bash
 docker ps
 ```
 
-Veja os logs:
+View the logs:
 
 ```bash
 npm run docker:logs
 ```
 
-### Resetar o banco de dados
+### Reset the database
 
 ```bash
 npm run docker:reset
 npm run prisma:migrate
 ```
 
-## Produção
+## Production
 
-Para deploy em produção:
+For production deployment:
 
-1. Use variáveis de ambiente seguras
-2. Altere `JWT_SECRET` para uma chave forte
-3. Configure `DATABASE_URL` para apontar para o banco de produção
-4. Execute migrations com:
+1. Use secure environment variables
+2. Change `JWT_SECRET` to a strong key
+3. Configure `DATABASE_URL` to point to the production database
+4. Run migrations with:
    ```bash
    npm run prisma:migrate:deploy
    ```
 
-## Estrutura
+## Structure
 
-- `docker compose.yml` - Configuração dos serviços Docker
-- `Dockerfile` - Imagem da aplicação (opcional)
-- `.dockerignore` - Arquivos ignorados no build
-- `.env` - Variáveis de ambiente (não comitado)
-- `.env.example` - Template de variáveis de ambiente
+- `docker compose.yml` - Docker services configuration
+- `Dockerfile` - Application image (optional)
+- `.dockerignore` - Files ignored in build
+- `.env` - Environment variables (not committed)
+- `.env.example` - Environment variables template

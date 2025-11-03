@@ -15,24 +15,24 @@ datasource db {
 }
 
 enum Role {
-  EMPLOYEE  // Funcionário comum (recebe vacinas)
-  NURSE     // Enfermeiro (aplica vacinas)
-  MANAGER   // Gestor (gerencia e gera relatórios)
+  EMPLOYEE  // Regular employee (receives vaccines)
+  NURSE     // Nurse (administers vaccines)
+  MANAGER   // Manager (manages and generates reports)
 }
 
 enum SchedulingStatus {
-  SCHEDULED   // Agendado
-  CONFIRMED   // Confirmado
-  CANCELLED   // Cancelado
-  COMPLETED   // Concluído
+  SCHEDULED   // Scheduled
+  CONFIRMED   // Confirmed
+  CANCELLED   // Cancelled
+  COMPLETED   // Completed
 }
 
 enum ReportType {
-  GENERAL           // Relatório geral do sistema
-  BY_EMPLOYEE       // Relatório por funcionário
-  BY_VACCINE        // Relatório por vacina
-  BY_PERIOD         // Relatório por período
-  COVERAGE          // Relatório de cobertura vacinal
+  GENERAL           // General system report
+  BY_EMPLOYEE       // Report by employee
+  BY_VACCINE        // Report by vaccine
+  BY_PERIOD         // Report by period
+  COVERAGE          // Vaccine coverage report
 }
 
 // ============================================

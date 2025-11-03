@@ -20,7 +20,7 @@ export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  
   }
 
   /**
-   * Busca por ID
+   * Find by ID
    */
   async findById(id: string): Promise<TModel | null> {
     return (this.model as any).findUnique({
@@ -29,14 +29,14 @@ export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  
   }
 
   /**
-   * Busca todos
+   * Find all
    */
   async findAll(): Promise<TModel[]> {
     return (this.model as any).findMany();
   }
 
   /**
-   * Cria um registro
+   * Create a record
    */
   async create(data: TCreateInput): Promise<TModel> {
     return (this.model as any).create({
@@ -45,7 +45,7 @@ export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  
   }
 
   /**
-   * Atualiza um registro
+   * Update a record
    */
   async update(id: string, data: TUpdateInput): Promise<TModel> {
     return (this.model as any).update({
@@ -55,7 +55,7 @@ export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  
   }
 
   /**
-   * Deleta um registro (hard delete)
+   * Delete a record (hard delete)
    */
   async delete(id: string): Promise<TModel> {
     return (this.model as any).delete({
@@ -77,14 +77,14 @@ export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  
   }
 
   /**
-   * Conta registros
+   * Count records
    */
   async count(where?: any): Promise<number> {
     return (this.model as any).count({ where });
   }
 
   /**
-   * Verifica se existe
+   * Check if exists
    */
   async exists(where: any): Promise<boolean> {
     const count = await (this.model as any).count({ where });
