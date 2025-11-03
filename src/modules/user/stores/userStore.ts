@@ -12,7 +12,7 @@ import { allowedSortFields } from "../constants";
  * This is the production implementation that uses Prisma ORM for database operations.
  * Registered as singleton in DI container to maintain connection pooling and caching.
  *
- * Herda métodos CRUD básicos do BaseStore:
+ * Inherits basic CRUD methods from BaseStore:
  * - findById(id)
  * - findAll()
  * - create(data)
@@ -22,19 +22,19 @@ import { allowedSortFields } from "../constants";
  * - count(where?)
  * - exists(where)
  *
- * E adiciona métodos específicos para User
+ * And adds User-specific methods
  */
 
 @injectable()
 export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, UserUpdateInput> implements IUserStore {
-  // Define o model que será usado pela classe base
+  // Defines the model to be used by the base class
   protected readonly model = this.prisma.user;
 
   /**
-   * Busca usuário por email
+   * Finds user by email
    *
-   * @param email - Email do usuário
-   * @returns User ou null se não encontrado
+   * @param email - User's email
+   * @returns User or null if not found
    */
   async findByEmail(email: string): Promise<User | null> {
     return this.model.findUnique({
@@ -43,10 +43,10 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca usuário por CPF
+   * Finds user by CPF
    *
-   * @param cpf - CPF do usuário (11 dígitos)
-   * @returns User ou null se não encontrado
+   * @param cpf - User's CPF (11 digits)
+   * @returns User or null if not found
    */
   async findByCPF(cpf: string): Promise<User | null> {
     return this.model.findUnique({
@@ -55,10 +55,10 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca usuário por COREN (registro de enfermeiro)
+   * Finds user by COREN (nurse registration number)
    *
-   * @param coren - Número do COREN
-   * @returns User ou null se não encontrado
+   * @param coren - COREN number
+   * @returns User or null if not found
    */
   async findByCOREN(coren: string): Promise<User | null> {
     return this.model.findUnique({
@@ -67,10 +67,10 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca usuários por role (perfil)
+   * Finds users by role (profile)
    *
    * @param role - EMPLOYEE | NURSE | MANAGER
-   * @returns Array de usuários
+   * @returns Array of users
    */
   async findByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<User[]> {
     return this.model.findMany({
@@ -79,9 +79,9 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca apenas usuários ativos (não deletados)
+   * Finds only active users (not deleted)
    *
-   * @returns Array de usuários ativos
+   * @returns Array of active users
    */
   async findAllActive(): Promise<User[]> {
     return this.model.findMany({
@@ -93,11 +93,11 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca enfermeiros ativos
+   * Finds active nurses
    *
-   * Útil para listar enfermeiros disponíveis para aplicar vacinas
+   * Useful for listing available nurses to administer vaccines
    *
-   * @returns Array de enfermeiros ativos
+   * @returns Array of active nurses
    */
   async findActiveNurses(): Promise<User[]> {
     return this.model.findMany({
@@ -110,9 +110,9 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca gestores ativos
+   * Finds active managers
    *
-   * @returns Array de gestores ativos
+   * @returns Array of active managers
    */
   async findActiveManagers(): Promise<User[]> {
     return this.model.findMany({
@@ -125,10 +125,10 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Busca usuário com todos os relacionamentos incluídos
+   * Finds user with all relationships included
    *
-   * @param id - ID do usuário
-   * @returns User com relacionamentos ou null
+   * @param id - User's ID
+   * @returns User with relationships or null
    */
   async findByIdWithRelations(id: string) {
     return this.model.findUnique({
@@ -146,41 +146,41 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Verifica se email já está em uso
+   * Checks if email is already in use
    *
-   * @param email - Email a verificar
-   * @returns true se já existe
+   * @param email - Email to check
+   * @returns true if already exists
    */
   async emailExists(email: string): Promise<boolean> {
     return this.exists({ email });
   }
 
   /**
-   * Verifica se CPF já está em uso
+   * Checks if CPF is already in use
    *
-   * @param cpf - CPF a verificar
-   * @returns true se já existe
+   * @param cpf - CPF to check
+   * @returns true if already exists
    */
   async cpfExists(cpf: string): Promise<boolean> {
     return this.exists({ cpf });
   }
 
   /**
-   * Verifica se COREN já está em uso
+   * Checks if COREN is already in use
    *
-   * @param coren - COREN a verificar
-   * @returns true se já existe
+   * @param coren - COREN to check
+   * @returns true if already exists
    */
   async corenExists(coren: string): Promise<boolean> {
     return this.exists({ coren });
   }
 
   /**
-   * Atualiza a senha de um usuário
+   * Updates a user's password
    *
-   * @param id - ID do usuário
-   * @param hashedPassword - Senha já hasheada
-   * @returns User atualizado
+   * @param id - User's ID
+   * @param hashedPassword - Already hashed password
+   * @returns Updated User
    */
   async updatePassword(id: string, hashedPassword: string): Promise<User> {
     return this.model.update({
@@ -190,11 +190,11 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Ativa ou desativa um usuário
+   * Activates or deactivates a user
    *
-   * @param id - ID do usuário
-   * @param isActive - true para ativar, false para desativar
-   * @returns User atualizado
+   * @param id - User's ID
+   * @param isActive - true to activate, false to deactivate
+   * @returns Updated User
    */
   async toggleActive(id: string, isActive: boolean): Promise<User> {
     return this.model.update({
@@ -204,19 +204,19 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   }
 
   /**
-   * Conta usuários por role
+   * Counts users by role
    *
    * @param role - EMPLOYEE | NURSE | MANAGER
-   * @returns Número de usuários com essa role
+   * @returns Number of users with this role
    */
   async countByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<number> {
     return this.count({ role });
   }
 
   /**
-   * Conta usuários ativos
+   * Counts active users
    *
-   * @returns Número de usuários ativos
+   * @returns Number of active users
    */
   async countActive(): Promise<number> {
     return this.count({

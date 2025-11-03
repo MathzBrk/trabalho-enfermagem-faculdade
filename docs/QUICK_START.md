@@ -1,103 +1,103 @@
 # Quick Start Guide
 
-## Setup em 5 passos
+## Setup in 5 steps
 
-### 1. Instalar dependências
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Configurar ambiente
+### 2. Configure environment
 ```bash
 cp .env.example .env
-# O .env já foi configurado, mas você pode ajustá-lo se necessário
+# The .env has already been configured, but you can adjust it if necessary
 ```
 
-### 3. Iniciar PostgreSQL
+### 3. Start PostgreSQL
 ```bash
 npm run docker:up
 ```
 
-Aguarde alguns segundos para o banco inicializar completamente.
+Wait a few seconds for the database to initialize completely.
 
-### 4. Configurar Prisma
+### 4. Configure Prisma
 ```bash
-# Gerar Prisma Client
+# Generate Prisma Client
 npm run prisma:generate
 
-# Criar e aplicar migrations (use --name para evitar prompt interativo)
+# Create and apply migrations (use --name to avoid interactive prompt)
 npx prisma migrate dev --name init
 ```
 
-### 5. Iniciar aplicação
+### 5. Start application
 ```bash
 npm run start:dev
 ```
 
-## Verificar se tudo está funcionando
+## Verify everything is working
 
-### Verificar Docker
+### Check Docker
 ```bash
 docker ps
-# Você deve ver o container: univas-enfermagem-db
+# You should see the container: univas-enfermagem-db
 ```
 
-### Verificar banco com Prisma Studio
+### Check database with Prisma Studio
 ```bash
 npm run prisma:studio
-# Abre em http://localhost:5555
+# Opens at http://localhost:5555
 ```
 
-### Logs do PostgreSQL
+### PostgreSQL logs
 ```bash
 npm run docker:logs
 ```
 
-## Próximos passos
+## Next steps
 
-1. Criar seeds para popular o banco com dados iniciais
-2. Implementar os endpoints da API
-3. Adicionar validações com Zod
-4. Implementar autenticação JWT
-5. Criar testes
+1. Create seeds to populate the database with initial data
+2. Implement API endpoints
+3. Add validations with Zod
+4. Implement JWT authentication
+5. Create tests
 
-## Comandos úteis
+## Useful commands
 
 ```bash
-# Parar containers
+# Stop containers
 npm run docker:down
 
-# Ver logs
+# View logs
 npm run docker:logs
 
-# Resetar banco (CUIDADO!)
+# Reset database (CAUTION!)
 npm run docker:reset
 
-# Abrir Prisma Studio
+# Open Prisma Studio
 npm run prisma:studio
 
-# Rodar testes
+# Run tests
 npm test
 ```
 
 ## Troubleshooting
 
-### Erro "Port 5432 already in use"
-Você já tem PostgreSQL rodando. Altere `POSTGRES_PORT=5433` no `.env` e atualize a `DATABASE_URL`.
+### Error "Port 5432 already in use"
+You already have PostgreSQL running. Change `POSTGRES_PORT=5433` in `.env` and update the `DATABASE_URL`.
 
-### Erro ao conectar no banco
+### Error connecting to database
 ```bash
-# Reinicie o container
+# Restart the container
 npm run docker:down
 npm run docker:up
 
-# Aguarde 10 segundos e tente novamente
+# Wait 10 seconds and try again
 ```
 
-### Erro no Prisma
+### Prisma error
 ```bash
-# Regenere o client
+# Regenerate the client
 npm run prisma:generate
 ```
 
-Para mais detalhes, consulte [README.Docker.md](README.Docker.md)
+For more details, see [README.Docker.md](README.Docker.md)

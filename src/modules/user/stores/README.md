@@ -1,81 +1,81 @@
-# UserStore - Guia de Uso
+# UserStore - Usage Guide
 
-## O que é uma Store?
+## What is a Store?
 
-A **Store** é a camada responsável por **acessar o banco de dados**. É uma abstração sobre o Prisma Client que fornece métodos específicos para cada entidade.
+The **Store** is the layer responsible for **accessing the database**. It is an abstraction over the Prisma Client that provides specific methods for each entity.
 
-### Hierarquia
+### Hierarchy
 
 ```
-BaseStore (classe abstrata)
-    ↓ herda
-UserStore (implementação concreta)
+BaseStore (abstract class)
+    ↓ inherits
+UserStore (concrete implementation)
 ```
 
 ---
 
-## Métodos Disponíveis
+## Available Methods
 
-### ✅ Herdados do BaseStore (já prontos)
+### ✅ Inherited from BaseStore (ready to use)
 
 ```typescript
 const userStore = new UserStore();
 
-// CRUD básico
-await userStore.findById(id)           // Buscar por ID
-await userStore.findAll()              // Buscar todos
-await userStore.create(data)           // Criar
-await userStore.update(id, data)       // Atualizar
-await userStore.delete(id)             // Deletar (hard delete)
-await userStore.softDelete(id)         // Deletar (soft delete)
-await userStore.count()                // Contar todos
-await userStore.exists({ email })      // Verificar se existe
+// Basic CRUD
+await userStore.findById(id)           // Find by ID
+await userStore.findAll()              // Find all
+await userStore.create(data)           // Create
+await userStore.update(id, data)       // Update
+await userStore.delete(id)             // Delete (hard delete)
+await userStore.softDelete(id)         // Delete (soft delete)
+await userStore.count()                // Count all
+await userStore.exists({ email })      // Check if exists
 ```
 
-### ✨ Métodos Específicos do User
+### ✨ User-Specific Methods
 
 ```typescript
-// Buscar por campos únicos
+// Find by unique fields
 await userStore.findByEmail(email)
 await userStore.findByCPF(cpf)
 await userStore.findByCOREN(coren)
 
-// Buscar por role
+// Find by role
 await userStore.findByRole("NURSE")
 await userStore.findActiveNurses()
 await userStore.findActiveManagers()
 
-// Buscar com relacionamentos
+// Find with relationships
 await userStore.findByIdWithRelations(id)
 
-// Validações
+// Validations
 await userStore.emailExists(email)
 await userStore.cpfExists(cpf)
 await userStore.corenExists(coren)
 
-// Operações específicas
+// Specific operations
 await userStore.updatePassword(id, hashedPassword)
 await userStore.toggleActive(id, true)
 
-// Contadores
+// Counters
 await userStore.countByRole("EMPLOYEE")
 await userStore.countActive()
 ```
 
 ---
 
-## Exemplos de Uso
+## Usage Examples
 
-### 1. Importar a Store
+### 1. Import the Store
 
 ```typescript
 import { UserStore } from "@modules/user/stores/UserStore";
 
-// Criar instância
+// Create instance
 const userStore = new UserStore();
 ```
 
-### 2. Criar Usuário
+### 2. Create User
 
 ```typescript
 const newUser = await userStore.create({
@@ -87,98 +87,98 @@ const newUser = await userStore.create({
 });
 ```
 
-### 3. Buscar Usuário
+### 3. Find User
 
 ```typescript
-// Por ID
+// By ID
 const user = await userStore.findById("uuid-123");
 
-// Por email
+// By email
 const user = await userStore.findByEmail("joao@example.com");
 
-// Por CPF
+// By CPF
 const user = await userStore.findByCPF("12345678900");
 ```
 
-### 4. Validar antes de criar
+### 4. Validate Before Creating
 
 ```typescript
-// Verificar se email já existe
+// Check if email already exists
 if (await userStore.emailExists(email)) {
-  throw new Error("Email já cadastrado");
+  throw new Error("Email already registered");
 }
 
-// Verificar se CPF já existe
+// Check if CPF already exists
 if (await userStore.cpfExists(cpf)) {
-  throw new Error("CPF já cadastrado");
+  throw new Error("CPF already registered");
 }
 
-// Se passou nas validações, criar
+// If validations pass, create
 const user = await userStore.create(userData);
 ```
 
-### 5. Listar por Role
+### 5. List by Role
 
 ```typescript
-// Listar todos os enfermeiros
+// List all nurses
 const nurses = await userStore.findByRole("NURSE");
 
-// Apenas enfermeiros ativos
+// Only active nurses
 const activeNurses = await userStore.findActiveNurses();
 
-// Apenas gestores ativos
+// Only active managers
 const managers = await userStore.findActiveManagers();
 ```
 
-### 6. Buscar com Relacionamentos
+### 6. Find with Relationships
 
 ```typescript
 const userWithData = await userStore.findByIdWithRelations("uuid-123");
 
-// Retorna:
+// Returns:
 // {
 //   id: "uuid-123",
 //   name: "João",
 //   email: "joao@example.com",
-//   // ... outros campos
-//   schedulingsReceived: [...],      // Agendamentos
-//   applicationsReceived: [...],     // Vacinas recebidas
-//   applicationsPerformed: [...],    // Vacinas aplicadas (se enfermeiro)
-//   notifications: [...]             // Notificações não lidas
+//   // ... other fields
+//   schedulingsReceived: [...],      // Appointments
+//   applicationsReceived: [...],     // Vaccines received
+//   applicationsPerformed: [...],    // Vaccines administered (if nurse)
+//   notifications: [...]             // Unread notifications
 // }
 ```
 
-### 7. Atualizar Usuário
+### 7. Update User
 
 ```typescript
-// Atualização simples
+// Simple update
 const updated = await userStore.update("uuid-123", {
   name: "João Santos",
   phone: "11999999999",
 });
 
-// Atualizar senha
+// Update password
 await userStore.updatePassword("uuid-123", hashedPassword);
 
-// Ativar/Desativar
+// Activate/Deactivate
 await userStore.toggleActive("uuid-123", false);
 ```
 
-### 8. Deletar Usuário
+### 8. Delete User
 
 ```typescript
-// Soft delete (recomendado - mantém histórico)
+// Soft delete (recommended - maintains history)
 await userStore.softDelete("uuid-123");
 
-// Hard delete (remove completamente)
+// Hard delete (removes completely)
 await userStore.delete("uuid-123");
 ```
 
 ---
 
-## Uso em Services
+## Usage in Services
 
-A UserStore **não deve ser usada diretamente nos controllers**. Use através de um Service:
+The UserStore **should not be used directly in controllers**. Use it through a Service:
 
 ```typescript
 // src/modules/user/services/UserService.ts
@@ -193,22 +193,22 @@ export class UserService {
   }
 
   /**
-   * Cria um novo usuário
+   * Creates a new user
    */
   async createUser(data: CreateUserDTO) {
-    // Validações
+    // Validations
     if (await this.userStore.emailExists(data.email)) {
-      throw new Error("Email já cadastrado");
+      throw new Error("Email already registered");
     }
 
     if (await this.userStore.cpfExists(data.cpf)) {
-      throw new Error("CPF já cadastrado");
+      throw new Error("CPF already registered");
     }
 
-    // Hash da senha
+    // Hash password
     const hashedPassword = await hashPassword(data.password);
 
-    // Criar no banco
+    // Create in database
     return this.userStore.create({
       ...data,
       password: hashedPassword,
@@ -216,18 +216,18 @@ export class UserService {
   }
 
   /**
-   * Busca usuário por ID
+   * Finds user by ID
    */
   async getUserById(id: string) {
     const user = await this.userStore.findById(id);
     if (!user) {
-      throw new Error("Usuário não encontrado");
+      throw new Error("User not found");
     }
     return user;
   }
 
   /**
-   * Lista enfermeiros disponíveis
+   * Lists available nurses
    */
   async getAvailableNurses() {
     return this.userStore.findActiveNurses();
@@ -237,7 +237,7 @@ export class UserService {
 
 ---
 
-## Criar Stores para Outros Módulos
+## Creating Stores for Other Modules
 
 ### VaccineStore
 
@@ -278,47 +278,47 @@ export class VaccineStore extends BaseStore<Vaccine, Prisma.VaccineDelegate> {
 
 ---
 
-## Padrão da Arquitetura
+## Architecture Pattern
 
 ```
 Controller → Service → Store → Prisma → Database
    ↓           ↓         ↓
-Recebe      Lógica    Acessa
-Request     Negócio    Banco
+Receives    Business   Accesses
+Request     Logic      Database
 ```
 
-### Responsabilidades
+### Responsibilities
 
-- **Controller**: Recebe HTTP request, valida entrada, chama service
-- **Service**: Lógica de negócio, validações complexas, usa stores
-- **Store**: Acessa banco de dados, queries, sem lógica de negócio
-- **Prisma**: ORM que faz queries SQL
+- **Controller**: Receives HTTP request, validates input, calls service
+- **Service**: Business logic, complex validations, uses stores
+- **Store**: Accesses database, queries, no business logic
+- **Prisma**: ORM that executes SQL queries
 
 ---
 
-## Transações
+## Transactions
 
-Quando precisar de transações (múltiplas operações atômicas):
+When you need transactions (multiple atomic operations):
 
 ```typescript
 export class UserService {
   private userStore: UserStore;
 
   async createUserWithNotification(userData: CreateUserDTO) {
-    // Acessa o prisma direto para transação
+    // Access prisma directly for transaction
     return this.userStore.prisma.$transaction(async (tx) => {
-      // Criar usuário
+      // Create user
       const user = await tx.user.create({
         data: userData,
       });
 
-      // Criar notificação
+      // Create notification
       await tx.notification.create({
         data: {
           userId: user.id,
           type: "GENERAL",
-          title: "Bem-vindo!",
-          message: "Sua conta foi criada",
+          title: "Welcome!",
+          message: "Your account has been created",
         },
       });
 
@@ -330,36 +330,36 @@ export class UserService {
 
 ---
 
-## Testes
+## Testing
 
-Facilita criar mocks para testes:
+Makes it easy to create mocks for testing:
 
 ```typescript
-// Mock da UserStore
+// Mock of UserStore
 class MockUserStore extends UserStore {
   async findByEmail(email: string) {
     return {
       id: "mock-id",
       email,
       name: "Mock User",
-      // ... outros campos
+      // ... other fields
     } as User;
   }
 }
 
-// Usar no teste
+// Use in test
 const mockStore = new MockUserStore();
 const service = new UserService();
-service.userStore = mockStore; // Injeta o mock
+service.userStore = mockStore; // Inject the mock
 ```
 
 ---
 
-## Resumo
+## Summary
 
-✅ **Store** = Acesso ao banco de dados
-✅ **BaseStore** = Métodos CRUD genéricos
-✅ **UserStore** = Métodos específicos do User
-✅ **Herança** = Evita duplicação de código
-✅ **Type-safe** = TypeScript sabe os tipos
-✅ **Testável** = Fácil fazer mocks
+✅ **Store** = Database access
+✅ **BaseStore** = Generic CRUD methods
+✅ **UserStore** = User-specific methods
+✅ **Inheritance** = Avoids code duplication
+✅ **Type-safe** = TypeScript knows the types
+✅ **Testable** = Easy to create mocks
