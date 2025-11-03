@@ -4,7 +4,7 @@ import { UserRole, type CreateUserDTO } from "@shared/models/user";
 import { injectable } from "tsyringe";
 import { PAGINATION_DEFAULTS } from "@shared/interfaces/pagination";
 import { UserFilterParams } from "@shared/interfaces/user";
-import { GetUsersQueryParams } from "../types/userTypes";
+import { ListUsersQuery } from "@modules/user/validators/listUsersValidator";
 
 /**
  * UserController - HTTP request handler for user endpoints
@@ -123,7 +123,8 @@ export class UserController {
    */
   async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { page, perPage, sortBy, sortOrder, role, isActive, excludeDeleted } = req.query as GetUsersQueryParams;
+      // req.query is already validated and transformed by validateRequest middleware
+      const { page, perPage, sortBy, sortOrder, role, isActive, excludeDeleted } = req.query as unknown as ListUsersQuery;
 
       const userId = req.user?.userId;
       if (!userId) {
@@ -136,8 +137,8 @@ export class UserController {
 
       const filters: UserFilterParams = {};
       if (role !== undefined) filters.role = role as UserRole;
-      if (isActive !== undefined) filters.isActive = isActive as boolean;
-      if (excludeDeleted !== undefined) filters.excludeDeleted = excludeDeleted as boolean;
+      if (isActive !== undefined) filters.isActive = isActive;
+      if (excludeDeleted !== undefined) filters.excludeDeleted = excludeDeleted;
 
       const result = await this.userService.listUsers(
         userId,

@@ -169,16 +169,3 @@ export const PAGINATION_DEFAULTS = {
   /** Minimum items per page allowed */
   MIN_PER_PAGE: 1,
 } as const;
-
-export const allowedSortFields = [
-      'id',
-      'name',
-      'email',
-      'cpf',
-      'coren',
-      'role',
-      'phone',
-      'isActive',
-      'createdAt',
-      'updatedAt',
-];

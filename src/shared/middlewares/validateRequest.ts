@@ -53,19 +53,40 @@ export const validateRequest = (options: ValidationOptions | ZodTypeAny) => {
 
       // Validate body if schema provided
       if (validationOptions.body) {
-        req.body = await validationOptions.body.parseAsync(req.body);
+        const validatedBody = await validationOptions.body.parseAsync(req.body);
+        // Override body property to ensure validated data is used
+        Object.defineProperty(req, 'body', {
+          value: validatedBody,
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
       }
 
       // Validate query parameters if schema provided
       if (validationOptions.query) {
-        const validatedQuery = await validationOptions.query.parseAsync(req.query);
-        Object.assign(req.query, validatedQuery);
+        // Create a plain object copy to avoid read-only issues
+        const queryData = { ...req.query };
+        const validatedQuery = await validationOptions.query.parseAsync(queryData);
+        Object.defineProperty(req, 'query', {
+          value: validatedQuery,
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
       }
 
       // Validate route parameters if schema provided
       if (validationOptions.params) {
-        const validatedParams = await validationOptions.params.parseAsync(req.params);
-        Object.assign(req.params, validatedParams);
+        const paramsData = { ...req.params };
+        const validatedParams = await validationOptions.params.parseAsync(paramsData);
+        // Override params property for consistency
+        Object.defineProperty(req, 'params', {
+          value: validatedParams,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
       }
 
       next();

@@ -3,7 +3,8 @@ import { BaseStore } from "@shared/stores/baseStore";
 import { IUserStore, UserFilterParams } from "@shared/interfaces/user";
 import { injectable } from "tsyringe";
 import { UserDelegate, UserUpdateInput, UserCreateInput } from "@shared/models/user";
-import { PaginationParams, PaginatedResponse, calculatePaginationMetadata, allowedSortFields } from "@shared/interfaces/pagination";
+import { PaginationParams, PaginatedResponse, calculatePaginationMetadata } from "@shared/interfaces/pagination";
+import { allowedSortFields } from "../constants";
 
 /**
  * UserStore - Prisma-based implementation of IUserStore

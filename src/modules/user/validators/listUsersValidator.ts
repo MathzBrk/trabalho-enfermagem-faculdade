@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { allowedSortFields, PAGINATION_DEFAULTS } from '@shared/interfaces/pagination';
+import { PAGINATION_DEFAULTS } from '@shared/interfaces/pagination';
+import { allowedSortFields } from '../constants';
 
 /**
  * ListUsersQuerySchema - Validates query parameters for user listing endpoint

@@ -1,11 +1,4 @@
-import { UserRole } from "@shared/models/user";
+import { PaginationParams } from "@shared/interfaces/pagination";
+import { UserFilterParams } from "@shared/interfaces/user";
 
-export interface GetUsersQueryParams {
-  page?: number;
-  perPage?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  role?: UserRole;
-  isActive?: boolean;
-  excludeDeleted?: boolean;
-}
+export interface GetUsersQueryParams extends PaginationParams, UserFilterParams {}
