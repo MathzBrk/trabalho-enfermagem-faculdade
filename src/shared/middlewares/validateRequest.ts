@@ -92,7 +92,7 @@ export const validateRequest = (options: ValidationOptions | ZodTypeAny) => {
   };
 };
 
-const overrideRequestProperty = (req: Request, property: 'body' | 'query' | 'params', value: any) => {
+const overrideRequestProperty = (req: Request, property: 'body' | 'query' | 'params', value: unknown) => {
   Object.defineProperty(req, property, {
     value,
     writable: true,
