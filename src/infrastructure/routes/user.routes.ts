@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { UserController } from "@modules/user/controllers/userController";
 import { container } from "@infrastructure/di/container";
+import { authMiddleware } from "@shared/middlewares/authMiddleware";
+import { validateRequest } from "@shared/middlewares/validateRequest";
+import { ListUsersQuerySchema } from "@modules/user/validators/listUsersValidator";
 
 /**
  * User Routes
@@ -30,5 +33,59 @@ const userController = container.resolve(UserController);
  * }
  */
 userRoutes.post("/", userController.create.bind(userController));
+
+/**
+ * GET /users
+ * List users with pagination
+ *
+ * Authentication: Required (JWT token via authMiddleware)
+ * Authorization: MANAGER role only (enforced in service layer)
+ *
+ * Query Parameters:
+ * - page: number (default: 1) - Page number (1-indexed)
+ * - perPage: number (default: 10, max: 100) - Items per page
+ * - sortBy: string (default: 'createdAt') - Field to sort by
+ * - sortOrder: 'asc' | 'desc' (default: 'desc') - Sort direction
+ *
+ * Valid sortBy fields:
+ * - id, name, email, cpf, coren, role, phone, isActive, createdAt, updatedAt
+ *
+ * Example:
+ * GET /api/users?page=2&perPage=20&sortBy=name&sortOrder=asc
+ * Authorization: Bearer <JWT_TOKEN>
+ *
+ * Response: 200 OK
+ * {
+ *   "data": [
+ *     {
+ *       "id": "1",
+ *       "name": "João Silva",
+ *       "email": "joao@example.com",
+ *       "cpf": "12345678900",
+ *       "role": "MANAGER",
+ *       ...
+ *     }
+ *   ],
+ *   "pagination": {
+ *     "page": 2,
+ *     "perPage": 20,
+ *     "total": 45,
+ *     "totalPages": 3,
+ *     "hasNext": true,
+ *     "hasPrev": true
+ *   }
+ * }
+ *
+ * Middleware Chain:
+ * 1. authMiddleware - Verifies JWT token, sets req.user
+ * 2. validateRequest - Validates query params with Zod schema
+ * 3. userController.listUsers - Handles business logic
+ */
+userRoutes.get(
+  "/",
+  authMiddleware,
+  validateRequest({ query: ListUsersQuerySchema }),
+  userController.listUsers.bind(userController)
+);
 
 export default userRoutes;
