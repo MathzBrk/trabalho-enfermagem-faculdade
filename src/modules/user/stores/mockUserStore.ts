@@ -1,7 +1,8 @@
 import type { User, Prisma } from "@infrastructure/database";
-import { IUserStore } from "@shared/interfaces/user";
+import { IUserStore, UserFilterParams } from "@shared/interfaces/user";
 import { injectable } from "tsyringe";
 import { MockedBaseStore } from "@shared/stores/mockedBaseStore";
+import { PaginationParams, PaginatedResponse, calculatePaginationMetadata } from "@shared/interfaces/pagination";
 
 /**
  * MockUserStore - In-memory implementation of IUserStore
@@ -356,5 +357,146 @@ export class MockUserStore
       }
     }
     return count;
+  }
+
+  /**
+   * Finds users with pagination, sorting, and optional filtering (In-Memory Implementation)
+   *
+   * Implementation Details:
+   * - Filters in-memory data based on provided criteria
+   * - Uses Array.filter() for applying filters
+   * - Uses Array.sort() for ordering by specified field
+   * - Uses Array.slice() for pagination
+   *
+   * Default Behavior (backward compatible):
+   * - isActive: true (only active users)
+   * - excludeDeleted: true (exclude soft-deleted users)
+   * - role: undefined (all roles)
+   *
+   * Performance Note:
+   * This implementation is O(n log n) due to sorting all filtered data.
+   * Acceptable for testing/development with small datasets (<1000 users).
+   * For production, use UserStore (Prisma) instead.
+   *
+   * Behavior matches Prisma implementation for consistent testing.
+   *
+   * @param params - Pagination and sorting parameters
+   * @param filters - Optional filter criteria (role, isActive, excludeDeleted)
+   * @returns Paginated list of users matching criteria
+   *
+   * @example
+   * // List all active nurses
+   * const result = await mockUserStore.findUsersPaginated(
+   *   { page: 1, perPage: 10, sortBy: 'name', sortOrder: 'asc' },
+   *   { role: 'NURSE' }
+   * );
+   *
+   * @example
+   * // List inactive managers
+   * const result = await mockUserStore.findUsersPaginated(
+   *   { page: 1, perPage: 10 },
+   *   { role: 'MANAGER', isActive: false }
+   * );
+   */
+  async findUsersPaginated(
+    params: PaginationParams,
+    filters: UserFilterParams = {}
+  ): Promise<PaginatedResponse<User>> {
+    const { page, perPage, sortBy = 'createdAt', sortOrder = 'desc' } = params;
+
+    // Default filters for backward compatibility
+    const {
+      role,
+      isActive = true,
+      excludeDeleted = true
+    } = filters;
+
+    // Filter users based on criteria
+    let filteredUsers = Array.from(this.data.values()).filter(user => {
+      // Apply role filter
+      if (role !== undefined && user.role !== role) {
+        return false;
+      }
+
+      // Apply isActive filter
+      if (isActive !== undefined && user.isActive !== isActive) {
+        return false;
+      }
+
+      // Apply deletedAt filter
+      if (excludeDeleted && user.deletedAt !== null) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Total count after filtering
+    const total = filteredUsers.length;
+
+    // Sort users
+    filteredUsers = this.sortUsers(filteredUsers, sortBy, sortOrder);
+
+    // Apply pagination via array slicing
+    const startIndex = (page - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+    // Calculate pagination metadata
+    const pagination = calculatePaginationMetadata(page, perPage, total);
+
+    return {
+      data: paginatedUsers,
+      pagination,
+    };
+  }
+
+  /**
+   * Sorts users by a specific field
+   *
+   * Supports sorting by any User field with type-aware comparison:
+   * - String fields: Case-insensitive alphabetical
+   * - Date fields: Chronological
+   * - Number fields: Numeric
+   *
+   * Handles null/undefined values safely.
+   *
+   * @param users - Array of users to sort
+   * @param sortBy - Field name to sort by
+   * @param sortOrder - Sort direction ('asc' or 'desc')
+   * @returns Sorted array of users
+   */
+  private sortUsers(
+    users: User[],
+    sortBy: string,
+    sortOrder: 'asc' | 'desc'
+  ): User[] {
+    return users.sort((a, b) => {
+      const aValue = (a as any)[sortBy];
+      const bValue = (b as any)[sortBy];
+
+      // Handle null/undefined values
+      // Push nulls to the end regardless of sort order
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      // Determine comparison based on value type
+      let comparison = 0;
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        // Case-insensitive string comparison
+        comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+      } else if (aValue instanceof Date && bValue instanceof Date) {
+        // Date comparison (chronological)
+        comparison = aValue.getTime() - bValue.getTime();
+      } else {
+        // Numeric or other comparison
+        comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      }
+
+      // Apply sort order (asc or desc)
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
   }
 }

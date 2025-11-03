@@ -1,11 +1,12 @@
-import { IUserStore } from "@shared/interfaces/user";
+import { IUserStore, UserFilterParams } from "@shared/interfaces/user";
 import { hashPassword } from "@shared/helpers/passwordHelper";
 import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
-import type { CreateUserDTO, UserResponse } from "@shared/models/user";
+import { UserRole, type CreateUserDTO, type UserResponse } from "@shared/models/user";
 import dayjs from "dayjs";
-import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError, ValidationError } from "../errors";
+import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError, ForbiddenError, UserNotFoundError, ValidationError } from "../errors";
 import { inject, injectable } from "tsyringe";
 import { TOKENS } from "@infrastructure/di/tokens";
+import { PaginationParams, PaginatedResponse } from "@shared/interfaces/pagination";
 
 /**
  * UserService - Service layer for user business logic
@@ -74,6 +75,70 @@ export class UserService {
       console.log('Error creating user:', error);
       throw error;
     }
+  }
+
+  /**
+   * Lists users with pagination, sorting, and filtering
+   *
+   * Business Rules:
+   * - Only MANAGER role can access user list
+   * - Supports filtering by role (EMPLOYEE, NURSE, MANAGER)
+   * - Supports filtering by active status
+   * - Default: Returns only active, non-deleted users
+   * - Sensitive data (password) excluded from response
+   * - Pagination prevents excessive data transfer
+   *
+   * Authorization:
+   * This method requires the requesting user to have MANAGER role.
+   * Authentication check must be done at controller/middleware level.
+   *
+   * @param requestingUserId - ID of user making the request (for authorization)
+   * @param params - Pagination and sorting parameters
+   * @param filters - Optional filter criteria (role, isActive, excludeDeleted)
+   * @returns Paginated list of users without sensitive data
+   * @throws UserNotFoundError if requesting user not found
+   * @throws ForbiddenError if requesting user is not MANAGER
+   *
+   * @example
+   * // List all active nurses
+   * const result = await userService.listUsers(
+   *   'manager-user-id',
+   *   { page: 1, perPage: 20, sortBy: 'name', sortOrder: 'asc' },
+   *   { role: 'NURSE' }
+   * );
+   *
+   * @example
+   * // List inactive managers
+   * const result = await userService.listUsers(
+   *   'manager-user-id',
+   *   { page: 1, perPage: 20 },
+   *   { role: 'MANAGER', isActive: false }
+   * );
+   */
+  async listUsers(
+    requestingUserId: string,
+    params: PaginationParams,
+    filters?: UserFilterParams
+  ): Promise<PaginatedResponse<UserResponse>> {
+    // Authorization: verify requesting user exists and has MANAGER role
+    const requestingUser = await this.userStore.findById(requestingUserId);
+
+    if (!requestingUser) {
+      throw new UserNotFoundError("User not found");
+    }
+
+    if (requestingUser.role !== UserRole.MANAGER) {
+      throw new ForbiddenError("Only MANAGER role can access user list");
+    }
+
+    // Fetch paginated users from store with filters
+    const result = await this.userStore.findUsersPaginated(params, filters);
+
+    // Transform users to response format (exclude passwords)
+    return {
+      data: result.data.map(toUserResponse),
+      pagination: result.pagination,
+    };
   }
 
   private async validateUserUniqueness(data: CreateUserDTO): Promise<void> {

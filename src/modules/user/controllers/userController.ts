@@ -2,6 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 import { UserService } from "@modules/user/services/userService";
 import { UserRole, type CreateUserDTO } from "@shared/models/user";
 import { injectable } from "tsyringe";
+import { PAGINATION_DEFAULTS } from "@shared/interfaces/pagination";
+import { UserFilterParams } from "@shared/interfaces/user";
+import { ListUsersQuery } from "@modules/user/validators/listUsersValidator";
 
 /**
  * UserController - HTTP request handler for user endpoints
@@ -72,6 +75,79 @@ export class UserController {
 
       // Return success response with 201 Created
       res.status(201).json(user);
+    } catch (error) {
+      // Pass error to Express error handling middleware
+      next(error);
+    }
+  }
+
+  /**
+   * Lists users with pagination and filtering
+   *
+   * HTTP Endpoint: GET /users
+   * Query Parameters:
+   * - page: number (default: 1)
+   * - perPage: number (default: 10, max: 100)
+   * - sortBy: string (default: 'createdAt')
+   * - sortOrder: 'asc' | 'desc' (default: 'desc')
+   * - role: 'EMPLOYEE' | 'NURSE' | 'MANAGER' (optional)
+   * - isActive: boolean (optional, default: true)
+   * - excludeDeleted: boolean (optional, default: true)
+   *
+   * Examples:
+   * - GET /api/users → List all active users (default)
+   * - GET /api/users?role=NURSE → List active nurses
+   * - GET /api/users?role=MANAGER&isActive=false → List inactive managers
+   *
+   * Response: 200 OK
+   * {
+   *   "data": [{ user objects without passwords }],
+   *   "pagination": {
+   *     "page": 1,
+   *     "perPage": 10,
+   *     "total": 45,
+   *     "totalPages": 5,
+   *     "hasNext": true,
+   *     "hasPrev": false
+   *   }
+   * }
+   *
+   * Errors:
+   * - 401 Unauthorized: No authentication token
+   * - 403 Forbidden: User is not MANAGER
+   * - 400 Bad Request: Invalid query parameters
+   *
+   * @param req - Express request (authenticated via middleware)
+   * @param res - Express response
+   * @param next - Express next function
+   */
+  async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // req.query is already validated and transformed by validateRequest middleware
+      const { page, perPage, sortBy, sortOrder, role, isActive, excludeDeleted } = req.query as unknown as ListUsersQuery;
+
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({
+          error: "Unauthorized",
+          message: "Authentication required",
+        });
+        return;
+      }
+
+      const filters: UserFilterParams = {};
+      if (role !== undefined) filters.role = role as UserRole;
+      if (isActive !== undefined) filters.isActive = isActive;
+      if (excludeDeleted !== undefined) filters.excludeDeleted = excludeDeleted;
+
+      const result = await this.userService.listUsers(
+        userId,
+        { page: page || PAGINATION_DEFAULTS.PAGE, perPage: perPage || PAGINATION_DEFAULTS.PER_PAGE, sortBy, sortOrder },
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
+
+      // Return successful response
+      res.status(200).json(result);
     } catch (error) {
       // Pass error to Express error handling middleware
       next(error);

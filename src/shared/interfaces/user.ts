@@ -1,5 +1,36 @@
 import { User, Prisma } from "@infrastructure/database";
 import { IBaseStore } from "@shared/stores/baseStore";
+import { PaginationParams, PaginatedResponse } from "./pagination";
+import { UserRole } from "@shared/models/user";
+
+/**
+ * UserFilterParams - Optional filter parameters for user queries
+ *
+ * All filters are optional and will be combined with AND logic.
+ * Default behavior (no filters): Returns only active, non-deleted users
+ *
+ * @example
+ * // Filter only nurses
+ * { role: 'NURSE' }
+ *
+ * @example
+ * // Include inactive users
+ * { isActive: false }
+ *
+ * @example
+ * // Admin view - all users including deleted
+ * { isActive: undefined, excludeDeleted: false }
+ */
+export interface UserFilterParams {
+  /** Filter by user role */
+  role?: UserRole;
+
+  /** Filter by active status. Default: true (only active users) */
+  isActive?: boolean;
+
+  /** Exclude soft-deleted users. Default: true (exclude deleted) */
+  excludeDeleted?: boolean;
+}
 
 /**
  * IUserStore Interface
@@ -35,4 +66,46 @@ export interface IUserStore extends IBaseStore<User, Prisma.UserCreateInput, Pri
     toggleActive(id: string, isActive: boolean): Promise<User>;
     countByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<number>;
     countActive(): Promise<number>;
+
+    /**
+     * Finds users with pagination, sorting, and optional filtering
+     *
+     * Flexible method that supports:
+     * - Filtering by role (EMPLOYEE, NURSE, MANAGER)
+     * - Filtering by active status
+     * - Including/excluding soft-deleted users
+     *
+     * All filters are optional and combine with AND logic.
+     * Default behavior (no filters): Returns only active, non-deleted users.
+     * Uses database-level pagination for efficiency.
+     *
+     * @param params - Pagination and sorting parameters
+     * @param filters - Optional filter criteria
+     * @returns Paginated list of users matching criteria
+     *
+     * @example
+     * // List all active nurses sorted by name
+     * const result = await userStore.findUsersPaginated(
+     *   { page: 1, perPage: 20, sortBy: 'name', sortOrder: 'asc' },
+     *   { role: 'NURSE' }
+     * );
+     *
+     * @example
+     * // List inactive managers
+     * const result = await userStore.findUsersPaginated(
+     *   { page: 1, perPage: 20 },
+     *   { role: 'MANAGER', isActive: false }
+     * );
+     *
+     * @example
+     * // Admin view - all users including deleted
+     * const result = await userStore.findUsersPaginated(
+     *   { page: 1, perPage: 20 },
+     *   { isActive: undefined, excludeDeleted: false }
+     * );
+     */
+    findUsersPaginated(
+        params: PaginationParams,
+        filters?: UserFilterParams
+    ): Promise<PaginatedResponse<User>>;
 }
