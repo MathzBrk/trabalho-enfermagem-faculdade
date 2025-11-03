@@ -1,6 +1,6 @@
-import type { NextFunction, Request, Response } from "express";
-import { AuthService } from "../services/authService";
-import { injectable } from "tsyringe";
+import type { NextFunction, Request, Response } from 'express';
+import { injectable, inject } from 'tsyringe';
+import type { AuthService } from '../services/authService';
 
 /**
  * AuthController - HTTP layer for authentication endpoints
@@ -13,9 +13,7 @@ import { injectable } from "tsyringe";
  */
 @injectable()
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService
-  ) {}
+  constructor(@inject('AuthService') private readonly authService: AuthService) {}
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -25,14 +23,18 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async register(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userData = req.body;
 
@@ -40,7 +42,7 @@ export class AuthController {
 
       res.status(201).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       next(error);
