@@ -4,6 +4,7 @@ import { UserRole, type CreateUserDTO } from "@shared/models/user";
 import { injectable } from "tsyringe";
 import { PAGINATION_DEFAULTS } from "@shared/interfaces/pagination";
 import { UserFilterParams } from "@shared/interfaces/user";
+import { GetUsersQueryParams } from "../types/userTypes";
 
 /**
  * UserController - HTTP request handler for user endpoints
@@ -122,13 +123,7 @@ export class UserController {
    */
   async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || PAGINATION_DEFAULTS.PAGE;
-      const perPage = Math.min(
-        parseInt(req.query.perPage as string) || PAGINATION_DEFAULTS.PER_PAGE,
-        PAGINATION_DEFAULTS.MAX_PER_PAGE
-      );
-      const sortBy = (req.query.sortBy as string) || PAGINATION_DEFAULTS.SORT_BY;
-      const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || PAGINATION_DEFAULTS.SORT_ORDER;
+      const { page, perPage, sortBy, sortOrder, role, isActive, excludeDeleted } = req.query as GetUsersQueryParams;
 
       const userId = req.user?.userId;
       if (!userId) {
@@ -140,38 +135,13 @@ export class UserController {
       }
 
       const filters: UserFilterParams = {};
+      if (role !== undefined) filters.role = role as UserRole;
+      if (isActive !== undefined) filters.isActive = isActive as boolean;
+      if (excludeDeleted !== undefined) filters.excludeDeleted = excludeDeleted as boolean;
 
-      // Role filter
-      if (req.query.role) {
-        const role = req.query.role as string;
-        filters.role = role as UserRole;
-      }
-
-      // isActive filter
-      if (req.query.isActive !== undefined) {
-        const isActiveStr = req.query.isActive as string;
-        if (isActiveStr === 'true') {
-          filters.isActive = true;
-        } else if (isActiveStr === 'false') {
-          filters.isActive = false;
-        }
-      }
-
-      // excludeDeleted filter
-      if (req.query.excludeDeleted !== undefined) {
-        const excludeDeletedStr = req.query.excludeDeleted as string;
-        if (excludeDeletedStr === 'true') {
-          filters.excludeDeleted = true;
-        } else if (excludeDeletedStr === 'false') {
-          filters.excludeDeleted = false;
-        }
-        // If invalid value, skip filter (will use default)
-      }
-
-      // Call service to get paginated users with filters
       const result = await this.userService.listUsers(
         userId,
-        { page, perPage, sortBy, sortOrder },
+        { page: page || PAGINATION_DEFAULTS.PAGE, perPage: perPage || PAGINATION_DEFAULTS.PER_PAGE, sortBy, sortOrder },
         Object.keys(filters).length > 0 ? filters : undefined
       );
 

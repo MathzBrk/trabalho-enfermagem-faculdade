@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('<1 Starting database seed...');
+  console.log('Starting database seed...');
 
   // Hash password for all users (using 'senha123' as default)
   const defaultPassword = await bcrypt.hash('senha123', 10);
@@ -58,7 +58,7 @@ async function main() {
     where: { email: 'enfermeiro2@hospital.com' },
     update: {},
     create: {
-      name: 'Jo�o Oliveira',
+      name: 'João Oliveira',
       email: 'enfermeiro2@hospital.com',
       password: defaultPassword,
       cpf: '456.789.012-33',
@@ -170,17 +170,17 @@ async function main() {
     },
   });
 
-  console.log(' Seed completed successfully!');
-  console.log('\n=� Created users:');
-  console.log(`   - ${2} Managers`);
-  console.log(`   - ${3} Nurses`);
-  console.log(`   - ${6} Employees (5 active + 1 inactive)`);
-  console.log('\n= Default password for all users: senha123');
+  console.log('Seed completed successfully!');
+  console.log('\n= Created users:');
+  console.log('   - 2 Managers');
+  console.log('   - 3 Nurses');
+  console.log('   - 6 Employees (5 active + 1 inactive)');
+  console.log('\n= Default password for all users: senha123');
 }
 
 main()
   .catch((e) => {
-    console.error('L Error during seed:', e);
+    console.error('Error during seed:', e);
     process.exit(1);
   })
   .finally(async () => {
