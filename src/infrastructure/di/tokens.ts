@@ -21,4 +21,5 @@ export const TOKENS = {
    * - MockUserStore (in-memory, testing/development)
    */
   IUserStore: Symbol.for('IUserStore'),
+  IVaccineStore: Symbol.for('IVaccineStore'),
 } as const;
