@@ -33,7 +33,7 @@
     "dev": "npm run docker:up && npm run start:dev"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "^1.9.4",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/jest": "^29.5.14",
