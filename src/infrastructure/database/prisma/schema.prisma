@@ -101,6 +101,7 @@ model Vaccine {
   schedulings       VaccineScheduling[]
   applications      VaccineApplication[]
 
+  @@unique([name, manufacturer])
   @@index([createdById])
   @@map("vaccines")
 }
