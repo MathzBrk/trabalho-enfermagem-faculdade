@@ -1,7 +1,7 @@
 import type { CreateVaccineDTO } from '@shared/models/vaccine';
 import type { NextFunction, Request, Response } from 'express';
 import { injectable } from 'tsyringe';
-// biome-ignore lint/style/useImportType: <explanation>
+// biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
 import { VaccineService } from '../services/vaccineService';
 
 @injectable()

@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import { injectable, inject } from 'tsyringe';
-import type { AuthService } from '../services/authService';
+import { injectable } from 'tsyringe';
+// biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
+import { AuthService } from '../services/authService';
 
 /**
  * AuthController - HTTP layer for authentication endpoints
@@ -13,7 +14,7 @@ import type { AuthService } from '../services/authService';
  */
 @injectable()
 export class AuthController {
-  constructor(@inject('AuthService') private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

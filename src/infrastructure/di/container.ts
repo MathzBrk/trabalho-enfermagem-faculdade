@@ -1,8 +1,6 @@
 import { container } from 'tsyringe';
 import { UserStore } from '@modules/user/stores/userStore';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
-import { UserService } from '@modules/user/services/userService';
-import { AuthService } from '@modules/user/services/authService';
 import { TOKENS } from './tokens';
 
 /**
@@ -31,15 +29,9 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.IUserStore, UserStore);
   container.registerSingleton(TOKENS.IVaccineStore, VaccineStore);
 
-  // Register services
-  container.registerSingleton('UserService', UserService);
-  container.registerSingleton('AuthService', AuthService);
-
   console.log('📦 DI Container configured');
   console.log('   └─ IUserStore → Using UserStore (Prisma)');
   console.log('   └─ IVaccineStore → Using VaccineStore (Prisma)');
-  console.log('   └─ UserService → Registered');
-  console.log('   └─ AuthService → Registered');
 
   // Future: Add environment-based switching
   // if (process.env.NODE_ENV === 'test') {

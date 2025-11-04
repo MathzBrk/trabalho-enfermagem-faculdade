@@ -9,7 +9,8 @@ import type { TokenPayload } from '../../../@types/express';
 import { InvalidCredentialsError } from '../errors';
 import type { AuthResponse } from '../types/authTypes';
 import type { RegisterDTO } from '../validators/registerValidator';
-import type { UserService } from './userService';
+// biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
+import { UserService } from './userService';
 
 /**
  * AuthService - Service layer for authentication operations
@@ -27,7 +28,7 @@ import type { UserService } from './userService';
 export class AuthService {
   constructor(
     @inject(TOKENS.IUserStore) private readonly userStore: IUserStore,
-    @inject('UserService') private readonly userService: UserService,
+    private readonly userService: UserService,
   ) {}
 
   async login(email: string, password: string): Promise<AuthResponse> {
