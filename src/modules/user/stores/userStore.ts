@@ -1,10 +1,19 @@
-import type { User, Prisma} from "@infrastructure/database";
-import { BaseStore } from "@shared/stores/baseStore";
-import { IUserStore, UserFilterParams } from "@shared/interfaces/user";
-import { injectable } from "tsyringe";
-import { UserDelegate, UserUpdateInput, UserCreateInput } from "@shared/models/user";
-import { PaginationParams, PaginatedResponse, calculatePaginationMetadata } from "@shared/interfaces/pagination";
-import { allowedSortFields } from "../constants";
+import type { User, Prisma } from '@infrastructure/database';
+import { BaseStore } from '@shared/stores/baseStore';
+import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
+import { injectable } from 'tsyringe';
+import type {
+  UserDelegate,
+  UserUpdateInput,
+  UserCreateInput,
+} from '@shared/models/user';
+import {
+  type PaginationParams,
+  type PaginatedResponse,
+  calculatePaginationMetadata,
+} from '@shared/interfaces/pagination';
+import { allowedUserSortFields } from '../constants';
+import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 
 /**
  * UserStore - Prisma-based implementation of IUserStore
@@ -26,7 +35,10 @@ import { allowedSortFields } from "../constants";
  */
 
 @injectable()
-export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, UserUpdateInput> implements IUserStore {
+export class UserStore
+  extends BaseStore<User, UserDelegate, UserCreateInput, UserUpdateInput>
+  implements IUserStore
+{
   // Defines the model to be used by the base class
   protected readonly model = this.prisma.user;
 
@@ -72,7 +84,7 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
    * @param role - EMPLOYEE | NURSE | MANAGER
    * @returns Array of users
    */
-  async findByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<User[]> {
+  async findByRole(role: 'EMPLOYEE' | 'NURSE' | 'MANAGER'): Promise<User[]> {
     return this.model.findMany({
       where: { role },
     });
@@ -102,7 +114,7 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   async findActiveNurses(): Promise<User[]> {
     return this.model.findMany({
       where: {
-        role: "NURSE",
+        role: 'NURSE',
         isActive: true,
         deletedAt: null,
       },
@@ -117,7 +129,7 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
   async findActiveManagers(): Promise<User[]> {
     return this.model.findMany({
       where: {
-        role: "MANAGER",
+        role: 'MANAGER',
         isActive: true,
         deletedAt: null,
       },
@@ -139,7 +151,7 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
         applicationsPerformed: true,
         notifications: {
           where: { isRead: false },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
@@ -209,7 +221,7 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
    * @param role - EMPLOYEE | NURSE | MANAGER
    * @returns Number of users with this role
    */
-  async countByRole(role: "EMPLOYEE" | "NURSE" | "MANAGER"): Promise<number> {
+  async countByRole(role: 'EMPLOYEE' | 'NURSE' | 'MANAGER'): Promise<number> {
     return this.count({ role });
   }
 
@@ -266,15 +278,15 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
    */
   async findUsersPaginated(
     params: PaginationParams,
-    filters: UserFilterParams = {}
+    filters: UserFilterParams = {},
   ): Promise<PaginatedResponse<User>> {
-    const { page, perPage, sortBy = 'createdAt', sortOrder = 'desc' } = params;
+    const { page, perPage } = params;
 
     // Default filters for backward compatibility
     const {
       role,
-      isActive = true,        // Default: only active users
-      excludeDeleted = true   // Default: exclude soft-deleted
+      isActive = true, // Default: only active users
+      excludeDeleted = true, // Default: exclude soft-deleted
     } = filters;
 
     // Build dynamic WHERE clause
@@ -292,19 +304,12 @@ export class UserStore extends BaseStore<User, UserDelegate, UserCreateInput, Us
       where.deletedAt = null;
     }
 
-    // Validate and sanitize sortBy field
-    const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
-
     // Execute count and data queries in parallel
     const [total, users] = await Promise.all([
       this.model.count({ where }),
       this.model.findMany({
         where,
-        skip: (page - 1) * perPage,
-        take: perPage,
-        orderBy: {
-          [safeSortBy]: sortOrder,
-        },
+        ...buildPaginationArgs(params, allowedUserSortFields),
       }),
     ]);
 
