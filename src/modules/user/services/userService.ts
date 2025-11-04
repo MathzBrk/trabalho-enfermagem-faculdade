@@ -1,12 +1,26 @@
-import { IUserStore, UserFilterParams } from "@shared/interfaces/user";
-import { hashPassword } from "@shared/helpers/passwordHelper";
-import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
-import { UserRole, type CreateUserDTO, type UserResponse } from "@shared/models/user";
-import dayjs from "dayjs";
-import { CORENAlreadyExistsError, CPFAlreadyExistsError, EmailAlreadyExistsError, ForbiddenError, UserNotFoundError, ValidationError } from "../errors";
-import { inject, injectable } from "tsyringe";
-import { TOKENS } from "@infrastructure/di/tokens";
-import { PaginationParams, PaginatedResponse } from "@shared/interfaces/pagination";
+import { TOKENS } from '@infrastructure/di/tokens';
+import { hashPassword } from '@shared/helpers/passwordHelper';
+import { normalizeEmail, toUserResponse } from '@shared/helpers/userHelper';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+} from '@shared/interfaces/pagination';
+import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
+import {
+  type CreateUserDTO,
+  type UserResponse,
+  UserRole,
+} from '@shared/models/user';
+import dayjs from 'dayjs';
+import { inject, injectable } from 'tsyringe';
+import {
+  CORENAlreadyExistsError,
+  CPFAlreadyExistsError,
+  EmailAlreadyExistsError,
+  ForbiddenError,
+  UserNotFoundError,
+  ValidationError,
+} from '../errors';
 
 /**
  * UserService - Service layer for user business logic
@@ -27,7 +41,7 @@ import { PaginationParams, PaginatedResponse } from "@shared/interfaces/paginati
 @injectable()
 export class UserService {
   constructor(
-    @inject(TOKENS.IUserStore) private readonly userStore: IUserStore
+    @inject(TOKENS.IUserStore) private readonly userStore: IUserStore,
   ) {}
 
   /**
@@ -118,17 +132,17 @@ export class UserService {
   async listUsers(
     requestingUserId: string,
     params: PaginationParams,
-    filters?: UserFilterParams
+    filters?: UserFilterParams,
   ): Promise<PaginatedResponse<UserResponse>> {
     // Authorization: verify requesting user exists and has MANAGER role
     const requestingUser = await this.userStore.findById(requestingUserId);
 
     if (!requestingUser) {
-      throw new UserNotFoundError("User not found");
+      throw new UserNotFoundError('User not found');
     }
 
     if (requestingUser.role !== UserRole.MANAGER) {
-      throw new ForbiddenError("Only MANAGER role can access user list");
+      throw new ForbiddenError('Only MANAGER role can access user list');
     }
 
     // Fetch paginated users from store with filters
@@ -153,9 +167,9 @@ export class UserService {
       throw new CPFAlreadyExistsError();
     }
 
-    if (data.role === "NURSE") {
+    if (data.role === 'NURSE') {
       if (!data.coren) {
-        throw new ValidationError("COREN is required for NURSE role");
+        throw new ValidationError('COREN is required for NURSE role');
       }
 
       const corenExists = await this.userStore.corenExists(data.coren);

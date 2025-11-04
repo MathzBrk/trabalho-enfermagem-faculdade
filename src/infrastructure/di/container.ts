@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { UserStore } from '@modules/user/stores/userStore';
+import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
 import { TOKENS } from './tokens';
 
 /**
@@ -22,13 +23,15 @@ import { TOKENS } from './tokens';
  * - Reduces memory overhead by reusing the same instance
  */
 export function setupContainer(): void {
-  // Register UserStore as singleton implementation for IUserStore interface
+  // Register stores as singleton implementation for their interfaces
   // Using singleton ensures all services share the same store instance,
   // which is critical for caching and connection pooling
   container.registerSingleton(TOKENS.IUserStore, UserStore);
+  container.registerSingleton(TOKENS.IVaccineStore, VaccineStore);
 
   console.log('📦 DI Container configured');
   console.log('   └─ IUserStore → Using UserStore (Prisma)');
+  console.log('   └─ IVaccineStore → Using VaccineStore (Prisma)');
 
   // Future: Add environment-based switching
   // if (process.env.NODE_ENV === 'test') {

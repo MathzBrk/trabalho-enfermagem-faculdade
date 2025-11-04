@@ -1,15 +1,16 @@
-import { comparePassword } from "@shared/helpers/passwordHelper";
-import { IUserStore } from "@shared/interfaces/user";
-import { User } from "@infrastructure/database";
-import type { TokenPayload } from "../../../@types/express";
-import { generateToken } from "@shared/helpers/tokenHelper";
-import type { AuthResponse } from "../types/authTypes";
-import type { RegisterDTO } from "../validators/registerValidator";
-import { UserService } from "./userService";
-import { normalizeEmail, toUserResponse } from "@shared/helpers/userHelper";
-import { InvalidCredentialsError } from "../errors";
-import { inject, injectable } from "tsyringe";
-import { TOKENS } from "@infrastructure/di/tokens";
+import type { User } from '@infrastructure/database';
+import { TOKENS } from '@infrastructure/di/tokens';
+import { comparePassword } from '@shared/helpers/passwordHelper';
+import { generateToken } from '@shared/helpers/tokenHelper';
+import { normalizeEmail, toUserResponse } from '@shared/helpers/userHelper';
+import type { IUserStore } from '@shared/interfaces/user';
+import { inject, injectable } from 'tsyringe';
+import type { TokenPayload } from '../../../@types/express';
+import { InvalidCredentialsError } from '../errors';
+import type { AuthResponse } from '../types/authTypes';
+import type { RegisterDTO } from '../validators/registerValidator';
+// biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
+import { UserService } from './userService';
 
 /**
  * AuthService - Service layer for authentication operations
@@ -27,7 +28,7 @@ import { TOKENS } from "@infrastructure/di/tokens";
 export class AuthService {
   constructor(
     @inject(TOKENS.IUserStore) private readonly userStore: IUserStore,
-    private readonly userService: UserService
+    private readonly userService: UserService,
   ) {}
 
   async login(email: string, password: string): Promise<AuthResponse> {
@@ -49,7 +50,7 @@ export class AuthService {
     return {
       user: toUserResponse(user),
       token,
-      expiresIn: '7d'
+      expiresIn: '7d',
     };
   }
 
@@ -63,14 +64,14 @@ export class AuthService {
     return {
       user,
       token,
-      expiresIn: '7d'
+      expiresIn: '7d',
     };
   }
 
   private generateToken(user: Omit<User, 'password' | 'deletedAt'>): string {
     const payload: TokenPayload = {
       userId: user.id,
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
     };
 
     return generateToken(payload, '7d');

@@ -61,6 +61,10 @@ model User {
   applicationsReceived     VaccineApplication[]  @relation("UserApplications")
   applicationsPerformed    VaccineApplication[]  @relation("NurseApplications")
 
+  // Vaccine creation relationships
+  vaccinesCreated          Vaccine[]             @relation("VaccinesCreated")
+  vaccineBatchesCreated    VaccineBatch[]        @relation("VaccineBatchesCreated")
+
   // Report relationships
   reportsGenerated         Report[]              @relation("GeneratedReports")
   reportsAbout             Report[]              @relation("UserReports")
@@ -77,16 +81,14 @@ model Vaccine {
   manufacturer      String
   description       String?
   dosesRequired     Int      @default(1)
-  intervalDays      Int?     
-  // Stock control
-  stockQuantity     Int      @default(0)
+  intervalDays      Int?  
+
+  totalStock        Int      @default(0)
   minStockLevel     Int      @default(10)
 
-  isObligatory      Boolean? 
+  isObligatory      Boolean
 
-
-  // Validity
-  expirationDate    DateTime?
+  createdById       String 
 
   // Timestamps
   createdAt         DateTime @default(now())
@@ -94,10 +96,50 @@ model Vaccine {
   deletedAt         DateTime?
 
   // Relationships
+  createdBy         User     @relation("VaccinesCreated", fields: [createdById], references: [id])
+  batches           VaccineBatch[]
   schedulings       VaccineScheduling[]
   applications      VaccineApplication[]
 
+  @@unique([name, manufacturer])
+  @@index([createdById])
   @@map("vaccines")
+}
+
+model VaccineBatch {
+  id              String   @id @default(uuid())
+  vaccineId       String
+  batchNumber     String   @unique
+  initialQuantity Int
+  currentQuantity Int
+  expirationDate  DateTime
+  receivedDate    DateTime @default(now())
+  status          BatchStatus @default(AVAILABLE)
+
+  createdById     String
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+
+  vaccine         Vaccine  @relation(fields: [vaccineId], references: [id])
+  createdBy       User     @relation("VaccineBatchesCreated", fields: [createdById], references: [id])
+  applications    VaccineApplication[]
+
+  @@index([vaccineId])
+  @@index([expirationDate])
+  @@index([status])
+  @@index([createdById])
+  @@map("vaccine_batches")
+  
+}
+
+enum BatchStatus {
+  AVAILABLE   
+  EXPIRED   
+  DEPLETED    
+  DISCARDED    
 }
 
 model VaccineScheduling {
@@ -131,7 +173,7 @@ model VaccineApplication {
   id                  String    @id @default(uuid())
   applicationDate     DateTime  @default(now())
   doseNumber          Int       @default(1)
-  batchNumber         String
+  batchId             String
   applicationSite     String
   observations        String?
 
@@ -151,8 +193,10 @@ model VaccineApplication {
   vaccine             Vaccine   @relation(fields: [vaccineId], references: [id])
   appliedBy           User      @relation("NurseApplications", fields: [appliedById], references: [id])
   scheduling          VaccineScheduling? @relation(fields: [schedulingId], references: [id])
+  batch                 VaccineBatch      @relation(fields: [batchId], references: [id])
 
   @@index([userId])
+  @@index([batchId])
   @@index([vaccineId])
   @@index([appliedById])
   @@index([applicationDate])
