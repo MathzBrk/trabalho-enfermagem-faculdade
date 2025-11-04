@@ -1,5 +1,8 @@
-import type { User as PrismaUser, Role, Prisma } from "@infrastructure/database";
-
+import type {
+  User as PrismaUser,
+  Role,
+  Prisma,
+} from '@infrastructure/database';
 
 /**
  * User model type from Prisma
@@ -9,11 +12,7 @@ export type User = PrismaUser;
 /**
  * User roles available in the system
  */
-export enum UserRole {
-  EMPLOYEE = "EMPLOYEE",
-  NURSE = "NURSE",
-  MANAGER = "MANAGER",
-}
+export type UserRole = Role;
 
 /**
  * DTO for creating a new user

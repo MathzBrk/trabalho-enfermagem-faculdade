@@ -3,6 +3,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { injectable } from 'tsyringe';
 // biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
 import { VaccineService } from '../services/vaccineService';
+import type { ListVaccinesQuery } from '../validators/listVaccinesValidator';
+import type { VaccineFilterParams } from '@shared/interfaces/vaccine';
 
 @injectable()
 export class VaccineController {
@@ -34,6 +36,41 @@ export class VaccineController {
         userId,
       );
       res.status(201).json(newVaccine);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPaginatedVaccines(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { isObligatory, page, perPage, manufacturer, sortBy, sortOrder } =
+        req.query as unknown as ListVaccinesQuery;
+
+      console.log(
+        `Getting paginated vaccines - Page: ${page}, Per Page: ${perPage}}`,
+      );
+
+      const userId = req.user?.userId!;
+
+      const filters: VaccineFilterParams = {};
+      if (manufacturer) {
+        filters.manufacturer = manufacturer;
+      }
+      if (isObligatory !== undefined) {
+        filters.isObligatory = isObligatory;
+      }
+
+      const paginatedVaccines = await this.vaccineService.getPaginatedVaccines(
+        { page, perPage, sortBy, sortOrder },
+        userId,
+        Object.keys(filters).length ? filters : undefined,
+      );
+
+      res.status(200).json(paginatedVaccines);
     } catch (error) {
       next(error);
     }

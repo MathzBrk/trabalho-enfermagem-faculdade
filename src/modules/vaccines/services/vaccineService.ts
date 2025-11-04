@@ -1,14 +1,18 @@
-import type { Vaccine } from '@infrastructure/database';
 import { TOKENS } from '@infrastructure/di/tokens';
 import { UserNotFoundError, ValidationError } from '@modules/user/errors';
 import { VaccineAlreadyExistsError } from '@modules/vaccines/errors';
-import {
-  normalizeManufacturerName,
-  normalizeVaccineName,
-} from '@shared/helpers/textHelper';
+import { normalizeText } from '@shared/helpers/textHelper';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+} from '@shared/interfaces/pagination';
 import type { IUserStore } from '@shared/interfaces/user';
-import type { IVaccineStore } from '@shared/interfaces/vaccine';
-import type { CreateVaccineDTO } from '@shared/models/vaccine';
+import type {
+  IVaccineStore,
+  VaccineFilterParams,
+} from '@shared/interfaces/vaccine';
+import type { UserRole } from '@shared/models/user';
+import type { CreateVaccineDTO, Vaccine } from '@shared/models/vaccine';
 import { inject, injectable } from 'tsyringe';
 
 @injectable()
@@ -34,8 +38,8 @@ export class VaccineService {
 
     // Normalize input values for consistent storage and comparison
     // This ensures case-insensitive uniqueness and removes extra whitespace
-    const normalizedName = normalizeVaccineName(data.name);
-    const normalizedManufacturer = normalizeManufacturerName(data.manufacturer);
+    const normalizedName = normalizeText(data.name);
+    const normalizedManufacturer = normalizeText(data.manufacturer);
 
     // Validate that normalized values are not empty
     if (!normalizedName || !normalizedManufacturer) {
@@ -71,5 +75,41 @@ export class VaccineService {
     });
 
     return newVaccine;
+  }
+
+  async getPaginatedVaccines(
+    pagination: PaginationParams,
+    userId: string,
+    filters?: VaccineFilterParams,
+  ): Promise<PaginatedResponse<Vaccine>> {
+    const user = await this.userStore.findById(userId);
+    if (!user) {
+      throw new UserNotFoundError();
+    }
+
+    if (filters?.manufacturer) {
+      filters.manufacturer = normalizeText(filters.manufacturer);
+    }
+
+    const result = await this.vaccineStore.findPaginatedVaccines(
+      pagination,
+      filters,
+    );
+
+    return {
+      data: this.transformVaccinesBasedOnUserRole(result.data, user.role),
+      pagination: result.pagination,
+    };
+  }
+
+  private transformVaccinesBasedOnUserRole(
+    vaccines: Vaccine[],
+    role: UserRole,
+  ): Vaccine[] {
+    console.log(`Transforming vaccines for role: ${role}`);
+    // For now, all roles see the same data.
+    // This method can be expanded in the future to tailor vaccine data
+    // based on user roles (e.g., hide certain fields for specific roles).
+    return vaccines;
   }
 }
