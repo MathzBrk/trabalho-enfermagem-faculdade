@@ -15,7 +15,7 @@ export const CreateVaccineBodySchema = z.object({
     .min(1, 'Doses required must be at least 1')
     .max(10, 'Doses required too high'),
   description: z.string().max(500, 'Description too long').optional(),
-  isObligatory: z.boolean().optional().default(true),
+  isObligatory: z.boolean(),
   intervalDays: z
     .number()
     .min(1, 'Interval days must be at least 1')
