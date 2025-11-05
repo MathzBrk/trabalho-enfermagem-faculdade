@@ -1,4 +1,5 @@
 import { TOKENS } from '@infrastructure/di/tokens';
+import { ValidationError } from '@modules/user/errors';
 import type { UserService } from '@modules/user/services/userService';
 import { VaccineAlreadyExistsError } from '@modules/vaccines/errors';
 import { normalizeText } from '@shared/helpers/textHelper';
@@ -76,6 +77,13 @@ export class VaccineService {
     // This ensures case-insensitive uniqueness and removes extra whitespace
     const normalizedName = normalizeText(data.name);
     const normalizedManufacturer = normalizeText(data.manufacturer);
+
+    // Validate that normalized values are not empty
+    if (!normalizedName || !normalizedManufacturer) {
+      throw new ValidationError(
+        'Vaccine name and manufacturer cannot be empty or whitespace only.',
+      );
+    }
 
     // Check if vaccine already exists (case-insensitive, excluding soft-deleted)
     const existingVaccine = await this.vaccineStore.findByNameAndManufacturer(

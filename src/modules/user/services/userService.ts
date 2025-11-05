@@ -431,6 +431,26 @@ export class UserService {
     return user.role;
   }
 
+  /**
+   * Retrieves a user by ID without validation
+   *
+   * This utility method fetches a user by their ID directly from the store,
+   * without performing existence or deletion checks. Unlike {@link validateUserExists},
+   * it does not throw an error if the user is not found or is deleted.
+   *
+   * Use this method when you need to attempt to retrieve a user that may not exist,
+   * or when you want to handle the "not found" case manually instead of throwing an exception.
+   * For most business logic, prefer {@link validateUserExists} to enforce existence.
+   *
+   * @param userId - ID of the user to retrieve
+   * @returns The user object if found, or null if not found or deleted
+   *
+   * @example
+   * const user = await userService.getUserWithoutValidation('user-id');
+   * if (!user) {
+   *   // Handle user not found
+   * }
+   */
   async getUserWithoutValidation(userId: string): Promise<User | null> {
     return this.userStore.findById(userId);
   }
