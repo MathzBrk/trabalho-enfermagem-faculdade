@@ -28,7 +28,7 @@ export const UpdateUserBodySchema = z.object({
     .optional(),
   isActive: z.boolean().optional(),
   role: z.nativeEnum(Role).optional(),
-  coren: z.string().trim().optional(),
+  coren: z.string().trim().min(1, 'COREN must not be empty').optional(),
 });
 
 export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
