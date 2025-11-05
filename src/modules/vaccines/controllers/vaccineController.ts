@@ -50,10 +50,6 @@ export class VaccineController {
       const { isObligatory, page, perPage, manufacturer, sortBy, sortOrder } =
         req.query as unknown as ListVaccinesQuery;
 
-      console.log(
-        `Getting paginated vaccines - Page: ${page}, Per Page: ${perPage}}`,
-      );
-
       const userId = req.user?.userId!;
 
       const filters: VaccineFilterParams = {};

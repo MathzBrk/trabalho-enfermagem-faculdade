@@ -87,13 +87,18 @@ export class VaccineService {
       throw new UserNotFoundError();
     }
 
-    if (filters?.manufacturer) {
-      filters.manufacturer = normalizeText(filters.manufacturer);
-    }
+    const normalizedFilters = filters
+      ? {
+          ...filters,
+          manufacturer: filters.manufacturer
+            ? normalizeText(filters.manufacturer)
+            : undefined,
+        }
+      : undefined;
 
     const result = await this.vaccineStore.findPaginatedVaccines(
       pagination,
-      filters,
+      normalizedFilters,
     );
 
     return {

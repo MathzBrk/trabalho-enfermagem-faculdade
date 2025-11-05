@@ -16,6 +16,7 @@ import type {
 import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import { BaseStore } from '@shared/stores/baseStore';
 import { injectable } from 'tsyringe';
+import { allowedVaccineSortFields } from '../constants';
 
 /**
  * VaccineStore - Prisma-based implementation of IVaccineStore
@@ -51,15 +52,9 @@ export class VaccineStore
 
   async findPaginatedVaccines(
     params: PaginationParams,
-    filters: VaccineFilterParams,
+    filters?: VaccineFilterParams,
   ): Promise<PaginatedResponse<Vaccine>> {
     const { page, perPage } = params;
-
-    console.log(
-      `Finding paginated vaccines - Page: ${page}, Per Page: ${perPage}, Filters: ${JSON.stringify(
-        filters,
-      )}`,
-    );
 
     const where: Prisma.VaccineWhereInput = {};
 
@@ -75,7 +70,7 @@ export class VaccineStore
       this.count(where),
       this.model.findMany({
         where,
-        ...buildPaginationArgs(params),
+        ...buildPaginationArgs(params, allowedVaccineSortFields),
       }),
     ]);
 
