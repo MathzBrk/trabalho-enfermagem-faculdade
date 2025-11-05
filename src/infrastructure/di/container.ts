@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { UserStore } from '@modules/user/stores/userStore';
+import { UserService } from '@modules/user/services/userService';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
 import { TOKENS } from './tokens';
 
@@ -11,16 +12,22 @@ import { TOKENS } from './tokens';
  * controllers or services are instantiated.
  *
  * Container Registration Strategy:
- * - SINGLETON: UserStore is registered as singleton to maintain shared cache
- *   and connection pooling across the application lifecycle
+ * - SINGLETON: Stores and Services are registered as singletons to maintain
+ *   shared state and optimize resource usage across the application lifecycle
  * - Interface-based: Services depend on IUserStore interface, not concrete class
- * - Environment-aware: Can switch between UserStore and MockUserStore based on NODE_ENV
+ * - Service-to-Service: Services can depend on other services (e.g., VaccineService → UserService)
+ * - Environment-aware: Can switch between implementations based on NODE_ENV
  *
  * Why Singleton for Stores?
  * - Maintains consistent state across all service instances
  * - Optimizes database connection pooling
  * - Enables caching strategies at the store level
  * - Reduces memory overhead by reusing the same instance
+ *
+ * Why Singleton for Services?
+ * - Services are stateless and can be safely shared
+ * - Reduces memory overhead and initialization time
+ * - Maintains consistent behavior across the application
  */
 export function setupContainer(): void {
   // Register stores as singleton implementation for their interfaces
@@ -29,9 +36,17 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.IUserStore, UserStore);
   container.registerSingleton(TOKENS.IVaccineStore, VaccineStore);
 
+  // Register services as singletons
+  // Services are stateless and can be safely shared across the application
+  // This follows the Service → Service communication pattern for proper encapsulation
+  container.registerSingleton(TOKENS.UserService, UserService);
+
   console.log('📦 DI Container configured');
+  console.log('   Stores:');
   console.log('   └─ IUserStore → Using UserStore (Prisma)');
   console.log('   └─ IVaccineStore → Using VaccineStore (Prisma)');
+  console.log('   Services:');
+  console.log('   └─ UserService → Registered as singleton');
 
   // Future: Add environment-based switching
   // if (process.env.NODE_ENV === 'test') {
