@@ -77,14 +77,6 @@ export class VaccineService {
     const normalizedName = normalizeText(data.name);
     const normalizedManufacturer = normalizeText(data.manufacturer);
 
-    // Validate that normalized values are not empty
-    if (!normalizedName || !normalizedManufacturer) {
-      throw new VaccineAlreadyExistsError(
-        data.name || '',
-        data.manufacturer || '',
-      );
-    }
-
     // Check if vaccine already exists (case-insensitive, excluding soft-deleted)
     const existingVaccine = await this.vaccineStore.findByNameAndManufacturer(
       normalizedName,

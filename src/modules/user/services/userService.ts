@@ -13,7 +13,9 @@ import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
 import type {
   CreateUserDTO,
   UpdateUserDTO,
+  User,
   UserResponse,
+  UserRole,
 } from '@shared/models/user';
 import dayjs from 'dayjs';
 import { inject, injectable } from 'tsyringe';
@@ -371,7 +373,7 @@ export class UserService {
    * @example
    * const user = await userService.validateUserExists('user-id');
    */
-  async validateUserExists(userId: string): Promise<import('@shared/models/user').User> {
+  async validateUserExists(userId: string): Promise<User> {
     const user = await this.userStore.findById(userId);
     if (!user || user.deletedAt) {
       throw new UserNotFoundError('User not found');
@@ -424,9 +426,13 @@ export class UserService {
    *   // Show admin features
    * }
    */
-  async getUserRole(userId: string): Promise<import('@shared/models/user').UserRole> {
+  async getUserRole(userId: string): Promise<UserRole> {
     const user = await this.validateUserExists(userId);
     return user.role;
+  }
+
+  async getUserWithoutValidation(userId: string): Promise<User | null> {
+    return this.userStore.findById(userId);
   }
 
   private async validateUserUniqueness(data: CreateUserDTO): Promise<void> {
