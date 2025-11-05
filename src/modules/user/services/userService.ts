@@ -279,6 +279,15 @@ export class UserService {
       );
     }
 
+    const isChangingToNurse = data.role === 'NURSE' && user.role !== 'NURSE';
+    const finalCoren = data.coren ?? user.coren;
+
+    if (isChangingToNurse && !finalCoren) {
+      throw new ValidationError(
+        'COREN is required when changing role to NURSE',
+      );
+    }
+
     // Validate COREN uniqueness if changed
     if (data.coren && data.coren !== user.coren) {
       const corenExists = await this.userStore.corenExists(data.coren);
