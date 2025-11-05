@@ -1,12 +1,22 @@
-import type { Vaccine } from '@infrastructure/database';
-import type { IVaccineStore } from '@shared/interfaces/vaccine';
+import type { Prisma, Vaccine } from '@infrastructure/database';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+} from '@shared/interfaces/pagination';
+import { calculatePaginationMetadata } from '@shared/interfaces/pagination';
+import type {
+  IVaccineStore,
+  VaccineFilterParams,
+} from '@shared/interfaces/vaccine';
 import type {
   VaccineCreateInput,
   VaccineDelegate,
   VaccineUpdateInput,
 } from '@shared/models/vaccine';
+import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import { BaseStore } from '@shared/stores/baseStore';
 import { injectable } from 'tsyringe';
+import { allowedVaccineSortFields } from '../constants';
 
 /**
  * VaccineStore - Prisma-based implementation of IVaccineStore
@@ -39,6 +49,38 @@ export class VaccineStore
 {
   // Defines the model to be used by the base class
   protected readonly model = this.prisma.vaccine;
+
+  async findPaginatedVaccines(
+    params: PaginationParams,
+    filters?: VaccineFilterParams,
+  ): Promise<PaginatedResponse<Vaccine>> {
+    const { page, perPage } = params;
+
+    const where: Prisma.VaccineWhereInput = {};
+
+    if (filters?.manufacturer) {
+      where.manufacturer = filters.manufacturer;
+    }
+
+    if (filters?.isObligatory !== undefined) {
+      where.isObligatory = filters.isObligatory;
+    }
+
+    const [total, vaccines] = await Promise.all([
+      this.count(where),
+      this.model.findMany({
+        where,
+        ...buildPaginationArgs(params, allowedVaccineSortFields),
+      }),
+    ]);
+
+    const pagination = calculatePaginationMetadata(page, perPage, total);
+
+    return {
+      data: vaccines,
+      pagination,
+    };
+  }
 
   /**
    * Finds vaccine by name

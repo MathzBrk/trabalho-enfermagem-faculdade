@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PAGINATION_DEFAULTS } from '@shared/interfaces/pagination';
-import { allowedSortFields } from '../constants';
+import { allowedUserSortFields } from '../constants';
 
 /**
  * ListUsersQuerySchema - Validates query parameters for user listing endpoint
@@ -36,8 +36,8 @@ export const ListUsersQuerySchema = z.object({
   page: z
     .string()
     .optional()
-    .transform(val => (val ? parseInt(val, 10) : PAGINATION_DEFAULTS.PAGE))
-    .refine(val => !isNaN(val) && val >= 1, {
+    .transform((val) => (val ? parseInt(val, 10) : PAGINATION_DEFAULTS.PAGE))
+    .refine((val) => !isNaN(val) && val >= 1, {
       message: 'Page must be a number >= 1',
     }),
 
@@ -49,15 +49,17 @@ export const ListUsersQuerySchema = z.object({
   perPage: z
     .string()
     .optional()
-    .transform(val => (val ? parseInt(val, 10) : PAGINATION_DEFAULTS.PER_PAGE))
+    .transform((val) =>
+      val ? parseInt(val, 10) : PAGINATION_DEFAULTS.PER_PAGE,
+    )
     .refine(
-      val =>
+      (val) =>
         !isNaN(val) &&
         val >= PAGINATION_DEFAULTS.MIN_PER_PAGE &&
         val <= PAGINATION_DEFAULTS.MAX_PER_PAGE,
       {
         message: `perPage must be between ${PAGINATION_DEFAULTS.MIN_PER_PAGE} and ${PAGINATION_DEFAULTS.MAX_PER_PAGE}`,
-      }
+      },
     ),
 
   /**
@@ -69,14 +71,9 @@ export const ListUsersQuerySchema = z.object({
     .string()
     .optional()
     .default(PAGINATION_DEFAULTS.SORT_BY)
-    .refine(
-      val =>
-        allowedSortFields.includes(val),
-      {
-        message:
-          `Invalid sortBy field. Allowed: ${allowedSortFields.join(', ')}`,
-      }
-    ),
+    .refine((val) => allowedUserSortFields.includes(val), {
+      message: `Invalid sortBy field. Allowed: ${allowedUserSortFields.join(', ')}`,
+    }),
 
   /**
    * Sort order
@@ -93,9 +90,7 @@ export const ListUsersQuerySchema = z.object({
    * - Optional
    * - Must be EMPLOYEE, NURSE, or MANAGER
    */
-  role: z
-    .enum(['EMPLOYEE', 'NURSE', 'MANAGER'])
-    .optional(),
+  role: z.enum(['EMPLOYEE', 'NURSE', 'MANAGER']).optional(),
 
   /**
    * Filter by active status
@@ -105,7 +100,7 @@ export const ListUsersQuerySchema = z.object({
   isActive: z
     .string()
     .optional()
-    .transform(val => {
+    .transform((val) => {
       if (val === undefined) return undefined;
       if (val === 'true') return true;
       if (val === 'false') return false;
@@ -120,7 +115,7 @@ export const ListUsersQuerySchema = z.object({
   excludeDeleted: z
     .string()
     .optional()
-    .transform(val => {
+    .transform((val) => {
       if (val === undefined) return undefined;
       if (val === 'true') return true;
       if (val === 'false') return false;

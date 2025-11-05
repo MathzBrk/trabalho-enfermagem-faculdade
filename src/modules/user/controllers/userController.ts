@@ -1,10 +1,10 @@
-import type { NextFunction, Request, Response } from "express";
-import { UserService } from "@modules/user/services/userService";
-import { UserRole, type CreateUserDTO } from "@shared/models/user";
-import { injectable } from "tsyringe";
-import { PAGINATION_DEFAULTS } from "@shared/interfaces/pagination";
-import { UserFilterParams } from "@shared/interfaces/user";
-import { ListUsersQuery } from "@modules/user/validators/listUsersValidator";
+import type { NextFunction, Request, Response } from 'express';
+import { UserService } from '@modules/user/services/userService';
+import { UserRole, type CreateUserDTO } from '@shared/models/user';
+import { injectable } from 'tsyringe';
+import { PAGINATION_DEFAULTS } from '@shared/interfaces/pagination';
+import { UserFilterParams } from '@shared/interfaces/user';
+import { ListUsersQuery } from '@modules/user/validators/listUsersValidator';
 
 /**
  * UserController - HTTP request handler for user endpoints
@@ -24,9 +24,7 @@ import { ListUsersQuery } from "@modules/user/validators/listUsersValidator";
  */
 @injectable()
 export class UserController {
-  constructor(
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   /**
    * Creates a new user
@@ -49,16 +47,6 @@ export class UserController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { name, email, password, cpf, phone, role, coren } = req.body;
-      
-      const validRoles = Object.values(UserRole);
-
-      if (!validRoles.includes(role)) {
-        res.status(400).json({
-          error: "Invalid role",
-          validRoles,
-        });
-        return;
-      }
 
       const createUserDTO: CreateUserDTO = {
         name,
@@ -121,16 +109,28 @@ export class UserController {
    * @param res - Express response
    * @param next - Express next function
    */
-  async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async listUsers(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       // req.query is already validated and transformed by validateRequest middleware
-      const { page, perPage, sortBy, sortOrder, role, isActive, excludeDeleted } = req.query as unknown as ListUsersQuery;
+      const {
+        page,
+        perPage,
+        sortBy,
+        sortOrder,
+        role,
+        isActive,
+        excludeDeleted,
+      } = req.query as unknown as ListUsersQuery;
 
       const userId = req.user?.userId;
       if (!userId) {
         res.status(401).json({
-          error: "Unauthorized",
-          message: "Authentication required",
+          error: 'Unauthorized',
+          message: 'Authentication required',
         });
         return;
       }
@@ -142,8 +142,13 @@ export class UserController {
 
       const result = await this.userService.listUsers(
         userId,
-        { page: page || PAGINATION_DEFAULTS.PAGE, perPage: perPage || PAGINATION_DEFAULTS.PER_PAGE, sortBy, sortOrder },
-        Object.keys(filters).length > 0 ? filters : undefined
+        {
+          page: page || PAGINATION_DEFAULTS.PAGE,
+          perPage: perPage || PAGINATION_DEFAULTS.PER_PAGE,
+          sortBy,
+          sortOrder,
+        },
+        Object.keys(filters).length > 0 ? filters : undefined,
       );
 
       // Return successful response

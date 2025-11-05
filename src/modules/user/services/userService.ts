@@ -6,11 +6,7 @@ import type {
   PaginationParams,
 } from '@shared/interfaces/pagination';
 import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
-import {
-  type CreateUserDTO,
-  type UserResponse,
-  UserRole,
-} from '@shared/models/user';
+import { type CreateUserDTO, type UserResponse } from '@shared/models/user';
 import dayjs from 'dayjs';
 import { inject, injectable } from 'tsyringe';
 import {
@@ -141,7 +137,7 @@ export class UserService {
       throw new UserNotFoundError('User not found');
     }
 
-    if (requestingUser.role !== UserRole.MANAGER) {
+    if (requestingUser.role !== 'MANAGER') {
       throw new ForbiddenError('Only MANAGER role can access user list');
     }
 

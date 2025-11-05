@@ -1,6 +1,7 @@
 import { container } from '@infrastructure/di/container';
 import { VaccineController } from '@modules/vaccines';
 import { CreateVaccineBodySchema } from '@modules/vaccines/validators/createVaccineValidator';
+import { ListVaccinesQuerySchema } from '@modules/vaccines/validators/listVaccinesValidator';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { validateRequest } from '@shared/middlewares/validateRequest';
 import { Router } from 'express';
@@ -16,6 +17,13 @@ vaccineRoutes.post(
   authMiddleware,
   validateRequest(CreateVaccineBodySchema),
   vaccineController.create.bind(vaccineController),
+);
+
+vaccineRoutes.get(
+  '/',
+  authMiddleware,
+  validateRequest({ query: ListVaccinesQuerySchema }),
+  vaccineController.getPaginatedVaccines.bind(vaccineController),
 );
 
 export default vaccineRoutes;

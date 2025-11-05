@@ -1,5 +1,5 @@
-import type { Prisma, User } from '@infrastructure/database';
-import type { UserRole } from '@shared/models/user';
+import type { Prisma } from '@infrastructure/database';
+import type { UserRole, User } from '@shared/models/user';
 import type { IBaseStore } from '@shared/stores/baseStore';
 import type { PaginatedResponse, PaginationParams } from './pagination';
 
