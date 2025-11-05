@@ -22,4 +22,16 @@ export const TOKENS = {
    */
   IUserStore: Symbol.for('IUserStore'),
   IVaccineStore: Symbol.for('IVaccineStore'),
+
+  /**
+   * Token for UserService
+   *
+   * Service layer for user business logic and operations.
+   * This service provides a facade over IUserStore with additional
+   * business rules, validation, and authorization logic.
+   *
+   * Other services should depend on UserService (not IUserStore)
+   * to maintain proper encapsulation and respect bounded contexts.
+   */
+  UserService: Symbol.for('UserService'),
 } as const;

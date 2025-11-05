@@ -354,6 +354,81 @@ export class UserService {
     await this.userStore.softDelete(id);
   }
 
+  /**
+   * Validates if a user exists and returns it
+   *
+   * This utility method provides a centralized way to validate user existence
+   * across the application, ensuring consistent error handling and business rules.
+   *
+   * Business Rules:
+   * - Deleted users (deletedAt is set) are treated as not found
+   * - Non-existent users throw UserNotFoundError
+   *
+   * @param userId - ID of the user to validate
+   * @returns User object if exists and not deleted
+   * @throws UserNotFoundError if user not found or deleted
+   *
+   * @example
+   * const user = await userService.validateUserExists('user-id');
+   */
+  async validateUserExists(userId: string): Promise<import('@shared/models/user').User> {
+    const user = await this.userStore.findById(userId);
+    if (!user || user.deletedAt) {
+      throw new UserNotFoundError('User not found');
+    }
+    return user;
+  }
+
+  /**
+   * Validates if a user has MANAGER role
+   *
+   * This utility method provides authorization validation for operations
+   * that require MANAGER role. It combines existence check with role validation
+   * in a single operation.
+   *
+   * Business Rules:
+   * - User must exist and not be deleted
+   * - User must have MANAGER role
+   *
+   * @param userId - ID of the user to validate
+   * @throws UserNotFoundError if user not found or deleted
+   * @throws ForbiddenError if user is not a MANAGER
+   *
+   * @example
+   * await userService.validateManagerRole('user-id');
+   * // If no exception thrown, user is a MANAGER and can proceed
+   */
+  async validateManagerRole(userId: string): Promise<void> {
+    const user = await this.validateUserExists(userId);
+    if (user.role !== 'MANAGER') {
+      throw new ForbiddenError('Only MANAGER can perform this action');
+    }
+  }
+
+  /**
+   * Gets user role for authorization checks
+   *
+   * This utility method retrieves a user's role for authorization logic
+   * in other services. It ensures the user exists before returning the role.
+   *
+   * Business Rules:
+   * - User must exist and not be deleted
+   *
+   * @param userId - ID of the user
+   * @returns User role (EMPLOYEE, NURSE, or MANAGER)
+   * @throws UserNotFoundError if user not found or deleted
+   *
+   * @example
+   * const role = await userService.getUserRole('user-id');
+   * if (role === 'MANAGER') {
+   *   // Show admin features
+   * }
+   */
+  async getUserRole(userId: string): Promise<import('@shared/models/user').UserRole> {
+    const user = await this.validateUserExists(userId);
+    return user.role;
+  }
+
   private async validateUserUniqueness(data: CreateUserDTO): Promise<void> {
     const normalizedEmail = normalizeEmail(data.email);
     const emailExists = await this.userStore.emailExists(normalizedEmail);
