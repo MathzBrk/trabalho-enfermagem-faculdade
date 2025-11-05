@@ -138,7 +138,7 @@ userRoutes.get(
 );
 
 /**
- * PUT /users/:id
+ * PATCH /users/:id
  * Update a user
  *
  * Authentication: Required (JWT token via authMiddleware)
@@ -159,7 +159,7 @@ userRoutes.get(
  * }
  *
  * Example:
- * PUT /api/users/550e8400-e29b-41d4-a716-446655440000
+ * PATCH /api/users/550e8400-e29b-41d4-a716-446655440000
  * Authorization: Bearer <JWT_TOKEN>
  * Content-Type: application/json
  *
@@ -185,7 +185,7 @@ userRoutes.get(
  * 2. validateRequest - Validates params and body with Zod schemas
  * 3. userController.update - Handles business logic
  */
-userRoutes.put(
+userRoutes.patch(
   '/:id',
   authMiddleware,
   validateRequest({ params: IdParamSchema, body: UpdateUserBodySchema }),
