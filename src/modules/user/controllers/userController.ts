@@ -1,10 +1,16 @@
 import type { NextFunction, Request, Response } from 'express';
+
+// biome-ignore lint/style/useImportType: I need to import types this way to avoid circular dependencies
 import { UserService } from '@modules/user/services/userService';
-import { UserRole, type CreateUserDTO } from '@shared/models/user';
+import type {
+  UserRole,
+  CreateUserDTO,
+  UpdateUserDTO,
+} from '@shared/models/user';
 import { injectable } from 'tsyringe';
 import { PAGINATION_DEFAULTS } from '@shared/interfaces/pagination';
-import { UserFilterParams } from '@shared/interfaces/user';
-import { ListUsersQuery } from '@modules/user/validators/listUsersValidator';
+import type { UserFilterParams } from '@shared/interfaces/user';
+import type { ListUsersQuery } from '@modules/user/validators/listUsersValidator';
 
 /**
  * UserController - HTTP request handler for user endpoints
@@ -155,6 +161,159 @@ export class UserController {
       res.status(200).json(result);
     } catch (error) {
       // Pass error to Express error handling middleware
+      next(error);
+    }
+  }
+
+  /**
+   * Gets a user by ID
+   *
+   * HTTP Endpoint: GET /users/:id
+   *
+   * Authorization:
+   * - MANAGER: Can view any user
+   * - Other roles: Can only view their own profile
+   *
+   * Response: 200 OK
+   * {
+   *   "id": "uuid",
+   *   "name": "João Silva",
+   *   "email": "joao@example.com",
+   *   ...
+   * }
+   *
+   * Errors:
+   * - 401 Unauthorized: No authentication token
+   * - 403 Forbidden: User trying to view another user's profile
+   * - 404 Not Found: User not found or deleted
+   *
+   * @param req - Express request with id param
+   * @param res - Express response
+   * @param next - Express next function
+   */
+  async getById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      const user = await this.userService.getUserById(id, userId);
+
+      res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Updates a user
+   *
+   * HTTP Endpoint: PATCH /users/:id
+   *
+   * Authorization:
+   * - MANAGER: Can update any user, all fields
+   * - Other roles: Can only update their own profile (name, phone)
+   *
+   * Request Body (all fields optional):
+   * {
+   *   "name": "João Silva",
+   *   "phone": "11999999999",
+   *   "isActive": true,      // MANAGER only
+   *   "role": "NURSE",       // MANAGER only
+   *   "coren": "123456"      // Required if role is NURSE
+   * }
+   *
+   * Response: 200 OK
+   * {
+   *   "id": "uuid",
+   *   "name": "João Silva",
+   *   ...
+   * }
+   *
+   * Errors:
+   * - 401 Unauthorized: No authentication token
+   * - 403 Forbidden: User trying to update another user or restricted fields
+   * - 404 Not Found: User not found or deleted
+   * - 409 Conflict: COREN already exists
+   *
+   * @param req - Express request with id param and body
+   * @param res - Express response
+   * @param next - Express next function
+   */
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId;
+      const updateData: UpdateUserDTO = req.body;
+
+      if (!userId) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      const updatedUser = await this.userService.updateUser(
+        id,
+        updateData,
+        userId,
+      );
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Deletes a user (soft delete)
+   *
+   * HTTP Endpoint: DELETE /users/:id
+   *
+   * Authorization:
+   * - Only MANAGER can delete users
+   * - Cannot delete yourself
+   *
+   * Response: 204 No Content
+   *
+   * Errors:
+   * - 401 Unauthorized: No authentication token
+   * - 403 Forbidden: User is not MANAGER or trying to delete themselves
+   * - 404 Not Found: User not found or already deleted
+   *
+   * @param req - Express request with id param
+   * @param res - Express response
+   * @param next - Express next function
+   */
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      await this.userService.deleteUser(id, userId);
+
+      res.status(204).send();
+    } catch (error) {
       next(error);
     }
   }

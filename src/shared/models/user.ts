@@ -43,6 +43,32 @@ export interface UserResponse {
   updatedAt: Date;
 }
 
+/**
+ * DTO for updating user information
+ * All fields are optional as partial updates are supported
+ */
+export interface UpdateUserDTO {
+  name?: string;
+  phone?: string;
+  isActive?: boolean; // Only MANAGER can update
+  role?: Role; // Only MANAGER can update
+  coren?: string;
+}
+
+/**
+ * Request params for getting user by ID
+ */
+export interface GetUserByIdParams {
+  id: string;
+}
+
+/**
+ * Request params for deleting a user
+ */
+export interface DeleteUserParams {
+  id: string;
+}
+
 export type UserCreateInput = Prisma.UserCreateInput;
 export type UserUpdateInput = Prisma.UserUpdateInput;
 export type UserDelegate = Prisma.UserDelegate;

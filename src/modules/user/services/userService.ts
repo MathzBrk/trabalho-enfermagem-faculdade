@@ -1,12 +1,20 @@
 import { TOKENS } from '@infrastructure/di/tokens';
 import { hashPassword } from '@shared/helpers/passwordHelper';
-import { normalizeEmail, toUserResponse } from '@shared/helpers/userHelper';
+import {
+  canAccessUser,
+  normalizeEmail,
+  toUserResponse,
+} from '@shared/helpers/userHelper';
 import type {
   PaginatedResponse,
   PaginationParams,
 } from '@shared/interfaces/pagination';
 import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
-import { type CreateUserDTO, type UserResponse } from '@shared/models/user';
+import type {
+  CreateUserDTO,
+  UpdateUserDTO,
+  UserResponse,
+} from '@shared/models/user';
 import dayjs from 'dayjs';
 import { inject, injectable } from 'tsyringe';
 import {
@@ -149,6 +157,201 @@ export class UserService {
       data: result.data.map(toUserResponse),
       pagination: result.pagination,
     };
+  }
+
+  /**
+   * Gets a user by ID
+   *
+   * Business Rules:
+   * - MANAGER: Can view any user
+   * - Other roles: Can only view their own profile
+   * - Deleted users are treated as not found
+   *
+   * @param id - ID of the user to retrieve
+   * @param requestingUserId - ID of user making the request (for authorization)
+   * @returns User object without password
+   * @throws UserNotFoundError if user not found or deleted
+   * @throws ForbiddenError if non-manager tries to view another user's profile
+   *
+   * @example
+   * // Manager viewing any user
+   * const user = await userService.getUserById('user-id', 'manager-id');
+   *
+   * @example
+   * // User viewing their own profile
+   * const user = await userService.getUserById('user-id', 'user-id');
+   */
+  async getUserById(
+    id: string,
+    requestingUserId: string,
+  ): Promise<UserResponse> {
+    // Fetch the user to view
+    const user = await this.userStore.findById(id);
+
+    if (!user || user.deletedAt) {
+      throw new UserNotFoundError('User not found');
+    }
+
+    // Fetch the requesting user for authorization
+    const requestingUser = await this.userStore.findById(requestingUserId);
+
+    if (!requestingUser) {
+      throw new UserNotFoundError('Requesting user not found');
+    }
+
+    const hasAccess = canAccessUser({
+      requester: requestingUser,
+      targetUser: user,
+      reqType: 'view',
+    });
+
+    if (!hasAccess) {
+      throw new ForbiddenError('You do not have permission to view this user');
+    }
+
+    return toUserResponse(user);
+  }
+
+  /**
+   * Updates a user
+   *
+   * Business Rules:
+   * - MANAGER: Can update any user, all fields (name, phone, isActive, role, coren)
+   * - Other roles: Can only update their own profile (name, phone only)
+   * - Role change to NURSE requires COREN
+   * - COREN must be unique if changed
+   * - Deleted users cannot be updated
+   *
+   * @param id - ID of the user to update
+   * @param data - Fields to update (all optional)
+   * @param requestingUserId - ID of user making the request (for authorization)
+   * @returns Updated user object without password
+   * @throws UserNotFoundError if user not found or deleted
+   * @throws ForbiddenError if user lacks permission to update
+   * @throws CORENAlreadyExistsError if COREN already exists
+   *
+   * @example
+   * // Manager updating any user
+   * const user = await userService.updateUser(
+   *   'user-id',
+   *   { isActive: false },
+   *   'manager-id'
+   * );
+   *
+   * @example
+   * // User updating their own profile
+   * const user = await userService.updateUser(
+   *   'user-id',
+   *   { name: 'New Name', phone: '11999999999' },
+   *   'user-id'
+   * );
+   */
+  async updateUser(
+    id: string,
+    data: UpdateUserDTO,
+    requestingUserId: string,
+  ): Promise<UserResponse> {
+    // Fetch user to update
+    const user = await this.userStore.findById(id);
+
+    if (!user || user.deletedAt) {
+      throw new UserNotFoundError('User not found');
+    }
+
+    // Fetch requesting user for authorization
+    const requestingUser = await this.userStore.findById(requestingUserId);
+
+    if (!requestingUser) {
+      throw new UserNotFoundError('Requesting user not found');
+    }
+
+    // Authorization check using centralized function
+    const hasAccess = canAccessUser({
+      requester: requestingUser,
+      targetUser: user,
+      reqType: 'modify',
+      dataUpdates: data,
+    });
+
+    if (!hasAccess) {
+      throw new ForbiddenError(
+        'You do not have permission to modify this user or these fields',
+      );
+    }
+
+    const isChangingToNurse = data.role === 'NURSE' && user.role !== 'NURSE';
+    const finalCoren = data.coren ?? user.coren;
+
+    if (isChangingToNurse && !finalCoren) {
+      throw new ValidationError(
+        'COREN is required when changing role to NURSE',
+      );
+    }
+
+    // Validate COREN uniqueness if changed
+    if (data.coren && data.coren !== user.coren) {
+      const corenExists = await this.userStore.corenExists(data.coren);
+      if (corenExists) {
+        throw new CORENAlreadyExistsError();
+      }
+    }
+
+    // Update user
+    const updatedUser = await this.userStore.update(id, {
+      ...data,
+      updatedAt: dayjs().toDate(),
+    });
+
+    return toUserResponse(updatedUser);
+  }
+
+  /**
+   * Deletes a user (soft delete)
+   *
+   * Business Rules:
+   * - Only MANAGER can delete users
+   * - Cannot delete yourself (prevent accidental lockout)
+   * - Uses soft delete (sets deletedAt and isActive=false)
+   * - Deleted users are preserved for audit trail
+   *
+   * @param id - ID of the user to delete
+   * @param requestingUserId - ID of user making the request (for authorization)
+   * @throws UserNotFoundError if user not found or already deleted
+   * @throws ForbiddenError if user is not MANAGER or trying to delete themselves
+   *
+   * @example
+   * await userService.deleteUser('user-to-delete-id', 'manager-id');
+   */
+  async deleteUser(id: string, requestingUserId: string): Promise<void> {
+    // Fetch user to delete
+    const user = await this.userStore.findById(id);
+
+    if (!user || user.deletedAt) {
+      throw new UserNotFoundError('User not found');
+    }
+
+    // Fetch requesting user for authorization
+    const requestingUser = await this.userStore.findById(requestingUserId);
+
+    if (!requestingUser) {
+      throw new UserNotFoundError('Requesting user not found');
+    }
+
+    // Authorization check using centralized function
+    const hasAccess = canAccessUser({
+      requester: requestingUser,
+      targetUser: user,
+      reqType: 'delete',
+    });
+
+    if (!hasAccess) {
+      throw new ForbiddenError(
+        'Only MANAGER can delete users and you cannot delete yourself',
+      );
+    }
+
+    // Soft delete the user
+    await this.userStore.softDelete(id);
   }
 
   private async validateUserUniqueness(data: CreateUserDTO): Promise<void> {
