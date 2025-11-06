@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 import { UserStore } from '@modules/user/stores/userStore';
 import { UserService } from '@modules/user/services/userService';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
+import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
 import { TOKENS } from './tokens';
 
 /**
@@ -35,6 +36,7 @@ export function setupContainer(): void {
   // which is critical for caching and connection pooling
   container.registerSingleton(TOKENS.IUserStore, UserStore);
   container.registerSingleton(TOKENS.IVaccineStore, VaccineStore);
+  container.registerSingleton(TOKENS.IVaccineBatchStore, VaccineBatchStore);
 
   // Register services as singletons
   // Services are stateless and can be safely shared across the application
@@ -45,6 +47,7 @@ export function setupContainer(): void {
   console.log('   Stores:');
   console.log('   └─ IUserStore → Using UserStore (Prisma)');
   console.log('   └─ IVaccineStore → Using VaccineStore (Prisma)');
+  console.log('   └─ IVaccineBatchStore → Using VaccineBatchStore (Prisma)');
   console.log('   Services:');
   console.log('   └─ UserService → Registered as singleton');
 
