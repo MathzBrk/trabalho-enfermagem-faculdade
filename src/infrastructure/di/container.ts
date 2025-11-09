@@ -5,6 +5,7 @@ import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
 import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
 import { TOKENS } from './tokens';
 import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBatchService';
+import { VaccineService } from '@modules/vaccines/services/vaccineService';
 
 /**
  * DI Container Setup
@@ -16,8 +17,9 @@ import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBat
  * Container Registration Strategy:
  * - SINGLETON: Stores and Services are registered as singletons to maintain
  *   shared state and optimize resource usage across the application lifecycle
- * - Interface-based: Services depend on IUserStore interface, not concrete class
- * - Service-to-Service: Services can depend on other services (e.g., VaccineService → UserService)
+ * - Interface-based: Services depend on store interfaces, not concrete classes
+ * - Store-first: Stores are registered before services to avoid circular dependencies
+ * - Services use stores directly to maintain separation of concerns
  * - Environment-aware: Can switch between implementations based on NODE_ENV
  *
  * Why Singleton for Stores?
@@ -41,8 +43,9 @@ export function setupContainer(): void {
 
   // Register services as singletons
   // Services are stateless and can be safely shared across the application
-  // This follows the Service → Service communication pattern for proper encapsulation
+  // Services use stores directly to avoid circular dependencies
   container.registerSingleton(TOKENS.UserService, UserService);
+  container.registerSingleton(TOKENS.VaccineService, VaccineService);
   container.registerSingleton(TOKENS.VaccineBatchService, VaccineBatchService);
 
   console.log('📦 DI Container configured');
@@ -52,6 +55,7 @@ export function setupContainer(): void {
   console.log('   └─ IVaccineBatchStore → Using VaccineBatchStore (Prisma)');
   console.log('   Services:');
   console.log('   └─ UserService → Registered as singleton');
+  console.log('   └─ VaccineService → Registered as singleton');
   console.log('   └─ VaccineBatchService → Registered as singleton');
 
   // Future: Add environment-based switching
