@@ -27,6 +27,7 @@ import {
   UserNotFoundError,
   ValidationError,
 } from '../errors';
+import { DEFAULT_USER_SYSTEM } from '../constants';
 
 /**
  * UserService - Service layer for user business logic
@@ -401,6 +402,9 @@ export class UserService {
    * // If no exception thrown, user is a MANAGER and can proceed
    */
   async validateManagerRole(userId: string): Promise<void> {
+    if (userId === DEFAULT_USER_SYSTEM) {
+      return;
+    }
     const user = await this.validateUserExists(userId);
     if (user.role !== 'MANAGER') {
       throw new ForbiddenError('Only MANAGER can perform this action');

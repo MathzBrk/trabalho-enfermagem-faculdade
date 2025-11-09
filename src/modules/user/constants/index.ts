@@ -10,3 +10,5 @@ export const allowedUserSortFields = [
   'createdAt',
   'updatedAt',
 ];
+
+export const DEFAULT_USER_SYSTEM = 'USER_SYSTEM';
