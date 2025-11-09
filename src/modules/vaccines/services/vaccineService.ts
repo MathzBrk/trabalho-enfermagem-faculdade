@@ -402,13 +402,25 @@ export class VaccineService {
   }
 
   /**
-   * Deletes a vaccine and all associated batches
+   * Deletes a vaccine and all associated batches atomically
    *
    * Business Rules:
    * - Only MANAGER role can delete vaccines
    * - Vaccine must exist
    * - Hard delete (permanently removes from database)
-   * - Cascade delete: all vaccine batches are deleted first to maintain referential integrity
+   * - CASCADE delete: all vaccine batches are automatically deleted
+   * - Stock is automatically adjusted for AVAILABLE batches before deletion
+   *
+   * Transactional Behavior:
+   * - Delegates to vaccineStore.deleteVaccineWithBatches() for atomic operation
+   * - All operations occur in a single database transaction
+   * - If any step fails, entire operation is rolled back
+   * - No partial deletions can occur
+   *
+   * Stock Adjustment:
+   * - Only AVAILABLE batches with currentQuantity > 0 affect stock
+   * - Stock is decremented before deletion for consistency
+   * - Other batch statuses (EXPIRED, DEPLETED, DISCARDED) don't affect stock
    *
    * Authorization:
    * - Uses UserService.validateManagerRole() for encapsulated authorization
@@ -426,34 +438,19 @@ export class VaccineService {
     // Authorization: validate user exists and has MANAGER role
     await this.userService.validateManagerRole(userId);
 
-    // Find vaccine and validate it exists
+    // Validate vaccine exists before attempting deletion
     const vaccine = await this.vaccineStore.findById(id);
     if (!vaccine) {
       throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
     }
 
-    // Find all batches associated with this vaccine using store directly
-    const vaccineBatches = await this.vaccineBatchStore.findByVaccineId(id);
-
-    // Delete all batches FIRST (to avoid foreign key constraint violation)
-    if (vaccineBatches.length > 0) {
-      console.log(
-        `Vaccine ${id} has ${vaccineBatches.length} batches. Deleting them first...`,
-      );
-
-      await Promise.all(
-        vaccineBatches.map(async (batch: VaccineBatch) => {
-          console.log(`Deleting batch ${batch.id} of vaccine ${id}.`);
-          await this.vaccineBatchStore.delete(batch.id);
-        }),
-      );
-    } else {
-      console.log(`Vaccine ${id} has no batches.`);
-    }
-
-    // Now delete the vaccine (after all batches are deleted)
-    await this.vaccineStore.delete(id);
-    console.log(`Vaccine ${id} deleted successfully.`);
+    // Delegate to store for atomic deletion
+    // This handles:
+    // - Stock adjustment for AVAILABLE batches
+    // - CASCADE deletion of all batches
+    // - Vaccine deletion
+    // All in a single transaction with automatic rollback on failure
+    await this.vaccineStore.deleteVaccineWithBatches(id);
   }
 
   private transformVaccinesBasedOnUserRole(

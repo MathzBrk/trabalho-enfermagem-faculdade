@@ -123,7 +123,7 @@ model VaccineBatch {
   updatedAt         DateTime @updatedAt
   deletedAt         DateTime?
 
-  vaccine         Vaccine  @relation(fields: [vaccineId], references: [id])
+  vaccine         Vaccine  @relation(fields: [vaccineId], references: [id], onDelete: Cascade)
   createdBy       User     @relation("VaccineBatchesCreated", fields: [createdById], references: [id])
   applications    VaccineApplication[]
 
@@ -132,7 +132,7 @@ model VaccineBatch {
   @@index([status])
   @@index([createdById])
   @@map("vaccine_batches")
-  
+
 }
 
 enum BatchStatus {
@@ -195,11 +195,13 @@ model VaccineApplication {
   scheduling          VaccineScheduling? @relation(fields: [schedulingId], references: [id])
   batch                 VaccineBatch      @relation(fields: [batchId], references: [id])
 
+  @@unique([userId, vaccineId, doseNumber])
   @@index([userId])
   @@index([batchId])
   @@index([vaccineId])
   @@index([appliedById])
   @@index([applicationDate])
+  @@index([userId, vaccineId, doseNumber])
   @@map("vaccine_applications")
 }
 
