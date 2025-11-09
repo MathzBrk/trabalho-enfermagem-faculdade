@@ -139,4 +139,12 @@ export class VaccineBatchService {
 
     return newBatch;
   }
+
+  async findVaccineBatchs(vaccineId: string): Promise<VaccineBatch[]> {
+    return this.vaccineBatchStore.findByVaccineId(vaccineId);
+  }
+
+  async deleteVaccineBatch(batchId: string): Promise<void> {
+    await this.vaccineBatchStore.delete(batchId);
+  }
 }

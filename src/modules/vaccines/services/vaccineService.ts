@@ -12,8 +12,14 @@ import type {
   VaccineFilterParams,
 } from '@shared/interfaces/vaccine';
 import type { UserRole } from '@shared/models/user';
-import type { CreateVaccineDTO, Vaccine } from '@shared/models/vaccine';
+import type {
+  CreateVaccineDTO,
+  UpdateVaccineDTO,
+  Vaccine,
+} from '@shared/models/vaccine';
 import { inject, injectable } from 'tsyringe';
+import { VaccineNotFoundError } from '../errors';
+import type { VaccineBatchService } from '@modules/vaccines-batch';
 
 /**
  * VaccineService - Service layer for vaccine business logic
@@ -34,6 +40,8 @@ export class VaccineService {
   constructor(
     @inject(TOKENS.IVaccineStore) private readonly vaccineStore: IVaccineStore,
     @inject(TOKENS.UserService) private readonly userService: UserService,
+    @inject(TOKENS.VaccineBatchService)
+    private readonly vaccineBatchService: VaccineBatchService,
   ) {}
 
   /**
@@ -166,6 +174,204 @@ export class VaccineService {
       data: this.transformVaccinesBasedOnUserRole(result.data, userRole),
       pagination: result.pagination,
     };
+  }
+
+  /**
+   * Retrieves a single vaccine by ID
+   *
+   * Business Rules:
+   * - User must exist to retrieve vaccine
+   * - Returns vaccine if found and not deleted
+   * - Throws error if vaccine not found or deleted
+   *
+   * Authorization:
+   * - Any authenticated user can retrieve vaccines
+   *
+   * @param id - Vaccine UUID
+   * @param userId - ID of the user requesting the vaccine
+   * @returns Vaccine object
+   * @throws UserNotFoundError if user not found (from UserService)
+   * @throws VaccineNotFoundError if vaccine not found or deleted
+   *
+   * @example
+   * const vaccine = await vaccineService.getVaccineById('vaccine-id', 'user-id');
+   */
+  async getVaccineById(id: string, userId: string): Promise<Vaccine> {
+    // Validate user exists
+    await this.userService.validateUserExists(userId);
+
+    // Find vaccine by ID
+    const vaccine = await this.vaccineStore.findById(id);
+
+    // Check if vaccine exists and is not deleted
+    if (!vaccine || vaccine.deletedAt) {
+      throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
+    }
+
+    return vaccine;
+  }
+
+  /**
+   * Updates an existing vaccine
+   *
+   * Business Rules:
+   * - Only MANAGER role can update vaccines
+   * - Vaccine must exist and not be deleted
+   * - If name/manufacturer changed, must maintain uniqueness
+   * - Name and manufacturer are normalized for consistency
+   *
+   * Authorization:
+   * - Uses UserService.validateManagerRole() for encapsulated authorization
+   *
+   * @param id - Vaccine UUID
+   * @param data - Update data with optional fields
+   * @param userId - ID of the user updating the vaccine
+   * @returns Updated vaccine object
+   * @throws UserNotFoundError if user not found (from UserService)
+   * @throws ForbiddenError if user is not MANAGER (from UserService)
+   * @throws VaccineNotFoundError if vaccine not found or deleted
+   * @throws VaccineAlreadyExistsError if update causes duplicate name+manufacturer
+   *
+   * @example
+   * const updated = await vaccineService.updateVaccine(
+   *   'vaccine-id',
+   *   { minStockLevel: 200, description: 'Updated description' },
+   *   'manager-user-id'
+   * );
+   */
+  async updateVaccine(
+    id: string,
+    data: UpdateVaccineDTO,
+    userId: string,
+  ): Promise<Vaccine> {
+    // Authorization: validate user exists and has MANAGER role
+    await this.userService.validateManagerRole(userId);
+
+    // Find existing vaccine and validate it exists
+    const existingVaccine = await this.vaccineStore.findById(id);
+    if (!existingVaccine || existingVaccine.deletedAt) {
+      throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
+    }
+
+    // Prepare update data with normalization
+    const updateData: Record<string, any> = {};
+
+    // Normalize name if provided
+    if (data.name !== undefined) {
+      const normalizedName = normalizeText(data.name);
+      if (!normalizedName) {
+        throw new ValidationError(
+          'Vaccine name cannot be empty or whitespace only',
+        );
+      }
+      updateData.name = normalizedName;
+    }
+
+    // Normalize manufacturer if provided
+    if (data.manufacturer !== undefined) {
+      const normalizedManufacturer = normalizeText(data.manufacturer);
+      if (!normalizedManufacturer) {
+        throw new ValidationError(
+          'Manufacturer cannot be empty or whitespace only',
+        );
+      }
+      updateData.manufacturer = normalizedManufacturer;
+    }
+
+    // Check for uniqueness if name or manufacturer changed
+    if (updateData.name || updateData.manufacturer) {
+      const nameToCheck = updateData.name || existingVaccine.name;
+      const manufacturerToCheck =
+        updateData.manufacturer || existingVaccine.manufacturer;
+
+      // Only check if the combination actually changed
+      if (
+        nameToCheck !== existingVaccine.name ||
+        manufacturerToCheck !== existingVaccine.manufacturer
+      ) {
+        const duplicate = await this.vaccineStore.findByNameAndManufacturer(
+          nameToCheck,
+          manufacturerToCheck,
+        );
+
+        if (duplicate && duplicate.id !== id) {
+          throw new VaccineAlreadyExistsError(
+            data.name || existingVaccine.name,
+            data.manufacturer || existingVaccine.manufacturer,
+          );
+        }
+      }
+    }
+
+    // Add other fields if provided
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
+    if (data.dosesRequired !== undefined) {
+      updateData.dosesRequired = data.dosesRequired;
+    }
+    if (data.intervalDays !== undefined) {
+      updateData.intervalDays = data.intervalDays;
+    }
+    if (data.isObligatory !== undefined) {
+      updateData.isObligatory = data.isObligatory;
+    }
+    if (data.minStockLevel !== undefined) {
+      updateData.minStockLevel = data.minStockLevel;
+    }
+
+    // Update vaccine
+    const updatedVaccine = await this.vaccineStore.update(id, updateData);
+
+    return updatedVaccine;
+  }
+
+  /**
+   * Soft deletes a vaccine
+   *
+   * Business Rules:
+   * - Only MANAGER role can delete vaccines
+   * - Vaccine must exist and not be already deleted
+   * - Uses soft delete (sets deletedAt timestamp)
+   *
+   * Authorization:
+   * - Uses UserService.validateManagerRole() for encapsulated authorization
+   *
+   * @param id - Vaccine UUID
+   * @param userId - ID of the user deleting the vaccine
+   * @throws UserNotFoundError if user not found (from UserService)
+   * @throws ForbiddenError if user is not MANAGER (from UserService)
+   * @throws VaccineNotFoundError if vaccine not found or already deleted
+   *
+   * @example
+   * await vaccineService.deleteVaccine('vaccine-id', 'manager-user-id');
+   */
+  async deleteVaccine(id: string, userId: string): Promise<void> {
+    // Authorization: validate user exists and has MANAGER role
+    await this.userService.validateManagerRole(userId);
+
+    // Find vaccine and validate it exists
+    const vaccine = await this.vaccineStore.findById(id);
+    if (!vaccine || vaccine.deletedAt) {
+      throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
+    }
+    const vaccineBatchs = await this.vaccineBatchService.findVaccineBatchs(id);
+
+    await this.vaccineStore.softDelete(id);
+
+    if (!vaccineBatchs.length) {
+      console.log(`Vaccine ${id} has no batches.`);
+      return;
+    }
+
+    console.log(`Vaccine ${id} has ${vaccineBatchs.length} batches.`);
+
+    await Promise.all(
+      vaccineBatchs.map(async (batch) => {
+        console.log(`Soft deleting batch ${batch.id} of vaccine ${id}.`);
+        await this.vaccineBatchService.deleteVaccineBatch(batch.id);
+      }),
+    );
   }
 
   private transformVaccinesBasedOnUserRole(

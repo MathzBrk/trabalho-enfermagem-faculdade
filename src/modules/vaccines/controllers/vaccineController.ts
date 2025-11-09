@@ -1,4 +1,7 @@
-import type { CreateVaccineDTO } from '@shared/models/vaccine';
+import type {
+  CreateVaccineDTO,
+  UpdateVaccineDTO,
+} from '@shared/models/vaccine';
 import type { NextFunction, Request, Response } from 'express';
 import { injectable } from 'tsyringe';
 // biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
@@ -67,6 +70,50 @@ export class VaccineController {
       );
 
       res.status(200).json(paginatedVaccines);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId!;
+
+      const vaccine = await this.vaccineService.getVaccineById(id, userId);
+
+      res.status(200).json(vaccine);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const data: UpdateVaccineDTO = req.body;
+      const userId = req.user?.userId!;
+
+      const updatedVaccine = await this.vaccineService.updateVaccine(
+        id,
+        data,
+        userId,
+      );
+
+      res.status(200).json(updatedVaccine);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId!;
+
+      await this.vaccineService.deleteVaccine(id, userId);
+
+      res.status(204).send();
     } catch (error) {
       next(error);
     }
