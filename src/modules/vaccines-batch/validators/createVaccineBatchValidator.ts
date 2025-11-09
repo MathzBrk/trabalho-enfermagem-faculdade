@@ -15,13 +15,13 @@ export const CreateVaccineBatchBodySchema = z.object({
     .min(1, 'Quantity must be at least 1'),
   expirationDate: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), {
+    .refine((date) => !Number.isNaN(Date.parse(date)), {
       message: 'Expiration date must be a valid ISO date string',
     })
     .transform((date) => new Date(date)),
   receivedDate: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), {
+    .refine((date) => !Number.isNaN(Date.parse(date)), {
       message: 'Received date must be a valid ISO date string',
     })
     .transform((date) => new Date(date))
