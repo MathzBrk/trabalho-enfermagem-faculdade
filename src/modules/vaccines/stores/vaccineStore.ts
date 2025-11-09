@@ -196,7 +196,7 @@ export class VaccineStore
    */
   async incrementStock(vaccineId: string, amount: number): Promise<Vaccine> {
     if (amount <= 0) {
-      throw new Error('Increment amount must be positive');
+      throw new Error(`Increment amount must be positive, got ${amount}`);
     }
 
     return this.model.update({
@@ -234,7 +234,7 @@ export class VaccineStore
    */
   async decrementStock(vaccineId: string, amount: number): Promise<Vaccine> {
     if (amount <= 0) {
-      throw new Error('Decrement amount must be positive');
+      throw new Error(`Decrement amount must be positive, got ${amount}`);
     }
 
     return this.model.update({
