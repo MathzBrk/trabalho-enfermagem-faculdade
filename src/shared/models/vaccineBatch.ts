@@ -21,3 +21,11 @@ export interface CreateVaccineBatchDTO {
   expirationDate: Date;
   receivedDate?: Date;
 }
+
+export interface UpdateVaccineBatchDTO {
+  batchNumber?: string;
+  quantity?: number;
+  expirationDate?: Date;
+  receivedDate?: Date;
+  status?: VaccineBatchStatus;
+}
