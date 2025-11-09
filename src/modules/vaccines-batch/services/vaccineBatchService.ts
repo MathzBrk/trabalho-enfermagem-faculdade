@@ -123,7 +123,7 @@ export class VaccineBatchService {
       currentQuantity: data.quantity,
       expirationDate: data.expirationDate,
 
-      receivedDate: data.receivedDate ? data.receivedDate : getCurrentDate(),
+      receivedDate: data.receivedDate ?? getCurrentDate(),
       status: 'AVAILABLE',
       vaccine: {
         connect: { id: data.vaccineId },
@@ -321,5 +321,7 @@ export class VaccineBatchService {
       );
       await this.vaccineStore.update(vaccine.id, { totalStock: newTotalStock });
     }
+    // Delete the batch from the database
+    await this.vaccineBatchStore.delete(batchId);
   }
 }
