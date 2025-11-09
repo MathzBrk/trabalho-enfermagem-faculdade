@@ -111,12 +111,6 @@ export class VaccineBatchService {
       throw new BatchNumberAlreadyExistsError(data.batchNumber);
     }
 
-    // Validate quantity is positive
-    if (data.quantity <= 0) {
-      throw new InvalidBatchQuantityError(
-        'Quantity must be a positive integer',
-      );
-    }
     if (!isDateInFuture(data.expirationDate)) {
       throw new ExpiredBatchError('Expiration date must be in the future');
     }
@@ -205,7 +199,10 @@ export class VaccineBatchService {
     if (isBecomingUnavailable) {
       // If becoming unavailable, remove the CURRENT stock from totalStock
       stockDelta = -existingBatch.currentQuantity;
-    } else if (normalizedData.quantity !== undefined) {
+    } else if (
+      normalizedData.quantity !== undefined &&
+      existingBatch.status === 'AVAILABLE'
+    ) {
       // Adjust stock based on quantity correction
       stockDelta = normalizedData.quantity - existingBatch.currentQuantity;
     }
