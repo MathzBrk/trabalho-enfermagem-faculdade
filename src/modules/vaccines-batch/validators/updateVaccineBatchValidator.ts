@@ -25,4 +25,5 @@ export const UpdateVaccineBatchBodySchema = z.object({
     })
     .transform((date) => new Date(date))
     .optional(),
+  status: z.enum(['AVAILABLE', 'EXPIRED', 'DEPLETED', 'DISCARDED']).optional(),
 });
