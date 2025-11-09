@@ -65,4 +65,50 @@ export interface IVaccineStore
    * const updatedVaccine = await vaccineStore.decrementStock('vaccine-id', 50);
    */
   decrementStock(vaccineId: string, amount: number): Promise<Vaccine>;
+
+  /**
+   * Atomically deletes a vaccine and all its associated batches
+   *
+   * This method executes a transactional operation that ensures all-or-nothing semantics.
+   * The deletion process follows these steps in a single database transaction:
+   *
+   * 1. Finds all AVAILABLE batches with currentQuantity > 0
+   * 2. Calculates total stock to remove (sum of currentQuantity from AVAILABLE batches)
+   * 3. If totalStockToRemove > 0, atomically decrements vaccine.totalStock
+   * 4. Deletes all vaccine batches (CASCADE)
+   * 5. Deletes the vaccine itself
+   *
+   * Transactional Guarantees:
+   * - If any step fails, the entire operation is rolled back
+   * - No partial deletions can occur
+   * - Stock adjustment happens atomically before deletion
+   * - Database remains in a consistent state even on failure
+   *
+   * Stock Adjustment Logic:
+   * - Only AVAILABLE batches affect the stock count
+   * - EXPIRED, DEPLETED, and DISCARDED batches do not contribute to totalStock
+   * - Stock is decremented BEFORE deletion for safer operation
+   *
+   * CASCADE Behavior:
+   * - All batches are deleted via deleteMany for efficiency
+   * - Foreign key relationships are handled at database level (onDelete: Cascade)
+   * - This provides a safety net if batches are deleted directly in database
+   *
+   * Error Handling:
+   * - Throws if vaccine does not exist
+   * - Transaction automatically rolls back on any database error
+   * - All changes are reverted if rollback occurs
+   *
+   * @param vaccineId - UUID of the vaccine to delete
+   * @returns Promise that resolves when deletion is complete
+   * @throws Error if vaccine not found
+   * @throws Error if transaction fails (with automatic rollback)
+   *
+   * @example
+   * // Delete vaccine and all its batches atomically
+   * await vaccineStore.deleteVaccineWithBatches('vaccine-id');
+   * // If this succeeds, both vaccine and all batches are deleted
+   * // If it fails, neither vaccine nor batches are deleted
+   */
+  deleteVaccineWithBatches(vaccineId: string): Promise<void>;
 }

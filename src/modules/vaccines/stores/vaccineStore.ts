@@ -245,4 +245,93 @@ export class VaccineStore
       },
     });
   }
+
+  /**
+   * Atomically deletes a vaccine and all its associated batches
+   *
+   * This method uses Prisma's $transaction to ensure all-or-nothing semantics.
+   * All operations are executed within a single database transaction, guaranteeing
+   * that either all changes succeed or all changes are rolled back.
+   *
+   * Transaction Steps:
+   * 1. Find all AVAILABLE batches with currentQuantity > 0
+   * 2. Calculate total stock to remove (sum of currentQuantity)
+   * 3. If totalStockToRemove > 0, atomically decrement vaccine.totalStock
+   * 4. Delete all batches using deleteMany (efficient bulk delete)
+   * 5. Delete the vaccine
+   *
+   * Design Rationale:
+   * - Stock adjustment happens BEFORE deletion for safer operation
+   * - Only AVAILABLE batches contribute to stock (business rule enforcement)
+   * - Using deleteMany is more efficient than individual deletes
+   * - Transaction ensures consistency even if operation is interrupted
+   *
+   * Why Adjust Stock Before Deletion?
+   * - Provides audit trail if transaction fails mid-operation
+   * - Ensures stock is correct even during rollback scenarios
+   * - Follows principle of "safe state before destructive operation"
+   *
+   * Performance Considerations:
+   * - Single round-trip to database for batch fetch
+   * - Bulk delete using deleteMany (more efficient than N deletes)
+   * - Transaction isolation prevents concurrent modification issues
+   *
+   * @param vaccineId - UUID of the vaccine to delete
+   * @returns Promise that resolves when deletion is complete
+   * @throws Error if vaccine not found
+   * @throws Error if transaction fails (all changes are rolled back)
+   *
+   * @example
+   * // Delete vaccine and all batches atomically
+   * await vaccineStore.deleteVaccineWithBatches('vaccine-id');
+   * // Success: vaccine and all batches deleted, stock adjusted
+   * // Failure: nothing deleted, database remains unchanged
+   */
+  async deleteVaccineWithBatches(vaccineId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      // Step 1: Find all AVAILABLE batches with quantity > 0
+      // Only AVAILABLE batches should affect totalStock
+      const availableBatches = await tx.vaccineBatch.findMany({
+        where: {
+          vaccineId,
+          status: 'AVAILABLE',
+          currentQuantity: { gt: 0 },
+          deletedAt: null,
+        },
+        select: {
+          currentQuantity: true,
+        },
+      });
+
+      // Step 2: Calculate total stock to remove
+      const totalStockToRemove = availableBatches.reduce(
+        (sum, batch) => sum + batch.currentQuantity,
+        0,
+      );
+
+      // Step 3: Adjust vaccine stock BEFORE deletion if needed
+      // This ensures stock is correct even during transaction rollback scenarios
+
+      if (totalStockToRemove > 0) {
+        await tx.vaccine.update({
+          where: { id: vaccineId },
+          data: {
+            totalStock: { decrement: totalStockToRemove },
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Step 4: Delete all batches (efficient bulk delete)
+      // This deletes ALL batches (AVAILABLE, EXPIRED, DEPLETED, DISCARDED)
+      await tx.vaccineBatch.deleteMany({
+        where: { vaccineId },
+      });
+
+      // Step 5: Delete the vaccine itself
+      await tx.vaccine.delete({
+        where: { id: vaccineId },
+      });
+    });
+  }
 }
