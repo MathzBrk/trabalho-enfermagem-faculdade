@@ -35,4 +35,5 @@ export const TOKENS = {
    * to maintain proper encapsulation and respect bounded contexts.
    */
   UserService: Symbol.for('UserService'),
+  VaccineBatchService: Symbol.for('VaccineBatchService'),
 } as const;
