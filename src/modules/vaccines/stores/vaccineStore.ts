@@ -171,4 +171,78 @@ export class VaccineStore
       },
     });
   }
+
+  /**
+   * Atomically increments the vaccine's total stock
+   *
+   * Uses Prisma's atomic increment operation to prevent race conditions.
+   * This is critical for maintaining data consistency when multiple batch
+   * operations occur concurrently (e.g., multiple batches being added simultaneously).
+   *
+   * The atomic operation is performed at the database level using:
+   * UPDATE vaccines SET totalStock = totalStock + amount WHERE id = vaccineId
+   *
+   * This ensures the increment is thread-safe and prevents lost updates.
+   *
+   * @param vaccineId - UUID of the vaccine to update
+   * @param amount - Positive integer amount to increment
+   * @returns Updated vaccine object with new totalStock
+   * @throws Error if amount is not positive
+   *
+   * @example
+   * // Adding a new batch of 100 units
+   * const vaccine = await vaccineStore.incrementStock('vaccine-id', 100);
+   * console.log(vaccine.totalStock); // Previous stock + 100
+   */
+  async incrementStock(vaccineId: string, amount: number): Promise<Vaccine> {
+    if (amount <= 0) {
+      throw new Error('Increment amount must be positive');
+    }
+
+    return this.model.update({
+      where: { id: vaccineId },
+      data: {
+        totalStock: { increment: amount },
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Atomically decrements the vaccine's total stock
+   *
+   * Uses Prisma's atomic decrement operation to prevent race conditions.
+   * This is critical for maintaining data consistency when batches are removed
+   * or stock is consumed concurrently.
+   *
+   * The atomic operation is performed at the database level using:
+   * UPDATE vaccines SET totalStock = totalStock - amount WHERE id = vaccineId
+   *
+   * Important: This method does NOT prevent negative stock values at the database level.
+   * The service layer is responsible for business rule validation (e.g., ensuring
+   * stock doesn't go below zero before calling this method).
+   *
+   * @param vaccineId - UUID of the vaccine to update
+   * @param amount - Positive integer amount to decrement
+   * @returns Updated vaccine object with new totalStock
+   * @throws Error if amount is not positive
+   *
+   * @example
+   * // Removing a batch of 50 units
+   * const vaccine = await vaccineStore.decrementStock('vaccine-id', 50);
+   * console.log(vaccine.totalStock); // Previous stock - 50
+   */
+  async decrementStock(vaccineId: string, amount: number): Promise<Vaccine> {
+    if (amount <= 0) {
+      throw new Error('Decrement amount must be positive');
+    }
+
+    return this.model.update({
+      where: { id: vaccineId },
+      data: {
+        totalStock: { decrement: amount },
+        updatedAt: new Date(),
+      },
+    });
+  }
 }

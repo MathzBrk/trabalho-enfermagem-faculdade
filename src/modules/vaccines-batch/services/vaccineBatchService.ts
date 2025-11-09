@@ -133,12 +133,9 @@ export class VaccineBatchService {
       },
     });
 
-    // Update vaccine's totalStock directly using store
-    // Increment the totalStock by the quantity of the new batch
-    await this.vaccineStore.update(data.vaccineId, {
-      totalStock: vaccine.totalStock + data.quantity,
-      updatedAt: getCurrentDate(),
-    });
+    // Atomically increment the vaccine's totalStock
+    // Uses store's atomic operation to prevent race conditions
+    await this.vaccineStore.incrementStock(data.vaccineId, data.quantity);
 
     return newBatch;
   }
@@ -187,8 +184,7 @@ export class VaccineBatchService {
       currentQuantity: quantity ?? existingBatch.currentQuantity,
     });
 
-    let stockDelta = 0;
-
+    // Handle stock adjustments using atomic operations
     // Check if status is changing from AVAILABLE to DISCARDED/EXPIRED
     const isBecomingUnavailable =
       normalizedData.status &&
@@ -197,22 +193,32 @@ export class VaccineBatchService {
       existingBatch.status === 'AVAILABLE';
 
     if (isBecomingUnavailable) {
-      // If becoming unavailable, remove the CURRENT stock from totalStock
-      stockDelta = -existingBatch.currentQuantity;
+      // If becoming unavailable, atomically decrement stock by current quantity
+      const decrementAmount = existingBatch.currentQuantity;
+      if (decrementAmount > 0) {
+        await this.vaccineStore.decrementStock(
+          existingBatch.vaccineId,
+          decrementAmount,
+        );
+      }
     } else if (
       normalizedData.quantity !== undefined &&
       existingBatch.status === 'AVAILABLE'
     ) {
-      // Adjust stock based on quantity correction
-      stockDelta = normalizedData.quantity - existingBatch.currentQuantity;
-    }
+      // Adjust stock based on quantity correction using atomic operations
+      const stockDelta = normalizedData.quantity - existingBatch.currentQuantity;
 
-    if (stockDelta !== 0) {
-      const newStock = Math.max(0, vaccine.totalStock + stockDelta);
-      await this.vaccineStore.update(existingBatch.vaccineId, {
-        totalStock: newStock,
-        updatedAt: getCurrentDate(),
-      });
+      if (stockDelta > 0) {
+        // Quantity increased - atomically increment
+        await this.vaccineStore.incrementStock(existingBatch.vaccineId, stockDelta);
+      } else if (stockDelta < 0) {
+        // Quantity decreased - atomically decrement
+        await this.vaccineStore.decrementStock(
+          existingBatch.vaccineId,
+          Math.abs(stockDelta),
+        );
+      }
+      // If stockDelta === 0, no stock update needed
     }
 
     return updatedBatch;
@@ -307,20 +313,23 @@ export class VaccineBatchService {
     if (!batch) {
       throw new VaccineBatchNotFoundError(batchId);
     }
-    // If batch is AVAILABLE, decrement vaccine's totalStock
-    if (batch.status === 'AVAILABLE') {
-      // Fetch the vaccine
+
+    // If batch is AVAILABLE, atomically decrement vaccine's totalStock
+    if (batch.status === 'AVAILABLE' && batch.currentQuantity > 0) {
+      // Verify vaccine exists before attempting stock adjustment
       const vaccine = await this.vaccineStore.findById(batch.vaccineId);
       if (!vaccine) {
         throw new VaccineNotFoundError(batch.vaccineId);
       }
-      // Decrement totalStock by batch.currentQuantity, but not below zero
-      const newTotalStock = Math.max(
-        0,
-        (vaccine.totalStock || 0) - (batch.currentQuantity || 0),
+
+      // Atomically decrement stock using store's atomic operation
+      // This prevents race conditions when deleting multiple batches concurrently
+      await this.vaccineStore.decrementStock(
+        batch.vaccineId,
+        batch.currentQuantity,
       );
-      await this.vaccineStore.update(vaccine.id, { totalStock: newTotalStock });
     }
+
     // Delete the batch from the database
     await this.vaccineBatchStore.delete(batchId);
   }
