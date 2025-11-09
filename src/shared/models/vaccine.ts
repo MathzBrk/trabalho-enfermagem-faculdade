@@ -14,6 +14,16 @@ export interface CreateVaccineDTO {
   createdById?: string; // Injected by service layer
 }
 
+export interface UpdateVaccineDTO {
+  name?: string;
+  manufacturer?: string;
+  description?: string;
+  dosesRequired?: number;
+  intervalDays?: number;
+  isObligatory?: boolean;
+  minStockLevel?: number;
+}
+
 export type Vaccine = PrismaVaccine;
 export type VaccineCreateInput = Prisma.VaccineCreateInput;
 export type VaccineUpdateInput = Prisma.VaccineUpdateInput;

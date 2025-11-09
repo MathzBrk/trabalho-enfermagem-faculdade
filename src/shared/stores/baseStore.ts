@@ -1,4 +1,4 @@
-import prisma from "@infrastructure/database";
+import prisma from '@infrastructure/database';
 
 export interface IBaseStore<TModel, TCreateInput, TUpdateInput> {
   findById(id: string): Promise<TModel | null>;
@@ -11,7 +11,9 @@ export interface IBaseStore<TModel, TCreateInput, TUpdateInput> {
   exists(where: any): Promise<boolean>;
 }
 
-export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  implements IBaseStore<TModel, TCreateInput, TUpdateInput> {
+export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>
+  implements IBaseStore<TModel, TCreateInput, TUpdateInput>
+{
   protected readonly prisma: typeof prisma;
   protected abstract readonly model: TDelegate;
 
@@ -71,7 +73,6 @@ export abstract class BaseStore<TModel, TDelegate, TCreateInput, TUpdateInput>  
       where: { id },
       data: {
         deletedAt: new Date(),
-        isActive: false,
       },
     });
   }

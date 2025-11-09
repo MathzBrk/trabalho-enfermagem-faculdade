@@ -3,6 +3,7 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import vaccineRoutes from './vaccine.routes';
+import vaccineBatchRoutes from './vaccineBatch.routes';
 
 /**
  * Main Routes Index
@@ -37,13 +38,22 @@ routes.use('/auth', authRoutes);
  */
 routes.use('/users', userRoutes);
 
+/**
+ * Vaccine routes
+ * Prefix: /api/vaccines
+ */
 routes.use('/vaccines', vaccineRoutes);
+
+/**
+ * Vaccine Batch routes
+ * Prefix: /api/vaccine-batches
+ */
+routes.use('/vaccine-batches', vaccineBatchRoutes);
 
 /**
  * TODO: Add more routes here as you create new modules
  *
  * Example:
- * routes.use("/vaccines", vaccineRoutes);
  * routes.use("/schedulings", schedulingRoutes);
  */
 
