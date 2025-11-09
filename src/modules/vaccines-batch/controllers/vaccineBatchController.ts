@@ -31,11 +31,6 @@ export class VaccineBatchController {
       const batchId: string = req.params.id;
       const data: UpdateVaccineBatchDTO = req.body;
 
-      if (!Object.keys(data).length) {
-        res.status(400).json({ message: 'No data provided for update' });
-        return;
-      }
-
       const userId = req.user?.userId!;
       const updatedVaccineBatch =
         await this.vaccineBatchService.updateVaccineBatch(

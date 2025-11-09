@@ -23,6 +23,7 @@ import type {
 } from '@shared/models/vaccineBatch';
 import { inject, injectable } from 'tsyringe';
 import { getCurrentDate, isDateInFuture } from '@shared/helpers/timeHelper';
+import { ValidationError } from '@modules/user/errors';
 
 /**
  * VaccineBatchService - Service layer for vaccine batch business logic
@@ -153,7 +154,11 @@ export class VaccineBatchService {
     data: UpdateVaccineBatchDTO,
     userId: string,
   ): Promise<VaccineBatch> {
-    // Authorization: validate user exists and has MANAGER role
+    if (!Object.keys(data).length) {
+      throw new ValidationError(
+        'At least one field must be provided for update',
+      );
+    }
     await this.userService.validateManagerRole(userId);
     const existingBatch = await this.vaccineBatchStore.findById(batchId);
     if (!existingBatch) {
@@ -248,6 +253,10 @@ export class VaccineBatchService {
       normalizedData.expirationDate = data.expirationDate;
     }
 
+    if (data.receivedDate !== undefined) {
+      normalizedData.receivedDate = data.receivedDate;
+    }
+
     if (data.status !== undefined) {
       normalizedData.status = data.status;
     }
@@ -296,6 +305,24 @@ export class VaccineBatchService {
   }
 
   async deleteVaccineBatch(batchId: string): Promise<void> {
-    await this.vaccineBatchStore.delete(batchId);
+    // Retrieve the batch before deletion
+    const batch = await this.vaccineBatchStore.findById(batchId);
+    if (!batch) {
+      throw new VaccineBatchNotFoundError(batchId);
+    }
+    // If batch is AVAILABLE, decrement vaccine's totalStock
+    if (batch.status === 'AVAILABLE') {
+      // Fetch the vaccine
+      const vaccine = await this.vaccineStore.findById(batch.vaccineId);
+      if (!vaccine) {
+        throw new VaccineNotFoundError(batch.vaccineId);
+      }
+      // Decrement totalStock by batch.currentQuantity, but not below zero
+      const newTotalStock = Math.max(
+        0,
+        (vaccine.totalStock || 0) - (batch.currentQuantity || 0),
+      );
+      await this.vaccineStore.update(vaccine.id, { totalStock: newTotalStock });
+    }
   }
 }
