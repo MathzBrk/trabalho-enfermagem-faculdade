@@ -4,6 +4,7 @@ import { CreateVaccineBatchBodySchema } from '@modules/vaccines-batch/validators
 import { UpdateVaccineBatchBodySchema } from '@modules/vaccines-batch/validators/updateVaccineBatchValidator';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { validateRequest } from '@shared/middlewares/validateRequest';
+import { idParamsSchema } from '@shared/validators/idParamsSchema';
 import { Router } from 'express';
 
 const vaccineBatchRoutes = Router();
@@ -22,7 +23,10 @@ vaccineBatchRoutes.post(
 vaccineBatchRoutes.patch(
   '/:id',
   authMiddleware,
-  validateRequest(UpdateVaccineBatchBodySchema),
+  validateRequest({
+    body: UpdateVaccineBatchBodySchema,
+    params: idParamsSchema,
+  }),
   vaccineBatchController.update.bind(vaccineBatchController),
 );
 

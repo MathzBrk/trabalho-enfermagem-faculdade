@@ -3,12 +3,12 @@ import { z } from 'zod';
 export const UpdateVaccineBodySchema = z.object({
   name: z
     .string()
-    .min(1, 'Vaccine name is required')
+    .min(1, 'Vaccine name cannot be empty if provided')
     .max(100, 'Vaccine name too long')
     .optional(),
   manufacturer: z
     .string()
-    .min(1, 'Manufacturer is required')
+    .min(1, 'Manufacturer cannot be empty if provided')
     .max(100, 'Manufacturer name too long')
     .optional(),
   dosesRequired: z

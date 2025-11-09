@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const UpdateVaccineBatchBodySchema = z.object({
   batchNumber: z
     .string()
-    .min(1, 'Batch number is required')
+    .min(1, 'Batch number cannot be empty if provided')
     .max(100, 'Batch number too long')
     .optional(),
   quantity: z

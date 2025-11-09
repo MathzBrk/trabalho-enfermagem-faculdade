@@ -5,9 +5,9 @@ import { GetVaccineByIdQuerySchema } from '@modules/vaccines/validators/getVacci
 import { ListVaccineBatchesQuerySchema } from '@modules/vaccines/validators/listVaccineBatchesValidator';
 import { ListVaccinesQuerySchema } from '@modules/vaccines/validators/listVaccinesValidator';
 import { UpdateVaccineBodySchema } from '@modules/vaccines/validators/updateVaccineValidator';
-import { VaccineIdParamSchema } from '@modules/vaccines/validators/vaccineIdParamValidator';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { validateRequest } from '@shared/middlewares/validateRequest';
+import { idParamsSchema } from '@shared/validators/idParamsSchema';
 import { Router } from 'express';
 
 const vaccineRoutes = Router();
@@ -37,7 +37,7 @@ vaccineRoutes.get(
   '/:id/batches',
   authMiddleware,
   validateRequest({
-    params: VaccineIdParamSchema,
+    params: idParamsSchema,
     query: ListVaccineBatchesQuerySchema,
   }),
   vaccineController.getVaccineBatches.bind(vaccineController),
@@ -48,7 +48,7 @@ vaccineRoutes.get(
   '/:id',
   authMiddleware,
   validateRequest({
-    params: VaccineIdParamSchema,
+    params: idParamsSchema,
     query: GetVaccineByIdQuerySchema,
   }),
   vaccineController.getById.bind(vaccineController),
@@ -59,7 +59,7 @@ vaccineRoutes.patch(
   '/:id',
   authMiddleware,
   validateRequest({
-    params: VaccineIdParamSchema,
+    params: idParamsSchema,
     body: UpdateVaccineBodySchema,
   }),
   vaccineController.update.bind(vaccineController),
@@ -69,7 +69,7 @@ vaccineRoutes.patch(
 vaccineRoutes.delete(
   '/:id',
   authMiddleware,
-  validateRequest({ params: VaccineIdParamSchema }),
+  validateRequest({ params: idParamsSchema }),
   vaccineController.delete.bind(vaccineController),
 );
 
