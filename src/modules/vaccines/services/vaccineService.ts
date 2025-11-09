@@ -204,7 +204,7 @@ export class VaccineService {
     const vaccine = await this.vaccineStore.findById(id);
 
     // Check if vaccine exists and is not deleted
-    if (!vaccine || vaccine.deletedAt) {
+    if (!vaccine) {
       throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
     }
 
@@ -327,12 +327,13 @@ export class VaccineService {
   }
 
   /**
-   * Soft deletes a vaccine
+   * Deletes a vaccine and all associated batches
    *
    * Business Rules:
    * - Only MANAGER role can delete vaccines
-   * - Vaccine must exist and not be already deleted
-   * - Uses soft delete (sets deletedAt timestamp)
+   * - Vaccine must exist
+   * - Hard delete (permanently removes from database)
+   * - Cascade delete: all vaccine batches are deleted first to maintain referential integrity
    *
    * Authorization:
    * - Uses UserService.validateManagerRole() for encapsulated authorization
@@ -341,7 +342,7 @@ export class VaccineService {
    * @param userId - ID of the user deleting the vaccine
    * @throws UserNotFoundError if user not found (from UserService)
    * @throws ForbiddenError if user is not MANAGER (from UserService)
-   * @throws VaccineNotFoundError if vaccine not found or already deleted
+   * @throws VaccineNotFoundError if vaccine not found
    *
    * @example
    * await vaccineService.deleteVaccine('vaccine-id', 'manager-user-id');
@@ -352,26 +353,30 @@ export class VaccineService {
 
     // Find vaccine and validate it exists
     const vaccine = await this.vaccineStore.findById(id);
-    if (!vaccine || vaccine.deletedAt) {
+    if (!vaccine) {
       throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
     }
+
+    // Find all batches associated with this vaccine
     const vaccineBatchs = await this.vaccineBatchService.findVaccineBatchs(id);
 
-    await this.vaccineStore.softDelete(id);
+    // Delete all batches FIRST (to avoid foreign key constraint violation)
+    if (vaccineBatchs.length > 0) {
+      console.log(`Vaccine ${id} has ${vaccineBatchs.length} batches. Deleting them first...`);
 
-    if (!vaccineBatchs.length) {
+      await Promise.all(
+        vaccineBatchs.map(async (batch) => {
+          console.log(`Deleting batch ${batch.id} of vaccine ${id}.`);
+          await this.vaccineBatchService.deleteVaccineBatch(batch.id);
+        }),
+      );
+    } else {
       console.log(`Vaccine ${id} has no batches.`);
-      return;
     }
 
-    console.log(`Vaccine ${id} has ${vaccineBatchs.length} batches.`);
-
-    await Promise.all(
-      vaccineBatchs.map(async (batch) => {
-        console.log(`Soft deleting batch ${batch.id} of vaccine ${id}.`);
-        await this.vaccineBatchService.deleteVaccineBatch(batch.id);
-      }),
-    );
+    // Now delete the vaccine (after all batches are deleted)
+    await this.vaccineStore.delete(id);
+    console.log(`Vaccine ${id} deleted successfully.`);
   }
 
   private transformVaccinesBasedOnUserRole(
