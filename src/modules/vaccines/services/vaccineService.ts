@@ -11,15 +11,19 @@ import type {
   IVaccineStore,
   VaccineFilterParams,
 } from '@shared/interfaces/vaccine';
+import type {
+  IVaccineBatchStore,
+  VaccineBatchFilterParams,
+} from '@shared/interfaces/vaccineBatch';
 import type { UserRole } from '@shared/models/user';
 import type {
   CreateVaccineDTO,
   UpdateVaccineDTO,
   Vaccine,
 } from '@shared/models/vaccine';
+import type { VaccineBatch } from '@shared/models/vaccineBatch';
 import { inject, injectable } from 'tsyringe';
 import { VaccineNotFoundError } from '../errors';
-import type { VaccineBatchService } from '@modules/vaccines-batch';
 
 /**
  * VaccineService - Service layer for vaccine business logic
@@ -31,7 +35,7 @@ import type { VaccineBatchService } from '@modules/vaccines-batch';
  * - Orchestrating store operations
  *
  * Architecture:
- * - Follows Service → Service communication pattern
+ * - Uses stores directly to avoid circular dependencies
  * - Depends on UserService (not IUserStore) for proper encapsulation
  * - Respects bounded contexts and DDD principles
  */
@@ -40,8 +44,8 @@ export class VaccineService {
   constructor(
     @inject(TOKENS.IVaccineStore) private readonly vaccineStore: IVaccineStore,
     @inject(TOKENS.UserService) private readonly userService: UserService,
-    @inject(TOKENS.VaccineBatchService)
-    private readonly vaccineBatchService: VaccineBatchService,
+    @inject(TOKENS.IVaccineBatchStore)
+    private readonly vaccineBatchStore: IVaccineBatchStore,
   ) {}
 
   /**
@@ -177,11 +181,12 @@ export class VaccineService {
   }
 
   /**
-   * Retrieves a single vaccine by ID
+   * Retrieves a single vaccine by ID with optional batches inclusion
    *
    * Business Rules:
    * - User must exist to retrieve vaccine
    * - Returns vaccine if found and not deleted
+   * - Optionally includes vaccine batches (non-deleted, ordered by expiration date)
    * - Throws error if vaccine not found or deleted
    *
    * Authorization:
@@ -189,19 +194,28 @@ export class VaccineService {
    *
    * @param id - Vaccine UUID
    * @param userId - ID of the user requesting the vaccine
-   * @returns Vaccine object
+   * @param includeBatches - Whether to include vaccine batches in the response
+   * @returns Vaccine object (optionally with batches array)
    * @throws UserNotFoundError if user not found (from UserService)
    * @throws VaccineNotFoundError if vaccine not found or deleted
    *
    * @example
+   * // Without batches
    * const vaccine = await vaccineService.getVaccineById('vaccine-id', 'user-id');
+   *
+   * // With batches
+   * const vaccineWithBatches = await vaccineService.getVaccineById('vaccine-id', 'user-id', true);
    */
-  async getVaccineById(id: string, userId: string): Promise<Vaccine> {
+  async getVaccineById(
+    id: string,
+    userId: string,
+    includeBatches = false,
+  ): Promise<Vaccine> {
     // Validate user exists
     await this.userService.validateUserExists(userId);
 
-    // Find vaccine by ID
-    const vaccine = await this.vaccineStore.findById(id);
+    // Find vaccine by ID (optionally with batches)
+    const vaccine = await this.vaccineStore.findById(id, includeBatches);
 
     // Check if vaccine exists and is not deleted
     if (!vaccine) {
@@ -209,6 +223,62 @@ export class VaccineService {
     }
 
     return vaccine;
+  }
+
+  /**
+   * Retrieves paginated vaccine batches for a specific vaccine
+   *
+   * Business Rules:
+   * - User must exist to retrieve batches
+   * - Vaccine must exist
+   * - Returns batches filtered by vaccineId with pagination
+   * - Supports additional filters (status, expiration dates, quantity)
+   * - Results are sorted by expiration date (ascending) by default
+   *
+   * Authorization:
+   * - Any authenticated user can retrieve vaccine batches
+   *
+   * @param vaccineId - Vaccine UUID to retrieve batches for
+   * @param userId - ID of the user requesting the batches
+   * @param pagination - Pagination parameters (page, perPage, sortBy, sortOrder)
+   * @param filters - Optional additional filter criteria
+   * @returns Paginated response with vaccine batches
+   * @throws UserNotFoundError if user not found (from UserService)
+   * @throws VaccineNotFoundError if vaccine not found
+   *
+   * @example
+   * const batches = await vaccineService.getVaccineBatches(
+   *   'vaccine-id',
+   *   'user-id',
+   *   { page: 1, perPage: 20, sortBy: 'expirationDate', sortOrder: 'asc' },
+   *   { status: 'AVAILABLE' }
+   * );
+   */
+  async getVaccineBatches(
+    vaccineId: string,
+    userId: string,
+    pagination: PaginationParams,
+    filters?: Partial<VaccineBatchFilterParams>,
+  ): Promise<PaginatedResponse<VaccineBatch>> {
+    // Validate user exists
+    await this.userService.validateUserExists(userId);
+
+    // Validate vaccine exists
+    const vaccine = await this.vaccineStore.findById(vaccineId);
+    if (!vaccine) {
+      throw new VaccineNotFoundError(`Vaccine with ID ${vaccineId} not found`);
+    }
+
+    // Merge vaccineId filter with other filters and fetch batches directly from store
+    const mergedFilters: VaccineBatchFilterParams = {
+      ...filters,
+      vaccineId,
+    };
+
+    return this.vaccineBatchStore.findPaginatedBatches(
+      pagination,
+      mergedFilters,
+    );
   }
 
   /**
@@ -362,9 +432,8 @@ export class VaccineService {
       throw new VaccineNotFoundError(`Vaccine with ID ${id} not found`);
     }
 
-    // Find all batches associated with this vaccine
-    const vaccineBatches =
-      await this.vaccineBatchService.findVaccineBatches(id);
+    // Find all batches associated with this vaccine using store directly
+    const vaccineBatches = await this.vaccineBatchStore.findByVaccineId(id);
 
     // Delete all batches FIRST (to avoid foreign key constraint violation)
     if (vaccineBatches.length > 0) {
@@ -373,9 +442,9 @@ export class VaccineService {
       );
 
       await Promise.all(
-        vaccineBatches.map(async (batch) => {
+        vaccineBatches.map(async (batch: VaccineBatch) => {
           console.log(`Deleting batch ${batch.id} of vaccine ${id}.`);
-          await this.vaccineBatchService.deleteVaccineBatch(batch.id);
+          await this.vaccineBatchStore.delete(batch.id);
         }),
       );
     } else {

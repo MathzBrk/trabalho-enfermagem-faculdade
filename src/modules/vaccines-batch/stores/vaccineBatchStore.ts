@@ -107,7 +107,7 @@ export class VaccineBatchStore
         where,
         ...buildPaginationArgs(params, allowedVaccineBatchSortFields),
         include: {
-          vaccine: true,
+          vaccine: false,
           createdBy: {
             select: {
               id: true,

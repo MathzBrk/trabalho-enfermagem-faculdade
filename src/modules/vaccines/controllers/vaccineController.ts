@@ -8,6 +8,8 @@ import { injectable } from 'tsyringe';
 import { VaccineService } from '../services/vaccineService';
 import type { ListVaccinesQuery } from '../validators/listVaccinesValidator';
 import type { VaccineFilterParams } from '@shared/interfaces/vaccine';
+import type { ListVaccineBatchesQuery } from '../validators/listVaccineBatchesValidator';
+import type { VaccineBatchFilterParams } from '@shared/interfaces/vaccineBatch';
 
 @injectable()
 export class VaccineController {
@@ -75,14 +77,72 @@ export class VaccineController {
     }
   }
 
-  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { id } = req.params;
+      const { include } = req.query;
       const userId = req.user?.userId!;
 
-      const vaccine = await this.vaccineService.getVaccineById(id, userId);
+      const includeBatches = include === 'batches';
+
+      const vaccine = await this.vaccineService.getVaccineById(
+        id,
+        userId,
+        includeBatches,
+      );
 
       res.status(200).json(vaccine);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getVaccineBatches(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const {
+        page,
+        perPage,
+        sortBy,
+        sortOrder,
+        status,
+        expiringBefore,
+        expiringAfter,
+        minQuantity,
+      } = req.query as unknown as ListVaccineBatchesQuery;
+
+      const userId = req.user?.userId!;
+
+      const filters: Partial<VaccineBatchFilterParams> = {};
+      if (status) {
+        filters.status = status;
+      }
+      if (expiringBefore) {
+        filters.expiringBefore = new Date(expiringBefore);
+      }
+      if (expiringAfter) {
+        filters.expiringAfter = new Date(expiringAfter);
+      }
+      if (minQuantity !== undefined) {
+        filters.minQuantity = minQuantity;
+      }
+
+      const paginatedBatches = await this.vaccineService.getVaccineBatches(
+        id,
+        userId,
+        { page, perPage, sortBy, sortOrder },
+        Object.keys(filters).length ? filters : undefined,
+      );
+
+      res.status(200).json(paginatedBatches);
     } catch (error) {
       next(error);
     }

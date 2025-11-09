@@ -16,6 +16,7 @@ export interface VaccineFilterParams {
 
 export interface IVaccineStore
   extends IBaseStore<Vaccine, VaccineCreateInput, VaccineUpdateInput> {
+  findById(id: string, includeBatches?: boolean): Promise<Vaccine | null>;
   findByName(name: string): Promise<Vaccine | null>;
   findByNameAndManufacturer(
     name: string,

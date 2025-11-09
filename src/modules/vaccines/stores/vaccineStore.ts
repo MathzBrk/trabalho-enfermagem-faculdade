@@ -50,6 +50,34 @@ export class VaccineStore
   // Defines the model to be used by the base class
   protected readonly model = this.prisma.vaccine;
 
+  /**
+   * Finds a vaccine by ID with optional batches inclusion
+   *
+   * @param id - Vaccine UUID
+   * @param includeBatches - Whether to include vaccine batches in the response
+   * @returns Vaccine object or null if not found
+   *
+   * @example
+   * // Without batches
+   * const vaccine = await vaccineStore.findById('vaccine-id');
+   *
+   * // With batches
+   * const vaccineWithBatches = await vaccineStore.findById('vaccine-id', true);
+   */
+  async findById(id: string, includeBatches = false): Promise<Vaccine | null> {
+    return this.model.findUnique({
+      where: { id },
+      include: includeBatches
+        ? {
+            batches: {
+              where: { deletedAt: null },
+              orderBy: { expirationDate: 'asc' },
+            },
+          }
+        : undefined,
+    }) as Promise<Vaccine | null>;
+  }
+
   async findPaginatedVaccines(
     params: PaginationParams,
     filters?: VaccineFilterParams,

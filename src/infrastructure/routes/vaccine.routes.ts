@@ -1,6 +1,8 @@
 import { container } from '@infrastructure/di/container';
 import { VaccineController } from '@modules/vaccines';
 import { CreateVaccineBodySchema } from '@modules/vaccines/validators/createVaccineValidator';
+import { GetVaccineByIdQuerySchema } from '@modules/vaccines/validators/getVaccineByIdValidator';
+import { ListVaccineBatchesQuerySchema } from '@modules/vaccines/validators/listVaccineBatchesValidator';
 import { ListVaccinesQuerySchema } from '@modules/vaccines/validators/listVaccinesValidator';
 import { UpdateVaccineBodySchema } from '@modules/vaccines/validators/updateVaccineValidator';
 import { VaccineIdParamSchema } from '@modules/vaccines/validators/vaccineIdParamValidator';
@@ -29,11 +31,26 @@ vaccineRoutes.get(
   vaccineController.getPaginatedVaccines.bind(vaccineController),
 );
 
-// GET /vaccines/:id - Get vaccine by ID
+// GET /vaccines/:id/batches - Get paginated batches for a specific vaccine
+// IMPORTANT: This route MUST be before /:id to avoid route conflicts
+vaccineRoutes.get(
+  '/:id/batches',
+  authMiddleware,
+  validateRequest({
+    params: VaccineIdParamSchema,
+    query: ListVaccineBatchesQuerySchema,
+  }),
+  vaccineController.getVaccineBatches.bind(vaccineController),
+);
+
+// GET /vaccines/:id - Get vaccine by ID (with optional ?include=batches)
 vaccineRoutes.get(
   '/:id',
   authMiddleware,
-  validateRequest({ params: VaccineIdParamSchema }),
+  validateRequest({
+    params: VaccineIdParamSchema,
+    query: GetVaccineByIdQuerySchema,
+  }),
   vaccineController.getById.bind(vaccineController),
 );
 
@@ -48,7 +65,7 @@ vaccineRoutes.patch(
   vaccineController.update.bind(vaccineController),
 );
 
-// DELETE /vaccines/:id - Soft delete vaccine
+// DELETE /vaccines/:id - hard delete vaccine
 vaccineRoutes.delete(
   '/:id',
   authMiddleware,
