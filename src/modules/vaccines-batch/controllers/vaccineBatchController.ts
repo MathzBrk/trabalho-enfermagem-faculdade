@@ -1,4 +1,7 @@
-import type { CreateVaccineBatchDTO } from '@shared/models/vaccineBatch';
+import type {
+  CreateVaccineBatchDTO,
+  UpdateVaccineBatchDTO,
+} from '@shared/models/vaccineBatch';
 import type { NextFunction, Request, Response } from 'express';
 import { injectable } from 'tsyringe';
 // biome-ignore lint/style/useImportType: I need to import types this way because of TSyringe
@@ -18,6 +21,29 @@ export class VaccineBatchController {
         userId,
       );
       res.status(201).json(newVaccineBatch);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const batchId: string = req.params.id;
+      const data: UpdateVaccineBatchDTO = req.body;
+
+      if (!Object.keys(data).length) {
+        res.status(400).json({ message: 'No data provided for update' });
+        return;
+      }
+
+      const userId = req.user?.userId!;
+      const updatedVaccineBatch =
+        await this.vaccineBatchService.updateVaccineBatch(
+          batchId,
+          data,
+          userId,
+        );
+      res.status(200).json(updatedVaccineBatch);
     } catch (error) {
       next(error);
     }
