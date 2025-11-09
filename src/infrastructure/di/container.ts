@@ -4,6 +4,7 @@ import { UserService } from '@modules/user/services/userService';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
 import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
 import { TOKENS } from './tokens';
+import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBatchService';
 
 /**
  * DI Container Setup
@@ -42,6 +43,7 @@ export function setupContainer(): void {
   // Services are stateless and can be safely shared across the application
   // This follows the Service → Service communication pattern for proper encapsulation
   container.registerSingleton(TOKENS.UserService, UserService);
+  container.registerSingleton(TOKENS.VaccineBatchService, VaccineBatchService);
 
   console.log('📦 DI Container configured');
   console.log('   Stores:');
@@ -50,6 +52,7 @@ export function setupContainer(): void {
   console.log('   └─ IVaccineBatchStore → Using VaccineBatchStore (Prisma)');
   console.log('   Services:');
   console.log('   └─ UserService → Registered as singleton');
+  console.log('   └─ VaccineBatchService → Registered as singleton');
 
   // Future: Add environment-based switching
   // if (process.env.NODE_ENV === 'test') {
