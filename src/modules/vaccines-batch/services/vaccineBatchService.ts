@@ -324,5 +324,7 @@ export class VaccineBatchService {
       );
       await this.vaccineStore.update(vaccine.id, { totalStock: newTotalStock });
     }
+    // Delete the batch from the database
+    await this.vaccineBatchStore.delete(batchId);
   }
 }
