@@ -320,6 +320,11 @@ export class VaccineService {
       updateData.minStockLevel = data.minStockLevel;
     }
 
+    if (!Object.keys(updateData).length) {
+      console.log(`No fields to update for vaccine ID ${id}. Skipping update.`);
+      return existingVaccine;
+    }
+
     // Update vaccine
     const updatedVaccine = await this.vaccineStore.update(id, updateData);
 
@@ -358,14 +363,17 @@ export class VaccineService {
     }
 
     // Find all batches associated with this vaccine
-    const vaccineBatchs = await this.vaccineBatchService.findVaccineBatchs(id);
+    const vaccineBatches =
+      await this.vaccineBatchService.findVaccineBatches(id);
 
     // Delete all batches FIRST (to avoid foreign key constraint violation)
-    if (vaccineBatchs.length > 0) {
-      console.log(`Vaccine ${id} has ${vaccineBatchs.length} batches. Deleting them first...`);
+    if (vaccineBatches.length > 0) {
+      console.log(
+        `Vaccine ${id} has ${vaccineBatches.length} batches. Deleting them first...`,
+      );
 
       await Promise.all(
-        vaccineBatchs.map(async (batch) => {
+        vaccineBatches.map(async (batch) => {
           console.log(`Deleting batch ${batch.id} of vaccine ${id}.`);
           await this.vaccineBatchService.deleteVaccineBatch(batch.id);
         }),

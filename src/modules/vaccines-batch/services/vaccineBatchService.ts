@@ -140,7 +140,7 @@ export class VaccineBatchService {
     return newBatch;
   }
 
-  async findVaccineBatchs(vaccineId: string): Promise<VaccineBatch[]> {
+  async findVaccineBatches(vaccineId: string): Promise<VaccineBatch[]> {
     return this.vaccineBatchStore.findByVaccineId(vaccineId);
   }
 
