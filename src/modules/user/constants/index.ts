@@ -1,3 +1,5 @@
+import type { User } from '@shared/models/user';
+
 export const allowedUserSortFields = [
   'id',
   'name',
@@ -11,4 +13,19 @@ export const allowedUserSortFields = [
   'updatedAt',
 ];
 
-export const DEFAULT_USER_SYSTEM = 'USER_SYSTEM';
+export const DEFAULT_USER_SYSTEM_ID = '00000000-0000-0000-0000-000000000000';
+
+export const DEFAULT_USER_SYSTEM: User = {
+  id: DEFAULT_USER_SYSTEM_ID,
+  name: 'User System',
+  email: 'user.system@example.com',
+  cpf: '12345678900',
+  phone: '123456789',
+  role: 'MANAGER',
+  coren: '12345',
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  password: 'securepassword',
+  deletedAt: null,
+};
