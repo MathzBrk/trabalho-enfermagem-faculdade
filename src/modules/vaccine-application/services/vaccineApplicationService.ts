@@ -226,7 +226,10 @@ export class VaccineApplicationService {
     }
 
     // 9. Validate batch is not expired
-    if (new Date(batch.expirationDate) <= new Date()) {
+    if (
+      new Date(batch.expirationDate).setHours(23, 59, 59, 999) <
+      getCurrentTimestamp()
+    ) {
       throw new BatchNotAvailableError(
         `Batch ${batch.batchNumber} has expired`,
       );
@@ -608,16 +611,19 @@ export class VaccineApplicationService {
     // Calculate compliance percentage
     // Compliance is based on mandatory vaccines only
     // Formula: (mandatory vaccines completed / total mandatory vaccines) * 100
+
+    // First: count mandatory vaccines that are fully completed
+    const mandatoryVaccinesCompleted = vaccinesByType.filter(
+      (v) => v.isComplete && v.vaccine.isObligatory,
+    ).length;
+
+    // Then: calculate total mandatory vaccines (completed + pending + partially completed)
     const totalMandatoryVaccines =
-      totalVaccinesCompleted +
+      mandatoryVaccinesCompleted +
       totalMandatoryPending +
       // Count partially completed mandatory vaccines
       vaccinesByType.filter((v) => !v.isComplete && v.vaccine.isObligatory)
         .length;
-
-    const mandatoryVaccinesCompleted = vaccinesByType.filter(
-      (v) => v.isComplete && v.vaccine.isObligatory,
-    ).length;
 
     const compliancePercentage =
       totalMandatoryVaccines > 0

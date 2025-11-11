@@ -87,7 +87,7 @@ export class VaccineApplicationStore
           applicationDate: getCurrentDate(),
           doseNumber: data.doseNumber,
           applicationSite: data.applicationSite,
-          observations: data.observations ? data.observations : undefined,
+          observations: data.observations,
           user: {
             connect: { id: data.receivedById },
           },
