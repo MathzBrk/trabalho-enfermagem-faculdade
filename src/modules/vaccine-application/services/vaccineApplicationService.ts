@@ -35,6 +35,7 @@ import { VaccineBatchNotFoundError } from '@modules/vaccines-batch/errors';
 import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
 import {
   getCurrentTimestamp,
+  MILLISECONDS_IN_A_DAY,
   transformDateToTimestamp,
 } from '@shared/helpers/timeHelper';
 
@@ -293,8 +294,6 @@ export class VaccineApplicationService {
         );
 
       if (latestApplication) {
-        const MILLISECONDS_IN_A_DAY = 1000 * 60 * 60 * 24;
-
         const timeDifference =
           getCurrentTimestamp() -
           transformDateToTimestamp(latestApplication.applicationDate);
@@ -539,7 +538,7 @@ export class VaccineApplicationService {
         expectedDate: v.vaccine.intervalDays
           ? new Date(
               v.lastDate.getTime() +
-                v.vaccine.intervalDays * 24 * 60 * 60 * 1000,
+                v.vaccine.intervalDays * MILLISECONDS_IN_A_DAY,
             )
           : null,
       }));
