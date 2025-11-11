@@ -1,4 +1,5 @@
 import type { VaccineApplication } from '@infrastructure/database';
+import type { Prisma } from '@infrastructure/database/generated/prisma';
 import {
   type PaginatedResponse,
   type PaginationParams,
@@ -159,7 +160,7 @@ export class VaccineApplicationStore
   ): Promise<PaginatedResponse<VaccineApplication>> {
     const { page, perPage } = params;
 
-    const where: any = {
+    const where: Prisma.VaccineApplicationWhereInput = {
       deletedAt: null,
     };
 
@@ -195,7 +196,7 @@ export class VaccineApplicationStore
 
     const [data, total] = await Promise.all([
       this.model.findMany({
-        where,
+        where: where ? where : undefined,
         ...buildPaginationArgs(params, allowedVaccineApplicationSortFields),
         include: {
           user: {

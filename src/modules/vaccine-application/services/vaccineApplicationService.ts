@@ -187,7 +187,6 @@ export class VaccineApplicationService {
       );
     }
 
-    // 4. Validate applicator and receiver are different people
     if (data.appliedById === data.receivedById) {
       throw new ValidationError(
         'The applicator and the receiver cannot be the same person',
@@ -212,21 +211,18 @@ export class VaccineApplicationService {
       );
     }
 
-    // 7. Validate batch is available for use
     if (batch.status !== 'AVAILABLE') {
       throw new BatchNotAvailableError(
         `Batch ${batch.batchNumber} is not available (status: ${batch.status})`,
       );
     }
 
-    // 8. Validate batch has sufficient quantity
     if (batch.currentQuantity <= 0) {
       throw new InsufficientBatchQuantityError(
         `Batch ${batch.batchNumber} has no remaining doses`,
       );
     }
 
-    // 9. Validate batch is not expired
     if (
       new Date(batch.expirationDate).setHours(23, 59, 59, 999) <
       getCurrentTimestamp()
@@ -236,7 +232,6 @@ export class VaccineApplicationService {
       );
     }
 
-    // 10. Validate dose number doesn't exceed vaccine's required doses
     if (data.doseNumber > vaccine.dosesRequired) {
       throw new ExceededRequiredDosesError(
         data.vaccineId,
@@ -244,7 +239,6 @@ export class VaccineApplicationService {
       );
     }
 
-    // 11. Check for duplicate dose (same receiver + vaccine + dose number)
     const isDuplicate =
       await this.vaccineApplicationStore.existsByUserVaccineDose(
         data.receivedById,
@@ -260,7 +254,6 @@ export class VaccineApplicationService {
       );
     }
 
-    // 12. Validate dose sequence (previous doses must exist for sequential application)
     if (data.doseNumber > 1) {
       const previousApplications =
         await this.vaccineApplicationStore.findByUserAndVaccine(
@@ -281,7 +274,6 @@ export class VaccineApplicationService {
       }
     }
 
-    // 13. Validate minimum interval between doses (if vaccine requires interval)
     if (
       vaccine.intervalDays &&
       vaccine.intervalDays > 0 &&
@@ -311,9 +303,6 @@ export class VaccineApplicationService {
       }
     }
 
-    // 14. Create application and decrement batch stock atomically
-    // This operation is handled in a transaction at the Store layer to ensure
-    // both operations succeed or fail together (atomicity)
     const application =
       await this.vaccineApplicationStore.createApplicationAndDecrementStock(
         data,
@@ -441,7 +430,7 @@ export class VaccineApplicationService {
     }
 
     // Update only allowed fields
-    const updateData: any = {};
+    const updateData: Partial<UpdateVaccineApplicationDTO> = {};
 
     if (data.applicationSite !== undefined) {
       updateData.applicationSite = normalizeText(data.applicationSite);
@@ -450,7 +439,7 @@ export class VaccineApplicationService {
     if (data.observations !== undefined) {
       updateData.observations = data.observations
         ? normalizeText(data.observations)
-        : null;
+        : undefined;
     }
 
     return this.vaccineApplicationStore.update(applicationId, updateData);

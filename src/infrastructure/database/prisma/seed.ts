@@ -190,7 +190,14 @@ async function main() {
     where: { email: 'funcionario3@hospital.com' },
   });
 
-  if (!manager || !nurse1 || !nurse2 || !employee1 || !employee2 || !employee3) {
+  if (
+    !manager ||
+    !nurse1 ||
+    !nurse2 ||
+    !employee1 ||
+    !employee2 ||
+    !employee3
+  ) {
     throw new Error('Required users not found');
   }
 
@@ -526,7 +533,7 @@ async function main() {
     },
   });
 
-  // Nurse 1 - Self vaccination (COVID complete)
+  // Nurse 1 - COVID vaccination (complete, administered by Nurse 2)
   await prisma.vaccineApplication.upsert({
     where: {
       userId_vaccineId_doseNumber: {
