@@ -148,8 +148,10 @@ export class UserService {
       throw new UserNotFoundError('User not found');
     }
 
-    if (requestingUser.role !== 'MANAGER') {
-      throw new ForbiddenError('Only MANAGER role can access user list');
+    if (requestingUser.role !== 'MANAGER' && requestingUser.role !== 'NURSE') {
+      throw new ForbiddenError(
+        'Only MANAGER or NURSE role can access user list',
+      );
     }
 
     // Fetch paginated users from store with filters
