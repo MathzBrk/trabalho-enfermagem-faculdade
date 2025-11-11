@@ -15,6 +15,10 @@ export const allowedUserSortFields = [
 
 export const DEFAULT_USER_SYSTEM_ID = '00000000-0000-0000-0000-000000000000';
 
+/**
+ *
+ * Default system user used for authored actions performed by the system itself, not for actual data operations by a real user.
+ */
 export const DEFAULT_USER_SYSTEM: User = {
   id: DEFAULT_USER_SYSTEM_ID,
   name: 'User System',
