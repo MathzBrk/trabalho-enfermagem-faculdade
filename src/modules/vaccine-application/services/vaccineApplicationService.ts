@@ -255,22 +255,17 @@ export class VaccineApplicationService {
     }
 
     if (data.doseNumber > 1) {
-      const previousApplications =
-        await this.vaccineApplicationStore.findByUserAndVaccine(
+      const previousDoseExists =
+        await this.vaccineApplicationStore.existsByUserVaccineDose(
           data.receivedById,
           data.vaccineId,
+          data.doseNumber - 1,
         );
 
-      // Ensure all previous doses have been applied before this one
-      for (let i = 1; i < data.doseNumber; i++) {
-        const hasDose = previousApplications.some(
-          (app) => app.doseNumber === i,
+      if (!previousDoseExists) {
+        throw new InvalidDoseSequenceError(
+          `Dose ${data.doseNumber - 1} must be applied before dose ${data.doseNumber}`,
         );
-        if (!hasDose) {
-          throw new InvalidDoseSequenceError(
-            `Dose ${i} must be applied before dose ${data.doseNumber}`,
-          );
-        }
       }
     }
 
