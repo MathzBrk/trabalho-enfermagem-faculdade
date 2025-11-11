@@ -26,6 +26,6 @@ export const DEFAULT_USER_SYSTEM: User = {
   isActive: true,
   createdAt: new Date(),
   updatedAt: new Date(),
-  password: 'securepassword',
+  password: '',
   deletedAt: null,
 };
