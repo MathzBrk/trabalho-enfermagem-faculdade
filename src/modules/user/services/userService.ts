@@ -27,7 +27,7 @@ import {
   UserNotFoundError,
   ValidationError,
 } from '../errors';
-import { DEFAULT_USER_SYSTEM } from '../constants';
+import { DEFAULT_USER_SYSTEM, DEFAULT_USER_SYSTEM_ID } from '../constants';
 
 /**
  * UserService - Service layer for user business logic
@@ -148,8 +148,10 @@ export class UserService {
       throw new UserNotFoundError('User not found');
     }
 
-    if (requestingUser.role !== 'MANAGER') {
-      throw new ForbiddenError('Only MANAGER role can access user list');
+    if (requestingUser.role !== 'MANAGER' && requestingUser.role !== 'NURSE') {
+      throw new ForbiddenError(
+        'Only MANAGER or NURSE role can access user list',
+      );
     }
 
     // Fetch paginated users from store with filters
@@ -195,8 +197,13 @@ export class UserService {
       throw new UserNotFoundError('User not found');
     }
 
-    // Fetch the requesting user for authorization
-    const requestingUser = await this.userStore.findById(requestingUserId);
+    let requestingUser = null;
+
+    if (requestingUserId === DEFAULT_USER_SYSTEM_ID) {
+      requestingUser = DEFAULT_USER_SYSTEM;
+    } else {
+      requestingUser = await this.userStore.findById(requestingUserId);
+    }
 
     if (!requestingUser) {
       throw new UserNotFoundError('Requesting user not found');
@@ -402,7 +409,7 @@ export class UserService {
    * // If no exception thrown, user is a MANAGER and can proceed
    */
   async validateManagerRole(userId: string): Promise<void> {
-    if (userId === DEFAULT_USER_SYSTEM) {
+    if (userId === DEFAULT_USER_SYSTEM_ID) {
       return;
     }
     const user = await this.validateUserExists(userId);

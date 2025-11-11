@@ -4,14 +4,13 @@ export const getCurrentTimestamp = (): number => {
   return dayjs().valueOf();
 };
 
+export const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
+
 export const getCurrentDate = (): Date => {
   return dayjs().toDate();
 };
 
-export const formatDate = (
-  date: Date,
-  format: string = 'YYYY-MM-DD',
-): string => {
+export const formatDate = (date: Date, format = 'YYYY-MM-DD'): string => {
   return dayjs(date).format(format);
 };
 

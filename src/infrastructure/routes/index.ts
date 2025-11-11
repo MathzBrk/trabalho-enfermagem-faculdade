@@ -4,6 +4,7 @@ import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import vaccineRoutes from './vaccine.routes';
 import vaccineBatchRoutes from './vaccineBatch.routes';
+import vaccineApplicationRoutes from './vaccineApplication.routes';
 
 /**
  * Main Routes Index
@@ -49,6 +50,12 @@ routes.use('/vaccines', vaccineRoutes);
  * Prefix: /api/vaccine-batches
  */
 routes.use('/vaccine-batches', vaccineBatchRoutes);
+
+/**
+ * Vaccine Application routes
+ * Prefix: /api/vaccine-applications
+ */
+routes.use('/vaccine-applications', vaccineApplicationRoutes);
 
 /**
  * TODO: Add more routes here as you create new modules
