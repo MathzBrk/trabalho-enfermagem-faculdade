@@ -358,7 +358,7 @@ export class VaccineApplicationService {
    *
    * Authorization:
    * - EMPLOYEE: Can only see their own applications (userId filter forced)
-   * - NURSE: Can see all applications they performed + their own
+   * - NURSE: Can see all applications
    * - MANAGER: Can see all applications
    *
    * @param params - Pagination parameters
