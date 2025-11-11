@@ -32,8 +32,10 @@ export type VaccineApplicationWithRelations =
       };
       appliedBy: {
         select: {
+          id: true;
           name: true;
           coren: true;
+          email: true;
         };
       };
     };

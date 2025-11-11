@@ -23,6 +23,16 @@ vaccineApplicationRoutes.post(
   vaccineApplicationController.create.bind(vaccineApplicationController),
 );
 
+// GET /vaccine-applications/users/:id/history - Get user's vaccination history
+vaccineApplicationRoutes.get(
+  '/users/:id/history',
+  authMiddleware,
+  validateRequest({ params: idParamsSchema }),
+  vaccineApplicationController.getUserHistory.bind(
+    vaccineApplicationController,
+  ),
+);
+
 // GET /vaccine-applications/:id - Get single vaccine application
 vaccineApplicationRoutes.get(
   '/:id',
@@ -48,16 +58,6 @@ vaccineApplicationRoutes.patch(
     params: idParamsSchema,
   }),
   vaccineApplicationController.update.bind(vaccineApplicationController),
-);
-
-// GET /vaccine-applications/users/:userId/history - Get user's vaccination history
-vaccineApplicationRoutes.get(
-  '/users/:id/history',
-  authMiddleware,
-  validateRequest({ params: idParamsSchema }),
-  vaccineApplicationController.getUserHistory.bind(
-    vaccineApplicationController,
-  ),
 );
 
 export default vaccineApplicationRoutes;

@@ -132,7 +132,12 @@ export class VaccineApplicationStore
       orderBy: { applicationDate: 'desc' },
       include: {
         vaccine: true,
-        batch: true,
+        batch: {
+          select: {
+            batchNumber: true,
+            expirationDate: true,
+          },
+        },
         appliedBy: {
           select: {
             id: true,
