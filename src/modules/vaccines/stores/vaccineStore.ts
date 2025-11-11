@@ -78,6 +78,22 @@ export class VaccineStore
     }) as Promise<Vaccine | null>;
   }
 
+  async findMandatoryVaccinesNotTakenByUser(
+    userId: string,
+  ): Promise<Vaccine[]> {
+    return this.model.findMany({
+      where: {
+        isObligatory: true,
+        deletedAt: null,
+        applications: {
+          none: {
+            userId,
+          },
+        },
+      },
+    });
+  }
+
   async findPaginatedVaccines(
     params: PaginationParams,
     filters?: VaccineFilterParams,
