@@ -52,7 +52,7 @@ vaccineApplicationRoutes.patch(
 
 // GET /vaccine-applications/users/:userId/history - Get user's vaccination history
 vaccineApplicationRoutes.get(
-  '/users/:userId/history',
+  '/users/:id/history',
   authMiddleware,
   validateRequest({ params: idParamsSchema }),
   vaccineApplicationController.getUserHistory.bind(
