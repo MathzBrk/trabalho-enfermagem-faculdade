@@ -24,7 +24,28 @@ export interface UpdateVaccineDTO {
   minStockLevel?: number;
 }
 
+// Store input types (independent of Prisma implementation)
+export interface VaccineCreateInput {
+  name: string;
+  manufacturer: string;
+  description?: string;
+  dosesRequired: number;
+  intervalDays?: number;
+  isObligatory: boolean;
+  minStockLevel?: number;
+  createdById: string;  // Simple ID, not Prisma connect
+}
+
+export interface VaccineUpdateInput {
+  name?: string;
+  manufacturer?: string;
+  description?: string;
+  dosesRequired?: number;
+  intervalDays?: number;
+  isObligatory?: boolean;
+  minStockLevel?: number;
+  deletedAt?: Date;
+}
+
 export type Vaccine = PrismaVaccine;
-export type VaccineCreateInput = Prisma.VaccineCreateInput;
-export type VaccineUpdateInput = Prisma.VaccineUpdateInput;
 export type VaccineDelegate = Prisma.VaccineDelegate;

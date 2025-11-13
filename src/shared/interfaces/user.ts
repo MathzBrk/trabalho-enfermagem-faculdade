@@ -1,5 +1,4 @@
-import type { Prisma } from '@infrastructure/database';
-import type { UserRole, User } from '@shared/models/user';
+import type { UserRole, User, UserCreateInput, UserUpdateInput } from '@shared/models/user';
 import type { IBaseStore } from '@shared/stores/baseStore';
 import type { PaginatedResponse, PaginationParams } from './pagination';
 
@@ -51,7 +50,7 @@ export interface UserFilterParams {
  * multiple implementations (Prisma, in-memory, etc.).
  */
 export interface IUserStore
-  extends IBaseStore<User, Prisma.UserCreateInput, Prisma.UserUpdateInput> {
+  extends IBaseStore<User, UserCreateInput, UserUpdateInput> {
   findByEmail(email: string): Promise<User | null>;
   findByCPF(cpf: string): Promise<User | null>;
   findByCOREN(coren: string): Promise<User | null>;

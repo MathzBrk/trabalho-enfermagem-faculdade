@@ -51,6 +51,27 @@ export class VaccineStore
   protected readonly model = this.prisma.vaccine;
 
   /**
+   * Creates a new vaccine
+   * Converts our store input format to Prisma format
+   */
+  async create(data: VaccineCreateInput): Promise<Vaccine> {
+    return this.model.create({
+      data: {
+        name: data.name,
+        manufacturer: data.manufacturer,
+        description: data.description,
+        dosesRequired: data.dosesRequired,
+        intervalDays: data.intervalDays,
+        isObligatory: data.isObligatory,
+        minStockLevel: data.minStockLevel,
+        createdBy: {
+          connect: { id: data.createdById },  // Store handles Prisma conversion
+        },
+      },
+    });
+  }
+
+  /**
    * Finds a vaccine by ID with optional batches inclusion
    *
    * @param id - Vaccine UUID

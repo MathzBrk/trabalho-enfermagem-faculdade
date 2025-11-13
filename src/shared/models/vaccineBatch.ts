@@ -3,9 +3,30 @@ import type {
   VaccineBatch as PrismaVaccineBatch,
 } from '@infrastructure/database';
 
+// Store input types (independent of Prisma implementation)
+export interface VaccineBatchCreateInput {
+  batchNumber: string;
+  initialQuantity: number;
+  currentQuantity: number;
+  expirationDate: Date;
+  receivedDate: Date;
+  status: string;
+  vaccineId: string;     // Simple ID, not Prisma connect
+  createdById: string;   // Simple ID, not Prisma connect
+}
+
+export interface VaccineBatchUpdateInput {
+  batchNumber?: string;
+  initialQuantity?: number;
+  currentQuantity?: number;
+  expirationDate?: Date;
+  receivedDate?: Date;
+  status?: string;
+  updatedAt?: Date;
+  deletedAt?: Date;
+}
+
 export type VaccineBatch = PrismaVaccineBatch;
-export type VaccineBatchCreateInput = Prisma.VaccineBatchCreateInput;
-export type VaccineBatchUpdateInput = Prisma.VaccineBatchUpdateInput;
 export type VaccineBatchDelegate = Prisma.VaccineBatchDelegate;
 
 export type VaccineBatchStatus =
