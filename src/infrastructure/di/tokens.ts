@@ -24,6 +24,7 @@ export const TOKENS = {
   IVaccineStore: Symbol.for('IVaccineStore'),
   IVaccineBatchStore: Symbol.for('IVaccineBatchStore'),
   IVaccineApplicationStore: Symbol.for('IVaccineApplicationStore'),
+  IVaccineSchedulingStore: Symbol.for('IVaccineSchedulingStore'),
 
   /**
    * Token for UserService
@@ -39,4 +40,5 @@ export const TOKENS = {
   VaccineBatchService: Symbol.for('VaccineBatchService'),
   VaccineService: Symbol.for('VaccineService'),
   VaccineApplicationService: Symbol.for('VaccineApplicationService'),
+  VaccineSchedulingService: Symbol.for('VaccineSchedulingService'),
 } as const;
