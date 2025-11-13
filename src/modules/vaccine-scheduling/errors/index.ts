@@ -38,8 +38,19 @@ export class InvalidDoseNumberError extends AppError {
   }
 }
 
+export class MissingPreviousDoseError extends AppError {
+  constructor(
+    message = 'Previous dose is missing for this vaccine scheduling',
+  ) {
+    super(message, 400);
+    this.name = 'MissingPreviousDoseError';
+  }
+}
+
 export class DuplicateSchedulingError extends AppError {
-  constructor(message = 'A scheduling for this vaccine and dose already exists') {
+  constructor(
+    message = 'A scheduling for this vaccine and dose already exists',
+  ) {
     super(message, 409);
     this.name = 'DuplicateSchedulingError';
   }

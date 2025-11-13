@@ -8,6 +8,7 @@ import type { ListVaccineSchedulingsDTO } from '@modules/vaccine-scheduling/vali
 import type { VaccineSchedulingFilterParams } from '@shared/interfaces/vaccineScheduling';
 import { inject, injectable } from 'tsyringe';
 import { TOKENS } from '@infrastructure/di/tokens';
+import { getDate } from '@shared/helpers/timeHelper';
 
 /**
  * VaccineSchedulingController - HTTP request handler for vaccine scheduling endpoints
@@ -65,11 +66,10 @@ export class VaccineSchedulingController {
       const data = req.body as CreateVaccineSchedulingDTO;
       const requestingUserId = req.user?.userId!;
 
-      const scheduling =
-        await this.vaccineSchedulingService.createScheduling(
-          data,
-          requestingUserId,
-        );
+      const scheduling = await this.vaccineSchedulingService.createScheduling(
+        data,
+        requestingUserId,
+      );
 
       res.status(201).json(scheduling);
     } catch (error) {
@@ -96,11 +96,10 @@ export class VaccineSchedulingController {
       const { id } = req.params;
       const requestingUserId = req.user?.userId!;
 
-      const scheduling =
-        await this.vaccineSchedulingService.getSchedulingById(
-          id,
-          requestingUserId,
-        );
+      const scheduling = await this.vaccineSchedulingService.getSchedulingById(
+        id,
+        requestingUserId,
+      );
 
       res.status(200).json(scheduling);
     } catch (error) {
@@ -143,8 +142,8 @@ export class VaccineSchedulingController {
         userId: query.userId,
         vaccineId: query.vaccineId,
         status: query.status,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        startDate: query.startDate ? getDate(query.startDate) : undefined,
+        endDate: query.endDate ? getDate(query.endDate) : undefined,
       };
 
       const result = await this.vaccineSchedulingService.getSchedulings(
@@ -190,12 +189,11 @@ export class VaccineSchedulingController {
       const data = req.body as UpdateVaccineSchedulingDTO;
       const requestingUserId = req.user?.userId!;
 
-      const scheduling =
-        await this.vaccineSchedulingService.updateScheduling(
-          id,
-          data,
-          requestingUserId,
-        );
+      const scheduling = await this.vaccineSchedulingService.updateScheduling(
+        id,
+        data,
+        requestingUserId,
+      );
 
       res.status(200).json(scheduling);
     } catch (error) {
@@ -220,11 +218,10 @@ export class VaccineSchedulingController {
       const { id } = req.params;
       const requestingUserId = req.user?.userId!;
 
-      const scheduling =
-        await this.vaccineSchedulingService.deleteScheduling(
-          id,
-          requestingUserId,
-        );
+      const scheduling = await this.vaccineSchedulingService.deleteScheduling(
+        id,
+        requestingUserId,
+      );
 
       res.status(200).json(scheduling);
     } catch (error) {

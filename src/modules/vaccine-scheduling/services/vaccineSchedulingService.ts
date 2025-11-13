@@ -20,6 +20,7 @@ import {
   SchedulingAlreadyCompletedError,
   InvalidDoseNumberError,
   DuplicateSchedulingError,
+  MissingPreviousDoseError,
 } from '../errors';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
 import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
@@ -73,7 +74,7 @@ export class VaccineSchedulingService {
    * @throws VaccineNotFoundError if vaccine not found or deleted
    * @throws UserNotFoundError if user not found
    * @throws InvalidSchedulingDateError if date is not in the future
-   * @throws InvalidDoseNumberError if dose number exceeds vaccine.doses
+   * @throws MissingPreviousDoseError if previous dose is not scheduled
    * @throws DuplicateSchedulingError if scheduling already exists
    */
   async createScheduling(
@@ -138,9 +139,8 @@ export class VaccineSchedulingService {
         );
 
       if (!previousDoseExists) {
-        throw new InvalidDoseNumberError(
+        throw new MissingPreviousDoseError(
           `Previous dose ${data.doseNumber - 1} must be scheduled before scheduling dose ${data.doseNumber}`,
-          vaccine.dosesRequired,
         );
       }
     }

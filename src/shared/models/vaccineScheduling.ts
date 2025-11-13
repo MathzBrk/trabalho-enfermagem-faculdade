@@ -31,7 +31,7 @@ export interface VaccineSchedulingCreateInput {
 export interface VaccineSchedulingUpdateInput {
   scheduledDate?: Date;
   notes?: string;
-  status?: string;
+  status?: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
   deletedAt?: Date;
 }
 
