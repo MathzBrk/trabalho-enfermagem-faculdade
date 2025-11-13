@@ -118,9 +118,7 @@ export class VaccineService {
       isObligatory: data.isObligatory,
       intervalDays: data.intervalDays,
       minStockLevel: data.minStockLevel,
-      createdBy: {
-        connect: { id: userId },
-      },
+      createdById: userId,  // Simple ID, Store handles Prisma conversion
     });
 
     return newVaccine;

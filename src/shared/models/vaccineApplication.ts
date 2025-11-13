@@ -19,6 +19,25 @@ export interface UpdateVaccineApplicationDTO {
   observations?: string;
 }
 
+// Store input types (independent of Prisma implementation)
+export interface VaccineApplicationCreateInput {
+  applicationDate: Date;
+  doseNumber: number;
+  applicationSite: string;
+  observations?: string;
+  receivedById: string;    // Simple ID, not Prisma connect
+  vaccineId: string;       // Simple ID, not Prisma connect
+  batchId: string;         // Simple ID, not Prisma connect
+  appliedById: string;     // Simple ID, not Prisma connect
+  schedulingId?: string;   // Simple ID, not Prisma connect
+}
+
+export interface VaccineApplicationUpdateInput {
+  applicationSite?: string;
+  observations?: string;
+  deletedAt?: Date;
+}
+
 export type VaccineApplication = PrismaVaccineApplication;
 export type VaccineApplicationWithRelations =
   Prisma.VaccineApplicationGetPayload<{
@@ -40,8 +59,4 @@ export type VaccineApplicationWithRelations =
       };
     };
   }>;
-export type VaccineApplicationCreateInput =
-  Prisma.VaccineApplicationCreateInput;
-export type VaccineApplicationUpdateInput =
-  Prisma.VaccineApplicationUpdateInput;
 export type VaccineApplicationDelegate = Prisma.VaccineApplicationDelegate;

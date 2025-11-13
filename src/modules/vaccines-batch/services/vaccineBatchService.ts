@@ -122,15 +122,10 @@ export class VaccineBatchService {
       initialQuantity: data.quantity,
       currentQuantity: data.quantity,
       expirationDate: data.expirationDate,
-
       receivedDate: data.receivedDate ?? getCurrentDate(),
       status: 'AVAILABLE',
-      vaccine: {
-        connect: { id: data.vaccineId },
-      },
-      createdBy: {
-        connect: { id: userId },
-      },
+      vaccineId: data.vaccineId,  // Simple ID, Store handles Prisma conversion
+      createdById: userId,         // Simple ID, Store handles Prisma conversion
     });
 
     // Atomically increment the vaccine's totalStock

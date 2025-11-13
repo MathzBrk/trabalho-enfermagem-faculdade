@@ -56,6 +56,29 @@ export class VaccineBatchStore
   protected readonly model = this.prisma.vaccineBatch;
 
   /**
+   * Creates a new vaccine batch
+   * Converts our store input format to Prisma format
+   */
+  async create(data: VaccineBatchCreateInput): Promise<VaccineBatch> {
+    return this.model.create({
+      data: {
+        batchNumber: data.batchNumber,
+        initialQuantity: data.initialQuantity,
+        currentQuantity: data.currentQuantity,
+        expirationDate: data.expirationDate,
+        receivedDate: data.receivedDate,
+        status: data.status as any,
+        vaccine: {
+          connect: { id: data.vaccineId },  // Store handles Prisma conversion
+        },
+        createdBy: {
+          connect: { id: data.createdById },  // Store handles Prisma conversion
+        },
+      },
+    });
+  }
+
+  /**
    * Finds a vaccine batch by batch number
    */
   async findByBatchNumber(batchNumber: string): Promise<VaccineBatch | null> {

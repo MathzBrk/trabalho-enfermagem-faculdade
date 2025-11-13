@@ -69,6 +69,28 @@ export interface DeleteUserParams {
   id: string;
 }
 
-export type UserCreateInput = Prisma.UserCreateInput;
-export type UserUpdateInput = Prisma.UserUpdateInput;
+// Store input types (independent of Prisma implementation)
+export interface UserCreateInput {
+  name: string;
+  email: string;
+  password: string;
+  cpf: string;
+  phone?: string;
+  role: Role;
+  coren?: string;
+  updatedAt: Date;
+}
+
+export interface UserUpdateInput {
+  name?: string;
+  email?: string;
+  password?: string;
+  phone?: string;
+  isActive?: boolean;
+  role?: Role;
+  coren?: string;
+  updatedAt?: Date;
+  deletedAt?: Date;
+}
+
 export type UserDelegate = Prisma.UserDelegate;

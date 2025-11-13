@@ -83,6 +83,7 @@ export class VaccineApplicationStore
   ): Promise<VaccineApplication> {
     return this.prisma.$transaction(async (prisma) => {
       // Step 1: Create vaccine application record
+      // Convert to Prisma format (Store handles Prisma conversion)
       const application = await prisma.vaccineApplication.create({
         data: {
           applicationDate: getCurrentDate(),
@@ -90,20 +91,20 @@ export class VaccineApplicationStore
           applicationSite: data.applicationSite,
           observations: data.observations,
           user: {
-            connect: { id: data.receivedById },
+            connect: { id: data.receivedById },  // Store handles Prisma conversion
           },
           vaccine: {
-            connect: { id: data.vaccineId },
+            connect: { id: data.vaccineId },  // Store handles Prisma conversion
           },
           batch: {
-            connect: { id: data.batchId },
+            connect: { id: data.batchId },  // Store handles Prisma conversion
           },
           appliedBy: {
-            connect: { id: data.appliedById },
+            connect: { id: data.appliedById },  // Store handles Prisma conversion
           },
           scheduling: data.schedulingId
             ? {
-                connect: { id: data.schedulingId },
+                connect: { id: data.schedulingId },  // Store handles Prisma conversion
               }
             : undefined,
         },

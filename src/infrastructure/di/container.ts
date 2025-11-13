@@ -4,10 +4,12 @@ import { UserService } from '@modules/user/services/userService';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
 import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
 import { VaccineApplicationStore } from '@modules/vaccine-application/stores/vaccineApplicationStore';
+import { VaccineSchedulingStore } from '@modules/vaccine-scheduling/stores/vaccineSchedulingStore';
 import { TOKENS } from './tokens';
 import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBatchService';
 import { VaccineService } from '@modules/vaccines/services/vaccineService';
 import { VaccineApplicationService } from '@modules/vaccine-application/services/vaccineApplicationService';
+import { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
 
 /**
  * DI Container Setup
@@ -43,6 +45,7 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.IVaccineStore, VaccineStore);
   container.registerSingleton(TOKENS.IVaccineBatchStore, VaccineBatchStore);
   container.registerSingleton(TOKENS.IVaccineApplicationStore, VaccineApplicationStore);
+  container.registerSingleton(TOKENS.IVaccineSchedulingStore, VaccineSchedulingStore);
 
   // Register services as singletons
   // Services are stateless and can be safely shared across the application
@@ -51,6 +54,7 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.VaccineService, VaccineService);
   container.registerSingleton(TOKENS.VaccineBatchService, VaccineBatchService);
   container.registerSingleton(TOKENS.VaccineApplicationService, VaccineApplicationService);
+  container.registerSingleton(TOKENS.VaccineSchedulingService, VaccineSchedulingService);
 
   console.log('📦 DI Container configured');
   console.log('   Stores:');
@@ -58,11 +62,13 @@ export function setupContainer(): void {
   console.log('   └─ IVaccineStore → Using VaccineStore (Prisma)');
   console.log('   └─ IVaccineBatchStore → Using VaccineBatchStore (Prisma)');
   console.log('   └─ IVaccineApplicationStore → Using VaccineApplicationStore (Prisma)');
+  console.log('   └─ IVaccineSchedulingStore → Using VaccineSchedulingStore (Prisma)');
   console.log('   Services:');
   console.log('   └─ UserService → Registered as singleton');
   console.log('   └─ VaccineService → Registered as singleton');
   console.log('   └─ VaccineBatchService → Registered as singleton');
   console.log('   └─ VaccineApplicationService → Registered as singleton');
+  console.log('   └─ VaccineSchedulingService → Registered as singleton');
 
   // Future: Add environment-based switching
   // if (process.env.NODE_ENV === 'test') {
