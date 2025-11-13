@@ -14,6 +14,10 @@ export const formatDate = (date: Date, format = 'YYYY-MM-DD'): string => {
   return dayjs(date).format(format);
 };
 
+export const getDate = (dateString: string): Date => {
+  return dayjs(dateString).toDate();
+};
+
 export const transformTimestampToDate = (timestamp: number): Date => {
   return dayjs(timestamp).toDate();
 };
