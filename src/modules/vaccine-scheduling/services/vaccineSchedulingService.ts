@@ -120,7 +120,7 @@ export class VaccineSchedulingService {
 
     if (availableDoses <= 0) {
       throw new ValidationError(
-        `No available doses for vaccine ID ${data.vaccineId}`,
+        `No available doses for vaccine ID ${data.vaccineId}. Total stock: ${vaccine.totalStock}, Reserved: ${dosesReserved}`,
       );
     }
     // Validate scheduled date is in the future
