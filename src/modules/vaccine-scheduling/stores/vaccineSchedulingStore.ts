@@ -1,4 +1,4 @@
-import type { VaccineScheduling } from '@infrastructure/database';
+import type { VaccineScheduling, Vaccine } from '@infrastructure/database';
 import type { Prisma } from '@infrastructure/database/generated/prisma';
 import type {
   IVaccineSchedulingStore,
@@ -19,6 +19,10 @@ import { BaseStore } from '@shared/stores/baseStore';
 import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import { allowedVaccineSchedulingSortFields } from '../constants';
 import { injectable } from 'tsyringe';
+import {
+  InsufficientStockError,
+  VaccineNotFoundError,
+} from '@modules/vaccines/errors';
 
 @injectable()
 export class VaccineSchedulingStore
@@ -225,6 +229,110 @@ export class VaccineSchedulingStore
         },
       },
       orderBy: { scheduledDate: 'asc' },
+    });
+  }
+
+  /**
+   * Creates a vaccine scheduling with atomic stock validation using pessimistic locking
+   *
+   * Race Condition Prevention Strategy:
+   * This method prevents overbooking by using a pessimistic lock (FOR UPDATE) on the vaccine row.
+   * The lock ensures that only one transaction can validate and create a scheduling at a time
+   * for a given vaccine, preventing the classic race condition where:
+   *   1. Request A checks stock: 1 dose available
+   *   2. Request B checks stock: 1 dose available
+   *   3. Request A creates scheduling
+   *   4. Request B creates scheduling (OVERBOOKING - should have failed!)
+   *
+   * Implementation Details:
+   * 1. Wraps all operations in a database transaction for atomicity
+   * 2. Uses SELECT ... FOR UPDATE to acquire an exclusive lock on the vaccine row
+   * 3. The lock is held until the transaction commits, preventing other transactions
+   *    from reading or modifying the vaccine row
+   * 4. Counts reserved doses (SCHEDULED + CONFIRMED status)
+   * 5. Validates available stock: totalStock - dosesReserved > 0
+   * 6. Creates scheduling only if validation passes
+   * 7. Transaction commits, releasing the lock
+   *
+   * Performance Considerations:
+   * - Pessimistic locking can reduce throughput under high concurrency
+   * - However, it provides strong consistency guarantees
+   * - Lock duration is minimized by keeping transaction scope small
+   * - Alternative: Optimistic locking with version fields (requires retry logic)
+   *
+   * @param data - Vaccine scheduling creation data
+   * @param vaccineId - ID of the vaccine to validate stock for
+   * @returns Created vaccine scheduling
+   * @throws InsufficientStockError if no available doses
+   * @throws VaccineNotFoundError if vaccine not found or deleted
+   */
+  async createSchedulingWithStockValidation(
+    data: VaccineSchedulingCreateInput,
+    vaccineId: string,
+  ): Promise<VaccineScheduling> {
+    console.log(
+      `Creating scheduling with stock validation for vaccine ID: ${vaccineId}`,
+    );
+    return this.prisma.$transaction(async (tx) => {
+      // Step 1: Lock the vaccine row to prevent concurrent modifications
+      // FOR UPDATE acquires an exclusive lock that blocks other transactions
+      // from selecting FOR UPDATE or modifying this row until we commit
+      const vaccines = await tx.$queryRaw<Vaccine[]>`
+        SELECT * FROM vaccines
+        WHERE id = ${vaccineId}
+        AND "deletedAt" IS NULL
+        FOR UPDATE
+      `;
+
+      // Step 2: Validate vaccine exists and is not deleted
+      const vaccine = vaccines?.[0];
+
+      if (!vaccine) {
+        throw new VaccineNotFoundError(
+          `Vaccine with ID ${vaccineId} not found`,
+        );
+      }
+
+      // Step 3: Count reserved doses atomically (still within the transaction)
+      // Status IN ['SCHEDULED', 'CONFIRMED'] represents doses that are reserved
+      const dosesReserved = await tx.vaccineScheduling.count({
+        where: {
+          vaccineId,
+          deletedAt: null,
+          status: {
+            in: ['SCHEDULED', 'CONFIRMED'],
+          },
+        },
+      });
+
+      // Step 4: Calculate available doses
+      const availableDoses = vaccine.totalStock - dosesReserved;
+
+      // Step 5: Validate stock availability
+      if (availableDoses <= 0) {
+        throw new InsufficientStockError(
+          `No available doses for vaccine ID ${vaccineId}. Total stock: ${vaccine.totalStock}, Reserved: ${dosesReserved}`,
+        );
+      }
+
+      // Step 6: Create scheduling (stock is guaranteed available due to lock)
+      const scheduling = await tx.vaccineScheduling.create({
+        data: {
+          scheduledDate: data.scheduledDate,
+          doseNumber: data.doseNumber,
+          notes: data.notes,
+          status: (data.status || 'SCHEDULED') as any,
+          user: {
+            connect: { id: data.userId },
+          },
+          vaccine: {
+            connect: { id: data.vaccineId },
+          },
+        },
+      });
+
+      // Transaction commits here, releasing the lock
+      return scheduling;
     });
   }
 }

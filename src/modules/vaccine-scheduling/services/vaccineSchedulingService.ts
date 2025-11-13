@@ -106,23 +106,6 @@ export class VaccineSchedulingService {
       );
     }
 
-    const vaccineSchedulingsForVaccine =
-      await this.vaccineSchedulingStore.findByVaccineId(data.vaccineId);
-
-    const activeSchedulings = vaccineSchedulingsForVaccine.filter(
-      (scheduling) =>
-        scheduling.status === 'SCHEDULED' || scheduling.status === 'CONFIRMED',
-    );
-
-    const dosesReserved = activeSchedulings.length;
-
-    const availableDoses = vaccine.totalStock - dosesReserved;
-
-    if (availableDoses <= 0) {
-      throw new ValidationError(
-        `No available doses for vaccine ID ${data.vaccineId}. Total stock: ${vaccine.totalStock}, Reserved: ${dosesReserved}`,
-      );
-    }
     // Validate scheduled date is in the future
     const scheduledDate = getDate(data.scheduledDate);
     const now = getCurrentDate();
@@ -190,15 +173,21 @@ export class VaccineSchedulingService {
       }
     }
 
-    // Create the scheduling
-    return this.vaccineSchedulingStore.create({
-      scheduledDate,
-      doseNumber: data.doseNumber,
-      notes: data.notes,
-      status: 'SCHEDULED',
-      userId: data.userId,
-      vaccineId: data.vaccineId,
-    });
+    // Create the scheduling with atomic stock validation
+    // The store method handles stock validation atomically using pessimistic locking
+    // to prevent race conditions where concurrent requests could both pass validation
+    // and create schedulings, leading to overbooking
+    return this.vaccineSchedulingStore.createSchedulingWithStockValidation(
+      {
+        scheduledDate,
+        doseNumber: data.doseNumber,
+        notes: data.notes,
+        status: 'SCHEDULED',
+        userId: data.userId,
+        vaccineId: data.vaccineId,
+      },
+      data.vaccineId,
+    );
   }
 
   /**
