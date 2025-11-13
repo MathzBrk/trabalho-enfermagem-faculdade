@@ -102,6 +102,12 @@ export class VaccineSchedulingService {
       );
     }
 
+    if (vaccine.totalStock <= 0) {
+      throw new ValidationError(
+        `Vaccine with ID ${data.vaccineId} is out of stock`,
+      );
+    }
+
     // Validate scheduled date is in the future
     const scheduledDate = getDate(data.scheduledDate);
     const now = getCurrentDate();
