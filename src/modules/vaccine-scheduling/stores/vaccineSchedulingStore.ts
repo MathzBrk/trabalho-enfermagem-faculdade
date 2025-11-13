@@ -53,6 +53,16 @@ export class VaccineSchedulingStore
     });
   }
 
+  async findByVaccineId(vaccineId: string): Promise<VaccineScheduling[]> {
+    return this.model.findMany({
+      where: {
+        vaccineId,
+        deletedAt: null,
+      },
+      orderBy: { scheduledDate: 'asc' },
+    });
+  }
+
   /**
    * Updates a vaccine scheduling
    * Converts our store input format to Prisma format

@@ -23,7 +23,9 @@ export interface IVaccineSchedulingStore
     VaccineSchedulingCreateInput,
     VaccineSchedulingUpdateInput
   > {
-  findByIdWithRelations(id: string): Promise<VaccineSchedulingWithRelations | null>;
+  findByIdWithRelations(
+    id: string,
+  ): Promise<VaccineSchedulingWithRelations | null>;
   findPaginatedSchedulings(
     params: PaginationParams,
     filters?: VaccineSchedulingFilterParams,
@@ -37,4 +39,5 @@ export interface IVaccineSchedulingStore
     userId: string,
     vaccineId: string,
   ): Promise<VaccineScheduling[]>;
+  findByVaccineId(vaccineId: string): Promise<VaccineScheduling[]>;
 }

@@ -24,7 +24,11 @@ import {
 } from '../errors';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
 import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
-import { getCurrentDate, getDate } from '@shared/helpers/timeHelper';
+import {
+  getCurrentDate,
+  getDate,
+  getDifferenceBetweenDatesInDays,
+} from '@shared/helpers/timeHelper';
 
 /**
  * VaccineSchedulingService - Service layer for vaccine scheduling business logic
@@ -102,12 +106,23 @@ export class VaccineSchedulingService {
       );
     }
 
-    if (vaccine.totalStock <= 0) {
+    const vaccineSchedulingsForVaccine =
+      await this.vaccineSchedulingStore.findByVaccineId(data.vaccineId);
+
+    const activeSchedulings = vaccineSchedulingsForVaccine.filter(
+      (scheduling) =>
+        scheduling.status === 'SCHEDULED' || scheduling.status === 'CONFIRMED',
+    );
+
+    const dosesReserved = activeSchedulings.length;
+
+    const availableDoses = vaccine.totalStock - dosesReserved;
+
+    if (availableDoses <= 0) {
       throw new ValidationError(
-        `Vaccine with ID ${data.vaccineId} is out of stock`,
+        `No available doses for vaccine ID ${data.vaccineId}`,
       );
     }
-
     // Validate scheduled date is in the future
     const scheduledDate = getDate(data.scheduledDate);
     const now = getCurrentDate();
@@ -137,16 +152,40 @@ export class VaccineSchedulingService {
     }
 
     if (data.doseNumber > 1) {
-      const previousDoseExists =
-        await this.vaccineSchedulingStore.existsByUserVaccineDose(
+      const vaccineSchedulings =
+        await this.vaccineSchedulingStore.findByUserAndVaccine(
           data.userId,
           data.vaccineId,
-          data.doseNumber - 1,
         );
 
-      if (!previousDoseExists) {
+      const previousDose = vaccineSchedulings.find(
+        (scheduling) =>
+          scheduling.doseNumber === data.doseNumber - 1 &&
+          scheduling.status !== 'CANCELLED',
+      );
+
+      if (!previousDose) {
         throw new MissingPreviousDoseError(
           `Previous dose ${data.doseNumber - 1} must be scheduled before scheduling dose ${data.doseNumber}`,
+        );
+      }
+
+      if (!vaccine.intervalDays) {
+        throw new ValidationError(
+          `Vaccine with ID ${data.vaccineId} does not have a valid intervalDays configured`,
+        );
+      }
+
+      const differenceInDays = getDifferenceBetweenDatesInDays(
+        previousDose.scheduledDate,
+        scheduledDate,
+      );
+
+      if (differenceInDays < vaccine.intervalDays) {
+        throw new InvalidSchedulingDateError(
+          `Dose ${data.doseNumber} must be scheduled at least ${vaccine.intervalDays} days after dose ${
+            data.doseNumber - 1
+          }`,
         );
       }
     }
