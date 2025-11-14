@@ -7,7 +7,6 @@ import type {
 } from '@shared/interfaces/vaccineApplication';
 import type { IVaccineStore } from '@shared/interfaces/vaccine';
 import type { IVaccineBatchStore } from '@shared/interfaces/vaccineBatch';
-import type { IVaccineSchedulingStore } from '@shared/interfaces/vaccineScheduling';
 import type {
   PaginatedResponse,
   PaginationParams,
@@ -36,7 +35,6 @@ import { VaccineBatchNotFoundError } from '@modules/vaccines-batch/errors';
 import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
 import {
   getCurrentTimestamp,
-  getCurrentDate,
   MILLISECONDS_IN_A_DAY,
   transformDateToTimestamp,
 } from '@shared/helpers/timeHelper';
@@ -124,16 +122,10 @@ export class VaccineApplicationService {
     private readonly vaccineStore: IVaccineStore,
     @inject(TOKENS.IVaccineBatchStore)
     private readonly vaccineBatchStore: IVaccineBatchStore,
-    @inject(TOKENS.IVaccineSchedulingStore)
-    private readonly vaccineSchedulingStore: IVaccineSchedulingStore,
   ) {}
 
   /**
    * Creates a new vaccine application
-   *
-   * Supports two scenarios:
-   * 1. Scheduled appointment: schedulingId provided, derives user/vaccine/dose from scheduling
-   * 2. Walk-in: No schedulingId, auto-creates scheduling then creates application
    *
    * Business Rules:
    * - Requesting user (who initiates the registration) must be NURSE or MANAGER
@@ -143,7 +135,7 @@ export class VaccineApplicationService {
    * - Vaccine must exist and not be deleted
    * - Batch must exist, be AVAILABLE, and have sufficient quantity
    * - Batch must not be expired
-   * - Cannot apply duplicate dose (unique constraint on scheduling)
+   * - Cannot apply duplicate dose (receivedById + vaccineId + doseNumber must be unique)
    * - Dose number must not exceed vaccine.dosesRequired
    * - Previous doses must be applied before current dose (sequential validation)
    * - If vaccine has intervalDays, minimum interval must be met since last dose
@@ -153,15 +145,13 @@ export class VaccineApplicationService {
    * - Requesting user: NURSE or MANAGER can initiate vaccine application registration
    * - Applicator: Only NURSE can be the one who physically applies the vaccine
    *
-   * @param data - Vaccine application creation data (schedulingId OR receivedById+vaccineId+doseNumber)
+   * @param data - Vaccine application creation data including receivedById and appliedById
    * @param requestingUserId - ID of the user initiating the registration (from req.user)
    * @returns Created vaccine application with all related data
    * @throws ValidationError if requesting user is not NURSE or MANAGER
    * @throws ValidationError if applicator is not NURSE
    * @throws ValidationError if applicator and receiver are the same person
-   * @throws ValidationError if scheduling not found (scheduled scenario)
-   * @throws ValidationError if application already exists for scheduling
-   * @throws UserNotFoundError if receiver not found (walk-in scenario)
+   * @throws UserNotFoundError if receiver not found
    * @throws VaccineNotFoundError if vaccine not found or deleted
    * @throws VaccineBatchNotFoundError if batch not found or deleted
    * @throws ValidationError if batch does not belong to the specified vaccine
@@ -169,168 +159,46 @@ export class VaccineApplicationService {
    * @throws InsufficientBatchQuantityError if batch has no remaining doses
    * @throws BatchNotAvailableError if batch has expired
    * @throws ExceededRequiredDosesError if dose number exceeds vaccine.dosesRequired
-   * @throws DuplicateDoseError if the same dose was already applied to this user (walk-in)
-   * @throws InvalidDoseSequenceError if previous doses haven't been applied yet (walk-in)
-   * @throws MinimumIntervalNotMetError if minimum interval not met since last dose (walk-in)
+   * @throws DuplicateDoseError if the same dose was already applied to this user
+   * @throws InvalidDoseSequenceError if previous doses haven't been applied yet
+   * @throws MinimumIntervalNotMetError if minimum interval not met since last dose
    */
   async createApplication(
     data: CreateVaccineApplicationDTO,
     requestingUserId: string,
   ): Promise<VaccineApplication> {
-    // Validate requesting user and applicator in parallel
-    const [requestingUser, applicator] = await Promise.all([
+    const [requestingUser, applicator, vaccine, batch, _] = await Promise.all([
       this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
       this.userService.getUserById(data.appliedById, DEFAULT_USER_SYSTEM_ID),
+      this.vaccineStore.findById(data.vaccineId),
+      this.vaccineBatchStore.findById(data.batchId),
+      this.userService.validateUserExists(data.receivedById),
     ]);
 
-    // Validate requesting user authorization
     if (requestingUser.role !== 'NURSE' && requestingUser.role !== 'MANAGER') {
       throw new ValidationError(
         'Only users with NURSE or MANAGER role can register vaccines',
       );
     }
 
-    // Validate applicator is a nurse
     if (applicator.role !== 'NURSE') {
       throw new ValidationError(
         'Only users with NURSE role can apply vaccines',
       );
     }
 
-    // Scenario A: Scheduled Appointment (schedulingId provided)
-    if (data.schedulingId) {
-      return this.createScheduledApplication(data);
-    }
-
-    // Scenario B: Walk-in (no schedulingId)
-    return this.createWalkInApplication(data);
-  }
-
-  /**
-   * Creates an application for a scheduled appointment
-   * @private
-   */
-  private async createScheduledApplication(
-    data: CreateVaccineApplicationDTO,
-  ): Promise<VaccineApplication> {
-    // Fetch scheduling, existing application, and batch in parallel
-    const [scheduling, existingApplication, batch] = await Promise.all([
-      this.vaccineSchedulingStore.findById(data.schedulingId!),
-      this.vaccineApplicationStore.findBySchedulingId(data.schedulingId!),
-      this.vaccineBatchStore.findById(data.batchId),
-    ]);
-
-    // Validate scheduling exists
-    if (!scheduling || scheduling.deletedAt) {
-      throw new ValidationError(
-        `Scheduling with ID ${data.schedulingId} not found`,
-      );
-    }
-
-    // Check if application already exists for this scheduling
-    if (existingApplication) {
-      throw new ValidationError(
-        'An application already exists for this scheduling',
-      );
-    }
-
-    // Validate scheduling status
-    if (scheduling.status === 'CANCELLED') {
-      throw new ValidationError('Cannot apply vaccine to cancelled scheduling');
-    }
-
-    // Validate applicator and receiver are different
-    if (data.appliedById === scheduling.userId) {
-      throw new ValidationError(
-        'The applicator and the receiver cannot be the same person',
-      );
-    }
-
-    // Validate batch
-    if (!batch || batch.deletedAt) {
-      throw new VaccineBatchNotFoundError(
-        `Batch with ID ${data.batchId} not found`,
-      );
-    }
-
-    if (batch.vaccineId !== scheduling.vaccineId) {
-      throw new ValidationError(
-        `Batch ${data.batchId} does not belong to vaccine ${scheduling.vaccineId}`,
-      );
-    }
-
-    if (batch.status !== 'AVAILABLE') {
-      throw new BatchNotAvailableError(
-        `Batch ${batch.batchNumber} is not available (status: ${batch.status})`,
-      );
-    }
-
-    if (batch.currentQuantity <= 0) {
-      throw new InsufficientBatchQuantityError(
-        `Batch ${batch.batchNumber} has no remaining doses`,
-      );
-    }
-
-    if (
-      new Date(batch.expirationDate).setHours(23, 59, 59, 999) <
-      getCurrentTimestamp()
-    ) {
-      throw new BatchNotAvailableError(
-        `Batch ${batch.batchNumber} has expired`,
-      );
-    }
-
-    // Create application linked to scheduling
-    return this.vaccineApplicationStore.createApplicationAndDecrementStock({
-      schedulingId: data.schedulingId!,
-      appliedById: data.appliedById,
-      batchId: data.batchId,
-      applicationSite: data.applicationSite,
-      observations: data.observations,
-    });
-  }
-
-  /**
-   * Creates an application for a walk-in patient (auto-creates scheduling)
-   * @private
-   */
-  private async createWalkInApplication(
-    data: CreateVaccineApplicationDTO,
-  ): Promise<VaccineApplication> {
-    // Validate required fields for walk-in
-    if (!data.receivedById || !data.vaccineId || data.doseNumber === undefined) {
-      throw new ValidationError(
-        'receivedById, vaccineId, and doseNumber are required for walk-in vaccinations',
-      );
-    }
-
-    // Validate applicator and receiver are different
     if (data.appliedById === data.receivedById) {
       throw new ValidationError(
         'The applicator and the receiver cannot be the same person',
       );
     }
 
-    // Fetch all independent data in parallel
-    const [_, vaccine, batch, isDuplicate] = await Promise.all([
-      this.userService.validateUserExists(data.receivedById),
-      this.vaccineStore.findById(data.vaccineId),
-      this.vaccineBatchStore.findById(data.batchId),
-      this.vaccineSchedulingStore.existsByUserVaccineDose(
-        data.receivedById,
-        data.vaccineId,
-        data.doseNumber,
-      ),
-    ]);
-
-    // Validate vaccine
     if (!vaccine || vaccine.deletedAt) {
       throw new VaccineNotFoundError(
         `Vaccine with ID ${data.vaccineId} not found`,
       );
     }
 
-    // Validate batch
     if (!batch || batch.deletedAt) {
       throw new VaccineBatchNotFoundError(
         `Batch with ID ${data.batchId} not found`,
@@ -364,7 +232,6 @@ export class VaccineApplicationService {
       );
     }
 
-    // Validate dose number
     if (data.doseNumber > vaccine.dosesRequired) {
       throw new ExceededRequiredDosesError(
         data.vaccineId,
@@ -372,7 +239,13 @@ export class VaccineApplicationService {
       );
     }
 
-    // Check for duplicate dose via scheduling (unique constraint will catch this too)
+    const isDuplicate =
+      await this.vaccineApplicationStore.existsByUserVaccineDose(
+        data.receivedById,
+        data.vaccineId,
+        data.doseNumber,
+      );
+
     if (isDuplicate) {
       throw new DuplicateDoseError(
         data.receivedById,
@@ -381,72 +254,56 @@ export class VaccineApplicationService {
       );
     }
 
-    // Validate dose sequence and interval (sequential - depends on previous validations)
     if (data.doseNumber > 1) {
-      const [previousDoseExists, previousSchedulings] = await Promise.all([
-        this.vaccineSchedulingStore.existsByUserVaccineDose(
+      const previousDoseExists =
+        await this.vaccineApplicationStore.existsByUserVaccineDose(
           data.receivedById,
           data.vaccineId,
           data.doseNumber - 1,
-        ),
-        vaccine.intervalDays && vaccine.intervalDays > 0
-          ? this.vaccineSchedulingStore.findByUserAndVaccine(
-              data.receivedById,
-              data.vaccineId,
-            )
-          : Promise.resolve([]),
-      ]);
+        );
 
       if (!previousDoseExists) {
         throw new InvalidDoseSequenceError(
           `Dose ${data.doseNumber - 1} must be applied before dose ${data.doseNumber}`,
         );
       }
+    }
 
-      // Validate minimum interval if required
-      if (vaccine.intervalDays && vaccine.intervalDays > 0) {
-        const previousDoseScheduling = previousSchedulings.find(
-          (s) => s.doseNumber === data.doseNumber! - 1 && !s.deletedAt,
+    if (
+      vaccine.intervalDays &&
+      vaccine.intervalDays > 0 &&
+      data.doseNumber > 1
+    ) {
+      const latestApplication =
+        await this.vaccineApplicationStore.findLatestApplicationForUserVaccine(
+          data.receivedById,
+          data.vaccineId,
         );
 
-        if (previousDoseScheduling) {
-          const timeDifference =
-            getCurrentTimestamp() -
-            transformDateToTimestamp(previousDoseScheduling.scheduledDate);
+      if (latestApplication) {
+        const timeDifference =
+          getCurrentTimestamp() -
+          transformDateToTimestamp(latestApplication.applicationDate);
 
-          const daysSinceLastDose = Math.floor(
-            timeDifference / MILLISECONDS_IN_A_DAY,
+        const daysSinceLastDose = Math.floor(
+          timeDifference / MILLISECONDS_IN_A_DAY,
+        );
+
+        if (daysSinceLastDose < vaccine.intervalDays) {
+          throw new MinimumIntervalNotMetError(
+            vaccine.intervalDays,
+            daysSinceLastDose,
           );
-
-          if (daysSinceLastDose < vaccine.intervalDays) {
-            throw new MinimumIntervalNotMetError(
-              vaccine.intervalDays,
-              daysSinceLastDose,
-            );
-          }
         }
       }
     }
 
-    // Auto-create scheduling for walk-in
-    const scheduling = await this.vaccineSchedulingStore.create({
-      userId: data.receivedById,
-      vaccineId: data.vaccineId,
-      doseNumber: data.doseNumber,
-      scheduledDate: getCurrentDate(),
-      status: 'COMPLETED', // Walk-in is immediately completed
-      assignedNurseId: data.appliedById,
-      notes: 'Walk-in application - auto-created scheduling',
-    });
+    const application =
+      await this.vaccineApplicationStore.createApplicationAndDecrementStock(
+        data,
+      );
 
-    // Create application linked to auto-created scheduling
-    return this.vaccineApplicationStore.createApplicationAndDecrementStock({
-      schedulingId: scheduling.id,
-      appliedById: data.appliedById,
-      batchId: data.batchId,
-      applicationSite: data.applicationSite,
-      observations: data.observations,
-    });
+    return application;
   }
 
   /**
@@ -630,18 +487,16 @@ export class VaccineApplicationService {
     // Build a map of vaccines with their current dose status
     const vaccinesWithMissingDoses = appliedVaccines.reduce(
       (acc, app) => {
-        if (!app.scheduling) return acc; // Skip if scheduling is null (shouldn't happen)
-
-        const key = app.scheduling.vaccineId;
+        const key = app.vaccineId;
 
         if (!acc[key]) {
           acc[key] = {
-            vaccine: app.scheduling.vaccine,
-            lastDose: app.scheduling.doseNumber,
+            vaccine: app.vaccine,
+            lastDose: app.doseNumber,
             lastDate: app.applicationDate,
           };
-        } else if (app.scheduling.doseNumber > acc[key].lastDose) {
-          acc[key].lastDose = app.scheduling.doseNumber;
+        } else if (app.doseNumber > acc[key].lastDose) {
+          acc[key].lastDose = app.doseNumber;
           acc[key].lastDate = app.applicationDate;
         }
 
@@ -650,7 +505,7 @@ export class VaccineApplicationService {
       {} as Record<
         string,
         {
-          vaccine: NonNullable<VaccineApplicationWithRelations['scheduling']>['vaccine'];
+          vaccine: VaccineApplicationWithRelations['vaccine'];
           lastDose: number;
           lastDate: Date;
         }
@@ -675,15 +530,13 @@ export class VaccineApplicationService {
     // Group applied vaccines by vaccine type with all doses and completion status
     const vaccinesByTypeMap = appliedVaccines.reduce(
       (acc, app) => {
-        if (!app.scheduling) return acc; // Skip if scheduling is null (shouldn't happen)
-
-        const key = app.scheduling.vaccineId;
+        const key = app.vaccineId;
 
         if (!acc[key]) {
           acc[key] = {
-            vaccine: app.scheduling.vaccine,
+            vaccine: app.vaccine,
             doses: [],
-            totalDosesRequired: app.scheduling.vaccine.dosesRequired,
+            totalDosesRequired: app.vaccine.dosesRequired,
             dosesApplied: 0,
           };
         }
@@ -696,7 +549,7 @@ export class VaccineApplicationService {
       {} as Record<
         string,
         {
-          vaccine: NonNullable<VaccineApplicationWithRelations['scheduling']>['vaccine'];
+          vaccine: VaccineApplicationWithRelations['vaccine'];
           doses: VaccineApplicationWithRelations[];
           totalDosesRequired: number;
           dosesApplied: number;
@@ -790,20 +643,11 @@ export class VaccineApplicationService {
       return; // Managers can see everything
     }
 
-    // Fetch scheduling to get userId (application no longer has userId directly)
-    const scheduling = await this.vaccineSchedulingStore.findById(
-      application.schedulingId,
-    );
-
-    if (!scheduling) {
-      throw new ValidationError('Associated scheduling not found');
-    }
-
     if (role === 'NURSE') {
       // Nurses can see applications they performed or their own
       if (
         application.appliedById === requestingUserId ||
-        scheduling.userId === requestingUserId
+        application.userId === requestingUserId
       ) {
         return;
       }
@@ -811,7 +655,7 @@ export class VaccineApplicationService {
 
     if (role === 'EMPLOYEE') {
       // Employees can only see their own
-      if (scheduling.userId === requestingUserId) {
+      if (application.userId === requestingUserId) {
         return;
       }
     }

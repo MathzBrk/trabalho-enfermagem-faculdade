@@ -39,20 +39,10 @@ export interface VaccineApplicationUpdateInput {
 }
 
 export type VaccineApplication = PrismaVaccineApplication;
-
-/**
- * VaccineApplication with relations via scheduling
- * Note: user, vaccine, and doseNumber are now accessed via scheduling relationship
- */
 export type VaccineApplicationWithRelations =
   Prisma.VaccineApplicationGetPayload<{
     include: {
-      scheduling: {
-        include: {
-          user: true;
-          vaccine: true;
-        };
-      };
+      vaccine: true;
       batch: {
         select: {
           batchNumber: true;
@@ -69,5 +59,4 @@ export type VaccineApplicationWithRelations =
       };
     };
   }>;
-
 export type VaccineApplicationDelegate = Prisma.VaccineApplicationDelegate;
