@@ -453,9 +453,11 @@ export class VaccineApplicationService {
     requestingUserId: string,
     filters: VaccineApplicationFilterParams = {},
   ): Promise<PaginatedResponse<VaccineApplication>> {
-    const role = await this.userStore
-      .findById(requestingUserId)
-      .then((user) => user?.role);
+    const user = await this.userStore.findById(requestingUserId);
+    if (!user) {
+      throw new UserNotFoundError(`User with ID ${requestingUserId} not found`);
+    }
+    const role = user.role;
 
     // Apply role-based filtering
     if (role === 'EMPLOYEE') {
@@ -512,11 +514,13 @@ export class VaccineApplicationService {
         `Application with ID ${applicationId} not found`,
       );
     }
+    const user = await this.userStore.findById(requestingUserId);
+    if (!user) {
+      throw new UserNotFoundError(`User with ID ${requestingUserId} not found`);
+    }
+    const role = user.role;
 
     // Authorization: Only the nurse who applied it or a MANAGER can update
-    const role = await this.userStore
-      .findById(requestingUserId)
-      .then((user) => user?.role);
     const isApplier = application.appliedById === requestingUserId;
     const isManager = role === 'MANAGER';
 
@@ -741,9 +745,11 @@ export class VaccineApplicationService {
     application: VaccineApplication,
     requestingUserId: string,
   ): Promise<void> {
-    const role = await this.userStore
-      .findById(requestingUserId)
-      .then((user) => user?.role);
+    const user = await this.userStore.findById(requestingUserId);
+    if (!user) {
+      throw new UserNotFoundError(`User with ID ${requestingUserId} not found`);
+    }
+    const role = user.role;
 
     if (role === 'MANAGER') {
       return; // Managers can see everything
