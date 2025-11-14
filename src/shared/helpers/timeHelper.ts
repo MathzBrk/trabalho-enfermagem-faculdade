@@ -10,6 +10,15 @@ export const getCurrentDate = (): Date => {
   return dayjs().toDate();
 };
 
+export const getDifferenceBetweenDatesInDays = (
+  startDate: Date,
+  endDate: Date,
+): number => {
+  const d1 = dayjs(startDate);
+  const d2 = dayjs(endDate);
+  return d2.diff(d1, 'day');
+};
+
 export const formatDate = (date: Date, format = 'YYYY-MM-DD'): string => {
   return dayjs(date).format(format);
 };

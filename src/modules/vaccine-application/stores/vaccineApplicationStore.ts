@@ -10,7 +10,6 @@ import type {
   VaccineApplicationFilterParams,
 } from '@shared/interfaces/vaccineApplication';
 import type {
-  CreateVaccineApplicationDTO,
   VaccineApplicationCreateInput,
   VaccineApplicationDelegate,
   VaccineApplicationUpdateInput,
@@ -63,15 +62,15 @@ export class VaccineApplicationStore
   }
 
   /**
-   * Creates a vaccine application and decrements batch stock atomically
+   * Creates a vaccine application and decrements both batch and vaccine stock atomically
    *
    * This method encapsulates a critical business operation in a database transaction
-   * to ensure both the application creation and stock decrement succeed or fail together.
-   * This prevents data inconsistency where an application is created but stock isn't updated.
+   * to ensure application creation, batch stock decrement, and vaccine stock decrement
+   * all succeed or fail together.
    *
    * Transaction ensures:
-   * - Atomicity: Both operations complete or neither does
-   * - Consistency: Database constraints are maintained
+   * - Atomicity: All three operations complete or none do
+   * - Consistency: Both batch.currentQuantity and vaccine.totalStock are updated
    * - Isolation: Concurrent operations don't interfere
    *
    * @param data - Complete vaccine application data including receivedById and appliedById
@@ -79,7 +78,7 @@ export class VaccineApplicationStore
    * @throws Prisma errors if transaction fails (constraint violations, etc.)
    */
   async createApplicationAndDecrementStock(
-    data: CreateVaccineApplicationDTO,
+    data: VaccineApplicationCreateInput,
   ): Promise<VaccineApplication> {
     return this.prisma.$transaction(async (prisma) => {
       // Step 1: Create vaccine application record
@@ -91,20 +90,20 @@ export class VaccineApplicationStore
           applicationSite: data.applicationSite,
           observations: data.observations,
           user: {
-            connect: { id: data.receivedById },  // Store handles Prisma conversion
+            connect: { id: data.receivedById }, // Store handles Prisma conversion
           },
           vaccine: {
-            connect: { id: data.vaccineId },  // Store handles Prisma conversion
+            connect: { id: data.vaccineId }, // Store handles Prisma conversion
           },
           batch: {
-            connect: { id: data.batchId },  // Store handles Prisma conversion
+            connect: { id: data.batchId }, // Store handles Prisma conversion
           },
           appliedBy: {
-            connect: { id: data.appliedById },  // Store handles Prisma conversion
+            connect: { id: data.appliedById }, // Store handles Prisma conversion
           },
           scheduling: data.schedulingId
             ? {
-                connect: { id: data.schedulingId },  // Store handles Prisma conversion
+                connect: { id: data.schedulingId }, // Store handles Prisma conversion
               }
             : undefined,
         },
@@ -115,6 +114,20 @@ export class VaccineApplicationStore
         where: { id: data.batchId },
         data: { currentQuantity: { decrement: 1 } },
       });
+
+      // Step 3: Decrement vaccine stock
+      await prisma.vaccine.update({
+        where: { id: data.vaccineId },
+        data: { totalStock: { decrement: 1 } },
+      });
+
+      if (data.schedulingId) {
+        // Step 4: Update scheduling status to COMPLETED if schedulingId is provided
+        await prisma.vaccineScheduling.update({
+          where: { id: data.schedulingId },
+          data: { status: 'COMPLETED' },
+        });
+      }
 
       return application;
     });

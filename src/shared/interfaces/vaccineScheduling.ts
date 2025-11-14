@@ -23,7 +23,9 @@ export interface IVaccineSchedulingStore
     VaccineSchedulingCreateInput,
     VaccineSchedulingUpdateInput
   > {
-  findByIdWithRelations(id: string): Promise<VaccineSchedulingWithRelations | null>;
+  findByIdWithRelations(
+    id: string,
+  ): Promise<VaccineSchedulingWithRelations | null>;
   findPaginatedSchedulings(
     params: PaginationParams,
     filters?: VaccineSchedulingFilterParams,
@@ -37,4 +39,27 @@ export interface IVaccineSchedulingStore
     userId: string,
     vaccineId: string,
   ): Promise<VaccineScheduling[]>;
+  findByVaccineId(vaccineId: string): Promise<VaccineScheduling[]>;
+  /**
+   * Creates a vaccine scheduling with atomic stock validation
+   *
+   * This method ensures race condition safety by:
+   * 1. Locking the vaccine row (FOR UPDATE) within a transaction
+   * 2. Validating available stock atomically
+   * 3. Creating the scheduling only if stock is available
+   *
+   * The entire operation is wrapped in a database transaction to guarantee
+   * that no other concurrent request can create a scheduling for the same
+   * vaccine between the stock check and scheduling creation.
+   *
+   * @param data - Vaccine scheduling creation data
+   * @param vaccineId - ID of the vaccine to validate stock for
+   * @returns Created vaccine scheduling
+   * @throws InsufficientStockError if no available doses
+   * @throws VaccineNotFoundError if vaccine not found or deleted
+   */
+  createSchedulingWithStockValidation(
+    data: VaccineSchedulingCreateInput,
+    vaccineId: string,
+  ): Promise<VaccineScheduling>;
 }

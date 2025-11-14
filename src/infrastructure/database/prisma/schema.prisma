@@ -58,6 +58,7 @@ model User {
 
   // Vaccine relationships
   schedulingsReceived      VaccineScheduling[]   @relation("UserSchedulings")
+  schedulingsAssigned      VaccineScheduling[]   @relation("NurseSchedulings")   
   applicationsReceived     VaccineApplication[]  @relation("UserApplications")
   applicationsPerformed    VaccineApplication[]  @relation("NurseApplications")
 
@@ -152,6 +153,7 @@ model VaccineScheduling {
   // Foreign Keys
   userId          String
   vaccineId       String
+  assignedNurseId String?
 
   // Timestamps
   createdAt       DateTime          @default(now())
@@ -161,11 +163,14 @@ model VaccineScheduling {
   // Relationships
   user            User              @relation("UserSchedulings", fields: [userId], references: [id])
   vaccine         Vaccine           @relation(fields: [vaccineId], references: [id])
+  assignedNurse   User?             @relation("NurseSchedulings", fields: [assignedNurseId], references: [id]) 
   application     VaccineApplication?
 
   @@index([userId])
   @@index([vaccineId])
   @@index([scheduledDate])
+  @@index([scheduledDate, assignedNurseId])
+  @@index([assignedNurseId])
   @@map("vaccine_schedulings")
 }
 

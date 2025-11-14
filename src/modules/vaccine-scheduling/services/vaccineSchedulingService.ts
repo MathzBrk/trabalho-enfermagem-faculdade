@@ -24,7 +24,11 @@ import {
 } from '../errors';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
 import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
-import { getCurrentDate, getDate } from '@shared/helpers/timeHelper';
+import {
+  getCurrentDate,
+  getDate,
+  getDifferenceBetweenDatesInDays,
+} from '@shared/helpers/timeHelper';
 
 /**
  * VaccineSchedulingService - Service layer for vaccine scheduling business logic
@@ -82,9 +86,13 @@ export class VaccineSchedulingService {
     requestingUserId: string,
   ): Promise<VaccineScheduling> {
     // Fetch requesting user and validate existence in parallel
-    const [requestingUser, vaccine, _] = await Promise.all([
+
+    const [requestingUser, vaccine, nurse, _] = await Promise.all([
       this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
       this.vaccineStore.findById(data.vaccineId),
+      data.nurseId
+        ? this.userService.getUserById(data.nurseId, DEFAULT_USER_SYSTEM_ID)
+        : Promise.resolve(null),
       this.userService.validateUserExists(data.userId),
     ]);
 
@@ -131,29 +139,60 @@ export class VaccineSchedulingService {
     }
 
     if (data.doseNumber > 1) {
-      const previousDoseExists =
-        await this.vaccineSchedulingStore.existsByUserVaccineDose(
+      const vaccineSchedulings =
+        await this.vaccineSchedulingStore.findByUserAndVaccine(
           data.userId,
           data.vaccineId,
-          data.doseNumber - 1,
         );
 
-      if (!previousDoseExists) {
+      const previousDose = vaccineSchedulings.find(
+        (scheduling) =>
+          scheduling.doseNumber === data.doseNumber - 1 &&
+          scheduling.status !== 'CANCELLED',
+      );
+
+      if (!previousDose) {
         throw new MissingPreviousDoseError(
           `Previous dose ${data.doseNumber - 1} must be scheduled before scheduling dose ${data.doseNumber}`,
         );
       }
+
+      if (!vaccine.intervalDays) {
+        throw new ValidationError(
+          `Vaccine with ID ${data.vaccineId} does not have a valid intervalDays configured`,
+        );
+      }
+
+      const differenceInDays = getDifferenceBetweenDatesInDays(
+        previousDose.scheduledDate,
+        scheduledDate,
+      );
+
+      if (differenceInDays < vaccine.intervalDays) {
+        throw new InvalidSchedulingDateError(
+          `Dose ${data.doseNumber} must be scheduled at least ${vaccine.intervalDays} days after dose ${
+            data.doseNumber - 1
+          }`,
+        );
+      }
     }
 
-    // Create the scheduling
-    return this.vaccineSchedulingStore.create({
-      scheduledDate,
-      doseNumber: data.doseNumber,
-      notes: data.notes,
-      status: 'SCHEDULED',
-      userId: data.userId,
-      vaccineId: data.vaccineId,
-    });
+    // Create the scheduling with atomic stock validation
+    // The store method handles stock validation atomically using pessimistic locking
+    // to prevent race conditions where concurrent requests could both pass validation
+    // and create schedulings, leading to overbooking
+    return this.vaccineSchedulingStore.createSchedulingWithStockValidation(
+      {
+        scheduledDate,
+        doseNumber: data.doseNumber,
+        notes: data.notes,
+        status: 'SCHEDULED',
+        userId: data.userId,
+        vaccineId: data.vaccineId,
+        nurseId: nurse ? nurse.id : undefined,
+      },
+      data.vaccineId,
+    );
   }
 
   /**
