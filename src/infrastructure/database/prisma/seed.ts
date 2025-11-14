@@ -379,9 +379,11 @@ async function main() {
     data: { totalStock: 580 },
   });
 
-  // Create Vaccine Applications
+  // Create Vaccine Schedulings and Applications
+  // The new model requires: scheduling first, then application linked to it
+
   // Employee 1 - Complete COVID vaccination (2 doses)
-  await prisma.vaccineApplication.upsert({
+  const emp1CovidScheduling1 = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee1.id,
@@ -393,16 +395,28 @@ async function main() {
     create: {
       userId: employee1.id,
       vaccineId: covidVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-03-10'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse1.id,
+      notes: 'Primeira dose agendada',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp1CovidScheduling1.id },
+    update: {},
+    create: {
+      schedulingId: emp1CovidScheduling1.id,
       batchId: covidBatch1.id,
       appliedById: nurse1.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-03-10'),
       applicationSite: 'Left Deltoid',
       observations: 'Primeira dose aplicada sem intercorrências',
     },
   });
 
-  await prisma.vaccineApplication.upsert({
+  const emp1CovidScheduling2 = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee1.id,
@@ -414,9 +428,21 @@ async function main() {
     create: {
       userId: employee1.id,
       vaccineId: covidVaccine.id,
+      doseNumber: 2,
+      scheduledDate: new Date('2024-03-31'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse1.id,
+      notes: 'Segunda dose agendada',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp1CovidScheduling2.id },
+    update: {},
+    create: {
+      schedulingId: emp1CovidScheduling2.id,
       batchId: covidBatch1.id,
       appliedById: nurse1.id,
-      doseNumber: 2,
       applicationDate: new Date('2024-03-31'),
       applicationSite: 'Right Deltoid',
       observations: 'Segunda dose - esquema completo',
@@ -424,7 +450,7 @@ async function main() {
   });
 
   // Employee 1 - Flu vaccine
-  await prisma.vaccineApplication.upsert({
+  const emp1FluScheduling = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee1.id,
@@ -436,17 +462,29 @@ async function main() {
     create: {
       userId: employee1.id,
       vaccineId: fluVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-04-05'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse2.id,
+      notes: 'Campanha de vacinação contra gripe',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp1FluScheduling.id },
+    update: {},
+    create: {
+      schedulingId: emp1FluScheduling.id,
       batchId: fluBatch.id,
       appliedById: nurse2.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-04-05'),
       applicationSite: 'Left Arm',
       observations: 'Campanha de vacinação contra gripe',
     },
   });
 
-  // Employee 2 - COVID first dose only (incomplete)
-  await prisma.vaccineApplication.upsert({
+  // Employee 2 - COVID first dose only (incomplete - scheduling exists but no second dose yet)
+  const emp2CovidScheduling1 = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee2.id,
@@ -458,9 +496,21 @@ async function main() {
     create: {
       userId: employee2.id,
       vaccineId: covidVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-03-15'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse1.id,
+      notes: 'Primeira dose aplicada, aguardando segunda dose',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp2CovidScheduling1.id },
+    update: {},
+    create: {
+      schedulingId: emp2CovidScheduling1.id,
       batchId: covidBatch1.id,
       appliedById: nurse1.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-03-15'),
       applicationSite: 'Right Deltoid',
       observations: 'Aguardando segunda dose',
@@ -468,7 +518,7 @@ async function main() {
   });
 
   // Employee 2 - Hepatitis B (dose 1 of 3)
-  await prisma.vaccineApplication.upsert({
+  const emp2HepScheduling1 = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee2.id,
@@ -480,9 +530,21 @@ async function main() {
     create: {
       userId: employee2.id,
       vaccineId: hepatitisVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-03-20'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse2.id,
+      notes: 'Início do esquema vacinal de Hepatite B',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp2HepScheduling1.id },
+    update: {},
+    create: {
+      schedulingId: emp2HepScheduling1.id,
       batchId: hepatitisBatch.id,
       appliedById: nurse2.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-03-20'),
       applicationSite: 'Left Deltoid',
       observations: 'Início do esquema vacinal de Hepatite B',
@@ -490,7 +552,7 @@ async function main() {
   });
 
   // Employee 3 - Tetanus
-  await prisma.vaccineApplication.upsert({
+  const emp3TetanusScheduling = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee3.id,
@@ -502,9 +564,21 @@ async function main() {
     create: {
       userId: employee3.id,
       vaccineId: tetanusVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-04-01'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse1.id,
+      notes: 'Reforço de rotina agendado',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp3TetanusScheduling.id },
+    update: {},
+    create: {
+      schedulingId: emp3TetanusScheduling.id,
       batchId: tetanusBatch.id,
       appliedById: nurse1.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-04-01'),
       applicationSite: 'Right Arm',
       observations: 'Reforço de rotina',
@@ -512,7 +586,7 @@ async function main() {
   });
 
   // Employee 3 - Flu vaccine
-  await prisma.vaccineApplication.upsert({
+  const emp3FluScheduling = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: employee3.id,
@@ -524,9 +598,21 @@ async function main() {
     create: {
       userId: employee3.id,
       vaccineId: fluVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-04-10'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse2.id,
+      notes: 'Vacinação preventiva anual',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: emp3FluScheduling.id },
+    update: {},
+    create: {
+      schedulingId: emp3FluScheduling.id,
       batchId: fluBatch.id,
       appliedById: nurse2.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-04-10'),
       applicationSite: 'Left Deltoid',
       observations: 'Vacinação preventiva anual',
@@ -534,7 +620,7 @@ async function main() {
   });
 
   // Nurse 1 - COVID vaccination (complete, administered by Nurse 2)
-  await prisma.vaccineApplication.upsert({
+  const nurse1CovidScheduling1 = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: nurse1.id,
@@ -546,16 +632,28 @@ async function main() {
     create: {
       userId: nurse1.id,
       vaccineId: covidVaccine.id,
+      doseNumber: 1,
+      scheduledDate: new Date('2024-03-05'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse2.id,
+      notes: 'Vacinação de profissional de saúde - prioridade',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: nurse1CovidScheduling1.id },
+    update: {},
+    create: {
+      schedulingId: nurse1CovidScheduling1.id,
       batchId: covidBatch2.id,
       appliedById: nurse2.id,
-      doseNumber: 1,
       applicationDate: new Date('2024-03-05'),
       applicationSite: 'Left Deltoid',
       observations: 'Vacinação de profissional de saúde',
     },
   });
 
-  await prisma.vaccineApplication.upsert({
+  const nurse1CovidScheduling2 = await prisma.vaccineScheduling.upsert({
     where: {
       userId_vaccineId_doseNumber: {
         userId: nurse1.id,
@@ -567,12 +665,69 @@ async function main() {
     create: {
       userId: nurse1.id,
       vaccineId: covidVaccine.id,
+      doseNumber: 2,
+      scheduledDate: new Date('2024-03-26'),
+      status: 'COMPLETED',
+      assignedNurseId: nurse2.id,
+      notes: 'Segunda dose - profissional de saúde',
+    },
+  });
+
+  await prisma.vaccineApplication.upsert({
+    where: { schedulingId: nurse1CovidScheduling2.id },
+    update: {},
+    create: {
+      schedulingId: nurse1CovidScheduling2.id,
       batchId: covidBatch2.id,
       appliedById: nurse2.id,
-      doseNumber: 2,
       applicationDate: new Date('2024-03-26'),
       applicationSite: 'Right Deltoid',
       observations: 'Esquema completo - profissional de saúde',
+    },
+  });
+
+  // Create some future schedulings (without applications yet)
+  // These demonstrate scheduled appointments that haven't been completed
+
+  // Employee 2 - COVID second dose scheduled for future
+  await prisma.vaccineScheduling.upsert({
+    where: {
+      userId_vaccineId_doseNumber: {
+        userId: employee2.id,
+        vaccineId: covidVaccine.id,
+        doseNumber: 2,
+      },
+    },
+    update: {},
+    create: {
+      userId: employee2.id,
+      vaccineId: covidVaccine.id,
+      doseNumber: 2,
+      scheduledDate: new Date('2025-12-15'),
+      status: 'SCHEDULED',
+      assignedNurseId: nurse1.id,
+      notes: 'Segunda dose agendada - aguardando data',
+    },
+  });
+
+  // Employee 2 - Hepatitis B second dose scheduled
+  await prisma.vaccineScheduling.upsert({
+    where: {
+      userId_vaccineId_doseNumber: {
+        userId: employee2.id,
+        vaccineId: hepatitisVaccine.id,
+        doseNumber: 2,
+      },
+    },
+    update: {},
+    create: {
+      userId: employee2.id,
+      vaccineId: hepatitisVaccine.id,
+      doseNumber: 2,
+      scheduledDate: new Date('2025-12-20'),
+      status: 'CONFIRMED',
+      assignedNurseId: nurse2.id,
+      notes: 'Segunda dose de Hepatite B confirmada',
     },
   });
 
@@ -591,11 +746,14 @@ async function main() {
   console.log('   - 1 Flu batch (1700 doses available)');
   console.log('   - 1 Hepatitis B batch (650 doses available)');
   console.log('   - 1 Tetanus batch (580 doses available)');
-  console.log('\n🩹 Created vaccine applications:');
+  console.log('\n📅 Created schedulings with applications:');
   console.log('   - Employee 1: COVID complete (2/2) + Flu (1/1)');
-  console.log('   - Employee 2: COVID incomplete (1/2) + Hepatitis B (1/3)');
+  console.log('   - Employee 2: COVID (1/2 applied) + Hepatitis B (1/3 applied)');
   console.log('   - Employee 3: Tetanus (1/1) + Flu (1/1)');
   console.log('   - Nurse 1: COVID complete (2/2)');
+  console.log('\n📆 Created future schedulings (no application yet):');
+  console.log('   - Employee 2: COVID dose 2 (scheduled)');
+  console.log('   - Employee 2: Hepatitis B dose 2 (confirmed)');
   console.log('\n🔑 Default password for all users: senha123');
 }
 
