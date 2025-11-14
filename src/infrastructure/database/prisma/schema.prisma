@@ -58,7 +58,7 @@ model User {
 
   // Vaccine relationships
   schedulingsReceived      VaccineScheduling[]   @relation("UserSchedulings")
-  schedulingsAssigned      VaccineScheduling[]   @relation("NurseSchedulings")
+  applicationsReceived     VaccineApplication[]  @relation("UserApplications")
   applicationsPerformed    VaccineApplication[]  @relation("NurseApplications")
 
   // Vaccine creation relationships
@@ -99,6 +99,7 @@ model Vaccine {
   createdBy         User     @relation("VaccinesCreated", fields: [createdById], references: [id])
   batches           VaccineBatch[]
   schedulings       VaccineScheduling[]
+  applications      VaccineApplication[]
 
   @@unique([name, manufacturer])
   @@index([createdById])
@@ -151,7 +152,6 @@ model VaccineScheduling {
   // Foreign Keys
   userId          String
   vaccineId       String
-  assignedNurseId String?
 
   // Timestamps
   createdAt       DateTime          @default(now())
@@ -161,13 +161,9 @@ model VaccineScheduling {
   // Relationships
   user            User              @relation("UserSchedulings", fields: [userId], references: [id])
   vaccine         Vaccine           @relation(fields: [vaccineId], references: [id])
-  assignedNurse   User?             @relation("NurseSchedulings", fields: [assignedNurseId], references: [id])
   application     VaccineApplication?
 
-  @@unique([userId, vaccineId, doseNumber])
   @@index([userId])
-  @@index([assignedNurseId])
-  @@index([scheduledDate, assignedNurseId])
   @@index([vaccineId])
   @@index([scheduledDate])
   @@map("vaccine_schedulings")
@@ -176,13 +172,16 @@ model VaccineScheduling {
 model VaccineApplication {
   id                  String    @id @default(uuid())
   applicationDate     DateTime  @default(now())
+  doseNumber          Int       @default(1)
   batchId             String
   applicationSite     String
   observations        String?
 
   // Foreign Keys
+  userId              String
+  vaccineId           String
   appliedById         String
-  schedulingId        String    @unique
+  schedulingId        String?   @unique
 
   // Timestamps
   createdAt           DateTime  @default(now())
@@ -190,14 +189,19 @@ model VaccineApplication {
   deletedAt           DateTime?
 
   // Relationships
-  appliedBy           User              @relation("NurseApplications", fields: [appliedById], references: [id])
-  scheduling          VaccineScheduling @relation(fields: [schedulingId], references: [id])
-  batch               VaccineBatch      @relation(fields: [batchId], references: [id])
+  user                User      @relation("UserApplications", fields: [userId], references: [id])
+  vaccine             Vaccine   @relation(fields: [vaccineId], references: [id])
+  appliedBy           User      @relation("NurseApplications", fields: [appliedById], references: [id])
+  scheduling          VaccineScheduling? @relation(fields: [schedulingId], references: [id])
+  batch                 VaccineBatch      @relation(fields: [batchId], references: [id])
 
+  @@unique([userId, vaccineId, doseNumber])
+  @@index([userId])
   @@index([batchId])
+  @@index([vaccineId])
   @@index([appliedById])
   @@index([applicationDate])
-  @@index([schedulingId])
+  @@index([userId, vaccineId, doseNumber])
   @@map("vaccine_applications")
 }
 
