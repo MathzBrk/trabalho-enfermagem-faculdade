@@ -86,9 +86,13 @@ export class VaccineSchedulingService {
     requestingUserId: string,
   ): Promise<VaccineScheduling> {
     // Fetch requesting user and validate existence in parallel
-    const [requestingUser, vaccine, _] = await Promise.all([
+
+    const [requestingUser, vaccine, nurse, _] = await Promise.all([
       this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
       this.vaccineStore.findById(data.vaccineId),
+      data.nurseId
+        ? this.userService.getUserById(data.nurseId, DEFAULT_USER_SYSTEM_ID)
+        : Promise.resolve(null),
       this.userService.validateUserExists(data.userId),
     ]);
 
@@ -185,6 +189,7 @@ export class VaccineSchedulingService {
         status: 'SCHEDULED',
         userId: data.userId,
         vaccineId: data.vaccineId,
+        nurseId: nurse ? nurse.id : undefined,
       },
       data.vaccineId,
     );

@@ -1,6 +1,5 @@
 import { TOKENS } from '@infrastructure/di/tokens';
-import type { UserService } from '@modules/user/services/userService';
-import { ValidationError } from '@modules/user/errors';
+import { UserNotFoundError, ValidationError } from '@modules/user/errors';
 import type {
   IVaccineApplicationStore,
   VaccineApplicationFilterParams,
@@ -16,7 +15,12 @@ import type {
   VaccineApplicationWithRelations,
 } from '@shared/models/vaccineApplication';
 import type { Vaccine } from '@shared/models/vaccine';
-import type { CreateVaccineApplicationDTO } from '@modules/vaccine-application/validators/createVaccineApplicationValidator';
+import type {
+  CreateVaccineApplicationDTO,
+  ScheduledApplicationDTO,
+  WalkInApplicationDTO,
+} from '@modules/vaccine-application/validators/createVaccineApplicationValidator';
+import { isScheduledApplication } from '@modules/vaccine-application/validators/createVaccineApplicationValidator';
 import type { UpdateVaccineApplicationDTO } from '@modules/vaccine-application/validators/updateVaccineApplicationValidator';
 import { inject, injectable } from 'tsyringe';
 import { normalizeText } from '@shared/helpers/textHelper';
@@ -32,12 +36,18 @@ import {
 } from '../errors';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
 import { VaccineBatchNotFoundError } from '@modules/vaccines-batch/errors';
-import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
 import {
+  getCurrentDate,
   getCurrentTimestamp,
   MILLISECONDS_IN_A_DAY,
   transformDateToTimestamp,
 } from '@shared/helpers/timeHelper';
+import type { VaccineBatch } from '@shared/models/vaccineBatch';
+import type { ValidateApplicationDataParams } from '../types';
+import type { User } from '@shared/models/user';
+import type { IVaccineSchedulingStore } from '@shared/interfaces/vaccineScheduling';
+import { VaccineSchedulingNotFoundError } from '@modules/vaccine-scheduling';
+import type { IUserStore } from '@shared/interfaces/user';
 
 /**
  * Response structure for vaccination history endpoint
@@ -116,8 +126,10 @@ export class VaccineApplicationService {
   constructor(
     @inject(TOKENS.IVaccineApplicationStore)
     private readonly vaccineApplicationStore: IVaccineApplicationStore,
-    @inject(TOKENS.UserService)
-    private readonly userService: UserService,
+    @inject(TOKENS.IVaccineSchedulingStore)
+    private readonly vaccineSchedulingStore: IVaccineSchedulingStore,
+    @inject(TOKENS.IUserStore)
+    private readonly userStore: IUserStore,
     @inject(TOKENS.IVaccineStore)
     private readonly vaccineStore: IVaccineStore,
     @inject(TOKENS.IVaccineBatchStore)
@@ -167,35 +179,18 @@ export class VaccineApplicationService {
     data: CreateVaccineApplicationDTO,
     requestingUserId: string,
   ): Promise<VaccineApplication> {
-    const [requestingUser, applicator, vaccine, batch, _] = await Promise.all([
-      this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
-      this.userService.getUserById(data.appliedById, DEFAULT_USER_SYSTEM_ID),
-      this.vaccineStore.findById(data.vaccineId),
+    const [requestingUser, batch] = await Promise.all([
+      this.userStore.findById(requestingUserId),
       this.vaccineBatchStore.findById(data.batchId),
-      this.userService.validateUserExists(data.receivedById),
     ]);
+
+    if (!requestingUser) {
+      throw new UserNotFoundError(`User with ID ${requestingUserId} not found`);
+    }
 
     if (requestingUser.role !== 'NURSE' && requestingUser.role !== 'MANAGER') {
       throw new ValidationError(
         'Only users with NURSE or MANAGER role can register vaccines',
-      );
-    }
-
-    if (applicator.role !== 'NURSE') {
-      throw new ValidationError(
-        'Only users with NURSE role can apply vaccines',
-      );
-    }
-
-    if (data.appliedById === data.receivedById) {
-      throw new ValidationError(
-        'The applicator and the receiver cannot be the same person',
-      );
-    }
-
-    if (!vaccine || vaccine.deletedAt) {
-      throw new VaccineNotFoundError(
-        `Vaccine with ID ${data.vaccineId} not found`,
       );
     }
 
@@ -205,9 +200,138 @@ export class VaccineApplicationService {
       );
     }
 
-    if (batch.vaccineId !== data.vaccineId) {
+    if (isScheduledApplication(data)) {
+      return this.createApplicationWithExistingScheduling(
+        data,
+        batch,
+        requestingUser,
+      );
+    }
+
+    return this.createWalkInApplication(data, batch, requestingUser);
+  }
+
+  async createApplicationWithExistingScheduling(
+    data: ScheduledApplicationDTO,
+    batch: VaccineBatch,
+    requestingUser: User,
+  ): Promise<VaccineApplication> {
+    const { applicationSite, observations, schedulingId } = data;
+    const scheduling =
+      await this.vaccineSchedulingStore.findByIdWithRelations(schedulingId);
+
+    if (!scheduling || scheduling.deletedAt) {
+      throw new VaccineSchedulingNotFoundError(
+        `Scheduling with ID ${schedulingId} not found`,
+      );
+    }
+
+    if (
+      scheduling.status === 'CANCELLED' ||
+      scheduling.status === 'COMPLETED'
+    ) {
       throw new ValidationError(
-        `Batch ${data.batchId} does not belong to vaccine ${data.vaccineId}`,
+        `Scheduling with ID ${schedulingId} is not in a valid state`,
+      );
+    }
+
+    await this.validateApplicationData({
+      applicator: requestingUser,
+      receiver: scheduling.user,
+      batch,
+      vaccine: scheduling.vaccine,
+      doseNumber: scheduling.doseNumber,
+    });
+
+    return this.vaccineApplicationStore.createApplicationAndDecrementStock({
+      receivedById: scheduling.userId,
+      appliedById: scheduling.assignedNurseId
+        ? scheduling.assignedNurseId
+        : requestingUser.id,
+      applicationDate: getCurrentDate(),
+      vaccineId: scheduling.vaccineId,
+      batchId: batch.id,
+      doseNumber: scheduling.doseNumber,
+      applicationSite: normalizeText(applicationSite),
+      observations: observations ? normalizeText(observations) : undefined,
+      schedulingId: scheduling.id,
+    });
+  }
+
+  async createWalkInApplication(
+    data: WalkInApplicationDTO,
+    batch: VaccineBatch,
+    requestingUser: User,
+  ): Promise<VaccineApplication> {
+    const {
+      receivedById,
+      vaccineId,
+      doseNumber,
+      batchId,
+      applicationSite,
+      observations,
+    } = data;
+    const [receiver, vaccine] = await Promise.all([
+      this.userStore.findById(receivedById),
+      this.vaccineStore.findById(vaccineId),
+    ]);
+
+    if (!receiver) {
+      throw new UserNotFoundError(`User with ID ${receivedById} not found`);
+    }
+
+    if (!vaccine || vaccine.deletedAt) {
+      throw new VaccineNotFoundError(`Vaccine with ID ${vaccineId} not found`);
+    }
+
+    await this.validateApplicationData({
+      applicator: requestingUser,
+      receiver,
+      batch,
+      vaccine,
+      doseNumber,
+    });
+
+    return this.vaccineApplicationStore.createApplicationAndDecrementStock({
+      receivedById,
+      appliedById: requestingUser.id,
+      applicationDate: getCurrentDate(),
+      vaccineId,
+      batchId,
+      doseNumber,
+      applicationSite: normalizeText(applicationSite),
+      observations: observations ? normalizeText(observations) : undefined,
+    });
+  }
+
+  private async validateApplicationData({
+    applicator,
+    receiver,
+    batch,
+    vaccine,
+    doseNumber,
+  }: ValidateApplicationDataParams): Promise<void> {
+    if (applicator.role !== 'NURSE') {
+      throw new ValidationError(
+        'Only users with NURSE role can apply vaccines',
+      );
+    }
+
+    if (applicator.id === receiver.id) {
+      throw new ValidationError(
+        'The applicator and the receiver cannot be the same person',
+      );
+    }
+
+    if (!receiver.isActive || !applicator.isActive) {
+      throw new ValidationError(
+        'Both applicator and receiver must be active users',
+      );
+    }
+
+    if (batch.vaccineId !== vaccine.id) {
+      throw new ValidationError(
+        `Batch ${batch.batchNumber} is not compatible with vaccine ${vaccine.id}`,
       );
     }
 
@@ -222,7 +346,6 @@ export class VaccineApplicationService {
         `Batch ${batch.batchNumber} has no remaining doses`,
       );
     }
-
     if (
       new Date(batch.expirationDate).setHours(23, 59, 59, 999) <
       getCurrentTimestamp()
@@ -231,64 +354,44 @@ export class VaccineApplicationService {
         `Batch ${batch.batchNumber} has expired`,
       );
     }
-
-    if (data.doseNumber > vaccine.dosesRequired) {
-      throw new ExceededRequiredDosesError(
-        data.vaccineId,
-        vaccine.dosesRequired,
-      );
+    if (doseNumber > vaccine.dosesRequired) {
+      throw new ExceededRequiredDosesError(vaccine.id, vaccine.dosesRequired);
     }
-
     const isDuplicate =
       await this.vaccineApplicationStore.existsByUserVaccineDose(
-        data.receivedById,
-        data.vaccineId,
-        data.doseNumber,
+        receiver.id,
+        vaccine.id,
+        doseNumber,
       );
-
     if (isDuplicate) {
-      throw new DuplicateDoseError(
-        data.receivedById,
-        data.vaccineId,
-        data.doseNumber,
-      );
+      throw new DuplicateDoseError(receiver.id, vaccine.id, doseNumber);
     }
-
-    if (data.doseNumber > 1) {
+    if (doseNumber > 1) {
       const previousDoseExists =
         await this.vaccineApplicationStore.existsByUserVaccineDose(
-          data.receivedById,
-          data.vaccineId,
-          data.doseNumber - 1,
+          receiver.id,
+          vaccine.id,
+          doseNumber - 1,
         );
-
       if (!previousDoseExists) {
         throw new InvalidDoseSequenceError(
-          `Dose ${data.doseNumber - 1} must be applied before dose ${data.doseNumber}`,
+          `Dose ${doseNumber - 1} must be applied before dose ${doseNumber}`,
         );
       }
     }
-
-    if (
-      vaccine.intervalDays &&
-      vaccine.intervalDays > 0 &&
-      data.doseNumber > 1
-    ) {
+    if (vaccine.intervalDays && vaccine.intervalDays > 0 && doseNumber > 1) {
       const latestApplication =
         await this.vaccineApplicationStore.findLatestApplicationForUserVaccine(
-          data.receivedById,
-          data.vaccineId,
+          receiver.id,
+          vaccine.id,
         );
-
       if (latestApplication) {
         const timeDifference =
           getCurrentTimestamp() -
           transformDateToTimestamp(latestApplication.applicationDate);
-
         const daysSinceLastDose = Math.floor(
           timeDifference / MILLISECONDS_IN_A_DAY,
         );
-
         if (daysSinceLastDose < vaccine.intervalDays) {
           throw new MinimumIntervalNotMetError(
             vaccine.intervalDays,
@@ -297,13 +400,6 @@ export class VaccineApplicationService {
         }
       }
     }
-
-    const application =
-      await this.vaccineApplicationStore.createApplicationAndDecrementStock(
-        data,
-      );
-
-    return application;
   }
 
   /**
@@ -357,7 +453,9 @@ export class VaccineApplicationService {
     requestingUserId: string,
     filters: VaccineApplicationFilterParams = {},
   ): Promise<PaginatedResponse<VaccineApplication>> {
-    const role = await this.userService.getUserRole(requestingUserId);
+    const role = await this.userStore
+      .findById(requestingUserId)
+      .then((user) => user?.role);
 
     // Apply role-based filtering
     if (role === 'EMPLOYEE') {
@@ -416,7 +514,9 @@ export class VaccineApplicationService {
     }
 
     // Authorization: Only the nurse who applied it or a MANAGER can update
-    const role = await this.userService.getUserRole(requestingUserId);
+    const role = await this.userStore
+      .findById(requestingUserId)
+      .then((user) => user?.role);
     const isApplier = application.appliedById === requestingUserId;
     const isManager = role === 'MANAGER';
 
@@ -465,9 +565,13 @@ export class VaccineApplicationService {
     requestingUserId: string,
   ): Promise<VaccinationHistoryResponse> {
     const [requestingUser, _] = await Promise.all([
-      this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
-      this.userService.getUserById(userId, DEFAULT_USER_SYSTEM_ID),
+      this.userStore.findById(requestingUserId),
+      this.userStore.findById(userId),
     ]);
+
+    if (!requestingUser) {
+      throw new UserNotFoundError(`User with ID ${requestingUserId} not found`);
+    }
 
     // Authorization: Employees can only view their own history
     if (requestingUserId !== userId) {
@@ -637,7 +741,9 @@ export class VaccineApplicationService {
     application: VaccineApplication,
     requestingUserId: string,
   ): Promise<void> {
-    const role = await this.userService.getUserRole(requestingUserId);
+    const role = await this.userStore
+      .findById(requestingUserId)
+      .then((user) => user?.role);
 
     if (role === 'MANAGER') {
       return; // Managers can see everything

@@ -7,7 +7,6 @@ export interface CreateVaccineApplicationDTO {
   receivedById: string;
   vaccineId: string;
   batchId: string;
-  appliedById: string;
   doseNumber: number;
   applicationSite: string;
   observations?: string;
@@ -25,11 +24,11 @@ export interface VaccineApplicationCreateInput {
   doseNumber: number;
   applicationSite: string;
   observations?: string;
-  receivedById: string;    // Simple ID, not Prisma connect
-  vaccineId: string;       // Simple ID, not Prisma connect
-  batchId: string;         // Simple ID, not Prisma connect
-  appliedById: string;     // Simple ID, not Prisma connect
-  schedulingId?: string;   // Simple ID, not Prisma connect
+  receivedById: string; // Simple ID, not Prisma connect
+  vaccineId: string; // Simple ID, not Prisma connect
+  batchId: string; // Simple ID, not Prisma connect
+  appliedById: string; // Simple ID, not Prisma connect
+  schedulingId?: string; // Simple ID, not Prisma connect
 }
 
 export interface VaccineApplicationUpdateInput {

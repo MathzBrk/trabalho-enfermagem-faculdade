@@ -6,6 +6,7 @@ import type {
 // DTOs (Data Transfer Objects) for API layer
 export interface CreateVaccineSchedulingDTO {
   userId: string;
+  nurseId?: string;
   vaccineId: string;
   scheduledDate: string;
   doseNumber: number;
@@ -21,6 +22,7 @@ export interface UpdateVaccineSchedulingDTO {
 // Store input types (independent of Prisma implementation)
 export interface VaccineSchedulingCreateInput {
   userId: string;
+  nurseId?: string;
   vaccineId: string;
   scheduledDate: Date;
   doseNumber: number;
@@ -42,22 +44,13 @@ export type VaccineSchedulingWithRelations =
   Prisma.VaccineSchedulingGetPayload<{
     include: {
       user: {
-        select: {
-          id: true;
-          name: true;
-          email: true;
-          cpf: true;
-          role: true;
+        omit: {
+          password: true;
         };
       };
-      vaccine: {
-        select: {
-          id: true;
-          name: true;
-          manufacturer: true;
-          dosesRequired: true;
-        };
-      };
+      vaccine: true;
+      assignedNurse: true;
+      application: true;
     };
   }>;
 

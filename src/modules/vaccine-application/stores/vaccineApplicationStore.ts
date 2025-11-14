@@ -10,7 +10,6 @@ import type {
   VaccineApplicationFilterParams,
 } from '@shared/interfaces/vaccineApplication';
 import type {
-  CreateVaccineApplicationDTO,
   VaccineApplicationCreateInput,
   VaccineApplicationDelegate,
   VaccineApplicationUpdateInput,
@@ -79,7 +78,7 @@ export class VaccineApplicationStore
    * @throws Prisma errors if transaction fails (constraint violations, etc.)
    */
   async createApplicationAndDecrementStock(
-    data: CreateVaccineApplicationDTO,
+    data: VaccineApplicationCreateInput,
   ): Promise<VaccineApplication> {
     return this.prisma.$transaction(async (prisma) => {
       // Step 1: Create vaccine application record
@@ -121,6 +120,14 @@ export class VaccineApplicationStore
         where: { id: data.vaccineId },
         data: { totalStock: { decrement: 1 } },
       });
+
+      if (data.schedulingId) {
+        // Step 4: Update scheduling status to COMPLETED if schedulingId is provided
+        await prisma.vaccineScheduling.update({
+          where: { id: data.schedulingId },
+          data: { status: 'COMPLETED' },
+        });
+      }
 
       return application;
     });

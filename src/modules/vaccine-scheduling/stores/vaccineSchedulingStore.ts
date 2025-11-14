@@ -99,22 +99,13 @@ export class VaccineSchedulingStore
       },
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            cpf: true,
-            role: true,
+          omit: {
+            password: true,
           },
         },
-        vaccine: {
-          select: {
-            id: true,
-            name: true,
-            manufacturer: true,
-            dosesRequired: true,
-          },
-        },
+        vaccine: true,
+        assignedNurse: true,
+        application: true,
       },
     });
   }
@@ -328,6 +319,11 @@ export class VaccineSchedulingStore
           vaccine: {
             connect: { id: data.vaccineId },
           },
+          assignedNurse: data.nurseId
+            ? {
+                connect: { id: data.nurseId },
+              }
+            : undefined,
         },
       });
 

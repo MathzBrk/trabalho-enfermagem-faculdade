@@ -1,6 +1,5 @@
 import type { VaccineApplication } from '@infrastructure/database';
 import type {
-  CreateVaccineApplicationDTO,
   VaccineApplicationCreateInput,
   VaccineApplicationUpdateInput,
   VaccineApplicationWithRelations,
@@ -25,7 +24,7 @@ export interface IVaccineApplicationStore
     VaccineApplicationUpdateInput
   > {
   createApplicationAndDecrementStock(
-    data: CreateVaccineApplicationDTO,
+    data: VaccineApplicationCreateInput,
   ): Promise<VaccineApplication>;
   findByUserAndVaccine(
     userId: string,
