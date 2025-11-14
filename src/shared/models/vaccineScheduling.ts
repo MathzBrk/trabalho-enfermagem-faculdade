@@ -26,6 +26,7 @@ export interface VaccineSchedulingCreateInput {
   doseNumber: number;
   notes?: string;
   status?: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+  assignedNurseId?: string;
 }
 
 export interface VaccineSchedulingUpdateInput {

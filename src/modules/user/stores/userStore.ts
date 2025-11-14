@@ -147,8 +147,8 @@ export class UserStore
       where: { id },
       include: {
         schedulingsReceived: true,
-        applicationsReceived: true,
         applicationsPerformed: true,
+        schedulingsAssigned: true,
         notifications: {
           where: { isRead: false },
           orderBy: { createdAt: 'desc' },

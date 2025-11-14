@@ -65,7 +65,7 @@ export class VaccineStore
         isObligatory: data.isObligatory,
         minStockLevel: data.minStockLevel,
         createdBy: {
-          connect: { id: data.createdById },  // Store handles Prisma conversion
+          connect: { id: data.createdById }, // Store handles Prisma conversion
         },
       },
     });
@@ -106,11 +106,7 @@ export class VaccineStore
       where: {
         isObligatory: true,
         deletedAt: null,
-        applications: {
-          none: {
-            userId,
-          },
-        },
+        schedulings: { none: { userId } },
       },
     });
   }
