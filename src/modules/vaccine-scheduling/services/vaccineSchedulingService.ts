@@ -344,11 +344,16 @@ export class VaccineSchedulingService {
       scheduledDate = newDate;
     }
 
+    if (data.nurseId) {
+      await this.userService.getUserById(data.nurseId, DEFAULT_USER_SYSTEM_ID);
+    }
+
     // Update the scheduling
     return this.vaccineSchedulingStore.update(id, {
       scheduledDate,
       notes: data.notes,
       status: data.status,
+      nurseId: data.nurseId,
     });
   }
 
