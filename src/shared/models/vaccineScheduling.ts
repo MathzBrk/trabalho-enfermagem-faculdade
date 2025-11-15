@@ -15,6 +15,7 @@ export interface CreateVaccineSchedulingDTO {
 
 export interface UpdateVaccineSchedulingDTO {
   scheduledDate?: string;
+  nurseId?: string;
   notes?: string;
   status?: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 }
@@ -32,6 +33,7 @@ export interface VaccineSchedulingCreateInput {
 
 export interface VaccineSchedulingUpdateInput {
   scheduledDate?: Date;
+  nurseId?: string;
   notes?: string;
   status?: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
   deletedAt?: Date;

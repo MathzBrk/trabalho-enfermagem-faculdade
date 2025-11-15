@@ -349,6 +349,7 @@ export class VaccineSchedulingService {
       scheduledDate,
       notes: data.notes,
       status: data.status,
+      nurseId: data.nurseId,
     });
   }
 

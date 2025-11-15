@@ -82,6 +82,7 @@ export class VaccineSchedulingStore
         notes: data.notes,
         status: data.status as any,
         deletedAt: data.deletedAt,
+        assignedNurseId: data.nurseId,
       },
     });
   }
@@ -165,6 +166,15 @@ export class VaccineSchedulingStore
               name: true,
               manufacturer: true,
               dosesRequired: true,
+            },
+          },
+          assignedNurse: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              cpf: true,
+              role: true,
             },
           },
         },
