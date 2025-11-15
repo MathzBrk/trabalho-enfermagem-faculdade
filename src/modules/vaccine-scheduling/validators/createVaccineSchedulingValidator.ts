@@ -12,4 +12,5 @@ export const CreateVaccineSchedulingBodySchema = z.object({
     .min(1, 'Dose number must be at least 1')
     .max(10, 'Dose number cannot exceed 10'),
   notes: z.string().max(500, 'Notes cannot exceed 500 characters').optional(),
+  nurseId: z.string().uuid('Nurse ID must be a valid UUID').optional(),
 });
