@@ -6,6 +6,7 @@ import vaccineRoutes from './vaccine.routes';
 import vaccineBatchRoutes from './vaccineBatch.routes';
 import vaccineApplicationRoutes from './vaccineApplication.routes';
 import vaccineSchedulingRoutes from './vaccineScheduling.routes';
+import notificationRoutes from './notification.routes';
 
 /**
  * Main Routes Index
@@ -63,5 +64,15 @@ routes.use('/vaccine-applications', vaccineApplicationRoutes);
  * Prefix: /api/vaccine-schedulings
  */
 routes.use('/vaccine-schedulings', vaccineSchedulingRoutes);
+
+/**
+ * Notification routes
+ * Prefix: /api/notifications
+ *
+ * - GET /api/notifications - List notifications for authenticated user
+ * - PATCH /api/notifications/:id/read - Mark notification as read
+ * - PATCH /api/notifications/read-all - Mark all notifications as read
+ */
+routes.use('/notifications', notificationRoutes);
 
 export default routes;
