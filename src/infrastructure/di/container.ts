@@ -11,6 +11,17 @@ import { VaccineService } from '@modules/vaccines/services/vaccineService';
 import { VaccineApplicationService } from '@modules/vaccine-application/services/vaccineApplicationService';
 import { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
 
+// Notification module imports
+import { NodeEventBus } from '@modules/notifications/infrastructure/NodeEventBus';
+import { NotificationStore } from '@modules/notifications/stores/NotificationStore';
+import { NotificationService } from '@modules/notifications/services/NotificationService';
+import { NotificationBootstrap } from '@modules/notifications/services/NotificationBootstrap';
+import { InAppVaccineScheduledHandler } from '@modules/notifications/handlers/InAppVaccineScheduledHandler';
+import { InAppNurseChangedHandler } from '@modules/notifications/handlers/InAppNurseChangedHandler';
+import { InAppBatchExpiringHandler } from '@modules/notifications/handlers/InAppBatchExpiringHandler';
+import { InAppLowStockHandler } from '@modules/notifications/handlers/InAppLowStockHandler';
+import { InAppReportGeneratedHandler } from '@modules/notifications/handlers/InAppReportGeneratedHandler';
+
 /**
  * DI Container Setup
  *
@@ -47,6 +58,9 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.IVaccineApplicationStore, VaccineApplicationStore);
   container.registerSingleton(TOKENS.IVaccineSchedulingStore, VaccineSchedulingStore);
 
+  // Register notification module stores
+  container.registerSingleton(TOKENS.INotificationStore, NotificationStore);
+
   // Register services as singletons
   // Services are stateless and can be safely shared across the application
   // Services use stores directly to avoid circular dependencies
@@ -56,6 +70,22 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.VaccineApplicationService, VaccineApplicationService);
   container.registerSingleton(TOKENS.VaccineSchedulingService, VaccineSchedulingService);
 
+  // Register notification module services and infrastructure
+  container.registerSingleton(TOKENS.IEventBus, NodeEventBus);
+  container.registerSingleton(TOKENS.NotificationService, NotificationService);
+  container.registerSingleton(TOKENS.NotificationBootstrap, NotificationBootstrap);
+
+  // Register notification event handlers
+  container.registerSingleton(TOKENS.VaccineScheduledHandler, InAppVaccineScheduledHandler);
+  container.registerSingleton(TOKENS.NurseChangedHandler, InAppNurseChangedHandler);
+  container.registerSingleton(TOKENS.BatchExpiringHandler, InAppBatchExpiringHandler);
+  container.registerSingleton(TOKENS.LowStockHandler, InAppLowStockHandler);
+  container.registerSingleton(TOKENS.ReportGeneratedHandler, InAppReportGeneratedHandler);
+
+  // Initialize notification system (register event handlers with event bus)
+  const notificationBootstrap = container.resolve<NotificationBootstrap>(TOKENS.NotificationBootstrap);
+  notificationBootstrap.initialize();
+
   console.log('📦 DI Container configured');
   console.log('   Stores:');
   console.log('   └─ IUserStore → Using UserStore (Prisma)');
@@ -63,12 +93,16 @@ export function setupContainer(): void {
   console.log('   └─ IVaccineBatchStore → Using VaccineBatchStore (Prisma)');
   console.log('   └─ IVaccineApplicationStore → Using VaccineApplicationStore (Prisma)');
   console.log('   └─ IVaccineSchedulingStore → Using VaccineSchedulingStore (Prisma)');
+  console.log('   └─ INotificationStore → Using NotificationStore (Prisma)');
   console.log('   Services:');
   console.log('   └─ UserService → Registered as singleton');
   console.log('   └─ VaccineService → Registered as singleton');
   console.log('   └─ VaccineBatchService → Registered as singleton');
   console.log('   └─ VaccineApplicationService → Registered as singleton');
   console.log('   └─ VaccineSchedulingService → Registered as singleton');
+  console.log('   └─ NotificationService → Registered as singleton');
+  console.log('   Infrastructure:');
+  console.log('   └─ IEventBus → Using NodeEventBus (EventEmitter)');
 
   // Future: Add environment-based switching
   // if (process.env.NODE_ENV === 'test') {
