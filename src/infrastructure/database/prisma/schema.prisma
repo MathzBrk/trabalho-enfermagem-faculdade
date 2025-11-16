@@ -246,6 +246,7 @@ model Notification {
   type        NotificationType
   title       String
   message     String
+  metadata    Json?    // Flexible JSON field for event-specific data
   isRead      Boolean  @default(false)
 
   userId      String
@@ -254,6 +255,8 @@ model Notification {
   createdAt   DateTime @default(now())
   readAt      DateTime?
 
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
   @@map("notifications")
 }
 
