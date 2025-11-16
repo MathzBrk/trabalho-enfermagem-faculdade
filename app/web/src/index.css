@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-*: initial;
+  --color-primary-50: #E8F4F8;
+  --color-primary-100: #D1E9F1;
+  --color-primary-200: #A3D3E3;
+  --color-primary-300: #75BDD5;
+  --color-primary-400: #47A7C7;
+  --color-primary-500: #0066CC;
+  --color-primary-600: #0052A3;
+  --color-primary-700: #003D7A;
+  --color-primary-800: #002951;
+  --color-primary-900: #001429;
+  --color-primary: #0066CC;
+
+  --color-success-*: initial;
+  --color-success-50: #E6F7ED;
+  --color-success-100: #CCF0DC;
+  --color-success-500: #00AA55;
+  --color-success-600: #008844;
+  --color-success-700: #006633;
+  --color-success: #00AA55;
+
+  --color-danger-*: initial;
+  --color-danger-50: #FEF2F2;
+  --color-danger-500: #DC3545;
+  --color-danger-600: #B02A37;
+  --color-danger: #DC3545;
+
+  --color-warning-*: initial;
+  --color-warning-50: #FFFBEB;
+  --color-warning-500: #FFC107;
+  --color-warning-600: #CC9A06;
+  --color-warning: #FFC107;
+
+  --color-medical-blue: #0066CC;
+  --color-medical-lightBlue: #E8F4F8;
+  --color-medical-accent: #00A3E0;
+}
+
+* {
+  border-color: rgb(229 231 235);
+}
+
+body {
+  background-color: rgb(249 250 251);
+  color: rgb(17 24 39);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: rgb(243 244 246);
+  border-radius: 0.25rem;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgb(209 213 219);
+  border-radius: 0.25rem;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(156 163 175);
+}
