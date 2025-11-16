@@ -36,17 +36,29 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiError>) => {
     // Handle 401 Unauthorized - token expired or invalid
+    // But DON'T redirect if it's a login/register attempt (those endpoints should handle their own errors)
     if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
-      window.location.href = '/login';
+      const isAuthEndpoint = error.config?.url?.includes('/auth/login') ||
+                             error.config?.url?.includes('/auth/register');
+
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+        window.location.href = '/login';
+      }
     }
 
     // Format error for consistent handling
+    // Backend can return error in different formats:
+    // - { success: false, error: "message" }
+    // - { message: "message" }
+    const responseData = error.response?.data as any;
+    const errorMessage = responseData?.error || responseData?.message || error.message || 'An error occurred';
+
     const apiError: ApiError = {
-      message: error.response?.data?.message || error.message || 'An error occurred',
+      message: errorMessage,
       statusCode: error.response?.status || 500,
-      errors: error.response?.data?.errors,
+      errors: responseData?.errors,
     };
 
     return Promise.reject(apiError);

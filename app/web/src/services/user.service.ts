@@ -1,63 +1,47 @@
-import type { User, PaginationParams, PaginatedResponse } from '../types';
-import { mockUsers } from '../utils/mockData';
+import type { User, PaginationParams, PaginatedResponse, UpdateUserData } from '../types';
+import { api } from './api';
 
 /**
  * User service
- * Currently using mock data - will integrate with real API later
+ * Integrates with backend API for user operations
  */
 export const userService = {
   /**
    * Get user by ID
    */
   getById: async (id: string): Promise<User> => {
-    // Mock implementation
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const user = mockUsers.find((u) => u.id === id);
-        if (user) {
-          const { password, ...userWithoutPassword } = user;
-          resolve(userWithoutPassword);
-        } else {
-          reject({
-            message: 'User not found',
-            statusCode: 404,
-          });
-        }
-      }, 500);
-    });
-
-    // Real API call (commented out for now)
-    // const response = await api.get<User>(`/users/${id}`);
-    // return response.data;
+    const response = await api.get<User>(`/users/${id}`);
+    return response.data;
   },
 
   /**
    * List users with pagination
    */
   list: async (params?: PaginationParams): Promise<PaginatedResponse<User>> => {
-    const page = params?.page || 1;
-    const limit = params?.limit || 10;
+    const response = await api.get<PaginatedResponse<User>>('/users', { params });
+    return response.data;
+  },
 
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const users = mockUsers.map(({ password, ...user }) => user);
-        const start = (page - 1) * limit;
-        const end = start + limit;
-        const paginatedUsers = users.slice(start, end);
+  /**
+   * Update user profile
+   */
+  update: async (id: string, data: UpdateUserData): Promise<User> => {
+    const response = await api.patch<User>(`/users/${id}`, data);
+    return response.data;
+  },
 
-        resolve({
-          data: paginatedUsers,
-          total: users.length,
-          page,
-          limit,
-          totalPages: Math.ceil(users.length / limit),
-        });
-      }, 500);
+  /**
+   * Upload profile photo
+   */
+  uploadPhoto: async (id: string, file: File): Promise<{ url: string }> => {
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    const response = await api.post<{ url: string }>(`/users/${id}/photo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
-
-    // Real API call (commented out for now)
-    // const response = await api.get<PaginatedResponse<User>>('/users', { params });
-    // return response.data;
+    return response.data;
   },
 };

@@ -48,10 +48,20 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        typeof error === 'object' && error !== null && 'message' in error
-          ? (error as { message: string }).message
-          : 'Failed to login';
+      let errorMessage = 'Falha ao fazer login';
+
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        const message = (error as { message: string }).message;
+
+        // Translate common error messages to Portuguese
+        if (message === 'Invalid email or password' || message === 'Invalid credentials') {
+          errorMessage = 'Email ou senha inválidos';
+        } else if (message.toLowerCase().includes('network')) {
+          errorMessage = 'Erro de conexão. Verifique sua internet.';
+        } else {
+          errorMessage = message;
+        }
+      }
 
       set({
         user: null,

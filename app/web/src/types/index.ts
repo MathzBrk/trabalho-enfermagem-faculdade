@@ -33,8 +33,11 @@ export interface User {
   name: string;
   email: string;
   cpf: string;
+  phone?: string | null;
   role: UserRole;
-  coren?: string;
+  coren?: string | null;
+  isActive?: boolean;
+  profilePhotoUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -124,7 +127,16 @@ export interface RegisterData {
   email: string;
   password: string;
   cpf: string;
+  phone?: string;
   role: UserRole;
+  coren?: string;
+}
+
+export interface UpdateUserData {
+  name?: string;
+  phone?: string;
+  isActive?: boolean;
+  role?: UserRole;
   coren?: string;
 }
 
@@ -169,8 +181,14 @@ export interface CreateVaccineBatchData {
 // ==================== API Response Types ====================
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  success?: boolean;
+  data?: {
+    token: string;
+    user: User;
+    expiresIn?: string;
+  };
+  token?: string;
+  user?: User;
 }
 
 export interface PaginationParams {

@@ -21,11 +21,23 @@ export const formatDateTime = (date: string | Date): string => {
 
 /**
  * Format a CPF string
+ * Supports partial formatting while typing
  */
 export const formatCPF = (cpf: string): string => {
   const cleaned = cpf.replace(/\D/g, '');
-  if (cleaned.length !== 11) return cpf;
-  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+
+  if (cleaned.length <= 3) return cleaned;
+  if (cleaned.length <= 6) return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
+  if (cleaned.length <= 9) return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
+
+  return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`;
+};
+
+/**
+ * Remove CPF formatting
+ */
+export const unformatCPF = (cpf: string): string => {
+  return cpf.replace(/\D/g, '');
 };
 
 /**
@@ -93,4 +105,29 @@ export const formatPriority = (priority: string): string => {
 export const truncate = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
+};
+
+/**
+ * Format phone number (Brazilian)
+ * Supports partial formatting while typing
+ */
+export const formatPhone = (phone: string): string => {
+  const cleaned = phone.replace(/\D/g, '');
+
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 6) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
+  if (cleaned.length <= 10) {
+    // Landline: (11) 3333-4444
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+  }
+
+  // Mobile: (11) 98765-4321
+  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
+};
+
+/**
+ * Remove phone formatting
+ */
+export const unformatPhone = (phone: string): string => {
+  return phone.replace(/\D/g, '');
 };
