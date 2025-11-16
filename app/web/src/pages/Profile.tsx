@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User as UserIcon, Camera, Save, X } from 'lucide-react';
-import { UpdateProfileSchema, UpdateProfileFormData } from '../utils/validationSchemas';
+import { Camera, Save, X, Mail, Phone, Calendar, Shield } from 'lucide-react';
+import { UpdateProfileSchema } from '../utils/validationSchemas';
+import type { UpdateProfileFormData } from '../utils/validationSchemas';
 import { useProfile } from '../hooks/useProfile';
 import { useAuthStore } from '../store/authStore';
 import { FormInput } from '../components/common/FormInput';
 import { MaskedInput } from '../components/common/MaskedInput';
 import { Select } from '../components/common/Select';
 import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { UserRole } from '../types';
 import { formatCPF, formatPhone, formatRole, formatDate, getInitials } from '../utils/formatters';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
 
 /**
  * Profile page component
@@ -114,34 +116,47 @@ export const Profile: React.FC = () => {
 
   if (isLoading && !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando perfil...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Carregando perfil...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md">
-          <div className="text-center py-8">
-            <p className="text-danger-600">Erro ao carregar perfil</p>
-            {error && <p className="text-sm text-gray-600 mt-2">{error}</p>}
-          </div>
-        </Card>
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Card className="max-w-md">
+            <CardContent className="py-8">
+              <div className="text-center">
+                <p className="text-danger-600">Erro ao carregar perfil</p>
+                {error && <p className="text-sm text-gray-600 mt-2">{error}</p>}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Profile Header */}
-        <Card className="mb-6">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+    <DashboardLayout>
+      <div className="p-6 max-w-5xl mx-auto space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Meu Perfil</h1>
+          <p className="text-gray-600 mt-1">Gerencie suas informações pessoais</p>
+        </div>
+
+        {/* Profile Header Card */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             {/* Profile Photo */}
             <div className="relative">
               {photoPreview || user.profilePhotoUrl ? (
@@ -194,124 +209,207 @@ export const Profile: React.FC = () => {
               )}
             </div>
 
-            {/* User Info */}
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-              <p className="text-gray-600 mt-1">{user.email}</p>
+              {/* User Info */}
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
+                <div className="flex items-center gap-2 mt-2 text-gray-600 justify-center md:justify-start">
+                  <Mail className="h-4 w-4" />
+                  <span className="text-sm">{user.email}</span>
+                </div>
 
-              <div className="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
-                <Badge variant="primary">{formatRole(user.role)}</Badge>
-                {user.coren && <Badge variant="secondary">COREN: {user.coren}</Badge>}
-                <Badge variant={user.isActive ? 'success' : 'danger'}>
-                  {user.isActive ? 'Ativo' : 'Inativo'}
-                </Badge>
+                <div className="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
+                  <Badge variant="info">
+                    <Shield className="h-3 w-3 mr-1" />
+                    {formatRole(user.role)}
+                  </Badge>
+                  {user.coren && (
+                    <Badge variant="default">COREN: {user.coren}</Badge>
+                  )}
+                  <Badge variant={user.isActive ? 'success' : 'danger'}>
+                    {user.isActive ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </div>
               </div>
 
-              <div className="mt-4 space-y-1 text-sm text-gray-600">
-                <p>
-                  <strong>CPF:</strong> {formatCPF(user.cpf)}
-                </p>
-                {user.phone && (
-                  <p>
-                    <strong>Telefone:</strong> {formatPhone(user.phone)}
-                  </p>
-                )}
-                <p>
-                  <strong>Cadastrado em:</strong> {formatDate(user.createdAt)}
-                </p>
-              </div>
+              {/* Edit Button */}
+              {!isEditing && (
+                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                  Editar Perfil
+                </Button>
+              )}
             </div>
-
-            {/* Edit Button */}
-            {!isEditing && (
-              <Button onClick={() => setIsEditing(true)} variant="outline">
-                Editar Perfil
-              </Button>
-            )}
-          </div>
+          </CardContent>
         </Card>
+
+        {/* Information Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Personal Information */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Informações Pessoais
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield className="h-4 w-4 text-primary-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">CPF</p>
+                    <p className="text-sm font-medium text-gray-900">{formatCPF(user.cpf)}</p>
+                  </div>
+                </div>
+
+                {user.phone && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Phone className="h-4 w-4 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Telefone</p>
+                      <p className="text-sm font-medium text-gray-900">{formatPhone(user.phone)}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar className="h-4 w-4 text-primary-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Membro desde</p>
+                    <p className="text-sm font-medium text-gray-900">{formatDate(user.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Status */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Status da Conta
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">Status</span>
+                  <Badge variant={user.isActive ? 'success' : 'danger'}>
+                    {user.isActive ? 'Ativa' : 'Inativa'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">Função</span>
+                  <Badge variant="info">{formatRole(user.role)}</Badge>
+                </div>
+                {user.role === UserRole.NURSE && user.coren && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">COREN</span>
+                    <span className="text-sm font-medium text-gray-900">{user.coren}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Edit Form */}
         {isEditing && (
           <Card>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Editar Perfil
-              </h2>
-              <Button onClick={handleCancelEdit} variant="ghost" size="sm">
-                <X size={20} />
-              </Button>
-            </div>
-
-            {error && (
-              <div className="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
-                <p className="text-danger-700 text-sm">{error}</p>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Editar Perfil
+                </h2>
+                <Button onClick={handleCancelEdit} variant="ghost" size="sm">
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <FormInput
-                label="Nome Completo"
-                type="text"
-                placeholder="João Silva"
-                register={register('name')}
-                error={errors.name?.message}
-              />
-
-              <MaskedInput
-                label="Telefone"
-                mask="phone"
-                placeholder="(00) 00000-0000"
-                register={register('phone')}
-                error={errors.phone?.message}
-              />
-
-              {/* Only managers can change role */}
-              {isManager && (
-                <>
-                  <Select
-                    label="Função"
-                    options={roleOptions}
-                    placeholder="Selecione a função"
-                    register={register('role')}
-                    error={errors.role?.message}
-                  />
-
-                  {selectedRole === UserRole.NURSE && (
-                    <FormInput
-                      label="COREN"
-                      type="text"
-                      placeholder="123456"
-                      register={register('coren')}
-                      error={errors.coren?.message}
-                      helperText="Número do registro no Conselho Regional de Enfermagem"
-                    />
-                  )}
-                </>
+              {error && (
+                <div className="mb-6 p-3 bg-danger-50 border border-danger-200 rounded-lg">
+                  <p className="text-danger-700 text-sm">{error}</p>
+                </div>
               )}
 
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  isLoading={isLoading}
-                  disabled={isLoading || !isDirty}
-                  className="flex-1"
-                >
-                  {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-900 pb-2 border-b border-gray-200">
+                    Informações Básicas
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormInput
+                      label="Nome Completo"
+                      type="text"
+                      placeholder="João Silva"
+                      register={register('name')}
+                      error={errors.name?.message}
+                    />
+
+                    <MaskedInput
+                      label="Telefone"
+                      mask="phone"
+                      placeholder="(00) 00000-0000"
+                      register={register('phone')}
+                      error={errors.phone?.message}
+                    />
+                  </div>
+                </div>
+
+                {/* Only managers can change role */}
+                {isManager && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-gray-900 pb-2 border-b border-gray-200">
+                      Informações da Conta
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Select
+                        label="Função"
+                        options={roleOptions}
+                        placeholder="Selecione a função"
+                        register={register('role')}
+                        error={errors.role?.message}
+                      />
+
+                      {selectedRole === UserRole.NURSE && (
+                        <FormInput
+                          label="COREN"
+                          type="text"
+                          placeholder="123456"
+                          register={register('coren')}
+                          error={errors.coren?.message}
+                          helperText="Número do registro no Conselho Regional de Enfermagem"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    disabled={isLoading || !isDirty}
+                    className="flex-1"
+                  >
+                    {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
           </Card>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };

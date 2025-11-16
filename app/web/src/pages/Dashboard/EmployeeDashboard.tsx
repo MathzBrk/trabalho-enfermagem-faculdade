@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Syringe,
@@ -25,6 +26,7 @@ import { formatDate, formatDateTime } from '../../utils/formatters';
  */
 export const EmployeeDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [schedulings, setSchedulings] = useState<VaccineScheduling[]>([]);
   const [applications, setApplications] = useState<VaccineApplication[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -40,12 +42,12 @@ export const EmployeeDashboard: React.FC = () => {
           await Promise.all([
             vaccineService.listSchedulings(user.id),
             vaccineService.listApplications(user.id),
-            notificationService.list(user.id, false),
+            notificationService.list({ isRead: false, perPage: 5 }),
           ]);
 
         setSchedulings(schedulingsData);
         setApplications(applicationsData);
-        setNotifications(notificationsData);
+        setNotifications(notificationsData.data);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -223,7 +225,7 @@ export const EmployeeDashboard: React.FC = () => {
           <CardContent>
             {notifications.length > 0 ? (
               <div className="space-y-3">
-                {notifications.slice(0, 5).map((notification) => (
+                {notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className="p-3 bg-gray-50 rounded-lg border border-gray-200"
@@ -237,13 +239,20 @@ export const EmployeeDashboard: React.FC = () => {
                           {notification.message}
                         </p>
                       </div>
-                      <Badge variant="info" size="sm">
-                        Novo
-                      </Badge>
+                      {!notification.isRead && (
+                        <Badge variant="info" size="sm">
+                          Novo
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 ))}
-                <Button variant="ghost" size="sm" className="w-full">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate('/notifications')}
+                >
                   Ver todas
                   <ArrowRight className="h-4 w-4" />
                 </Button>

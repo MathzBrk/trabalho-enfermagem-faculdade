@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { RoleBadge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { notificationService } from '../../services/notification.service';
 import { useNavigate } from 'react-router-dom';
 import { getInitials } from '../../utils/formatters';
+
+const POLLING_INTERVAL = 10000; // 10 seconds
 
 /**
  * Header component with user info and notifications
@@ -15,11 +18,31 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Fetch unread count on mount and set up polling
   useEffect(() => {
-    if (user) {
-      notificationService.getUnreadCount(user.id).then(setUnreadCount);
-    }
+    if (!user) return;
+
+    // Initial fetch
+    fetchUnreadCount();
+
+    // Set up polling interval
+    const intervalId = setInterval(fetchUnreadCount, POLLING_INTERVAL);
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      // Silently fail - don't disrupt user experience
+      console.error('Error fetching unread count:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -47,21 +70,16 @@ export const Header: React.FC = () => {
         {/* Right: User info and actions */}
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <button
-            className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full" />
-            )}
-          </button>
+          <NotificationDropdown
+            unreadCount={unreadCount}
+            onUnreadCountChange={setUnreadCount}
+          />
 
           {/* User info */}
           <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-              <div className="flex items-center justify-end gap-2 mt-0.5">
+              <p className="text-sm font-medium text-gray-900 leading-tight">{user.name}</p>
+              <div className="flex items-center justify-end gap-2 mt-1">
                 <RoleBadge role={user.role} />
               </div>
             </div>
