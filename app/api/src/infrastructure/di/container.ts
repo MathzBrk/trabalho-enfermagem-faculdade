@@ -16,6 +16,7 @@ import { NodeEventBus } from '@infrastructure/messaging/NodeEventBus';
 import { NotificationStore } from '@modules/notifications/stores/NotificationStore';
 import { NotificationService } from '@modules/notifications/services/NotificationService';
 import { NotificationBootstrap } from '@modules/notifications/services/NotificationBootstrap';
+import { NotificationController } from '@modules/notifications/controllers/NotificationController';
 import { InAppVaccineScheduledHandler } from '@modules/notifications/handlers/InAppVaccineScheduledHandler';
 import { InAppNurseChangedHandler } from '@modules/notifications/handlers/InAppNurseChangedHandler';
 import { InAppBatchExpiringHandler } from '@modules/notifications/handlers/InAppBatchExpiringHandler';
@@ -81,6 +82,9 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.BatchExpiringHandler, InAppBatchExpiringHandler);
   container.registerSingleton(TOKENS.LowStockHandler, InAppLowStockHandler);
   container.registerSingleton(TOKENS.ReportGeneratedHandler, InAppReportGeneratedHandler);
+
+  // Register notification controller
+  container.registerSingleton(NotificationController);
 
   // Initialize notification system (register event handlers with event bus)
   const notificationBootstrap = container.resolve<NotificationBootstrap>(TOKENS.NotificationBootstrap);
