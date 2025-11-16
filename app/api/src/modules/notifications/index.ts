@@ -29,7 +29,8 @@ export { NotificationStore } from './stores/NotificationStore';
 // ============================================
 // Infrastructure
 // ============================================
-export { NodeEventBus } from './infrastructure/NodeEventBus';
+// Note: NodeEventBus moved to @infrastructure/messaging/NodeEventBus
+// Import directly from infrastructure layer if needed
 
 // ============================================
 // Handlers
