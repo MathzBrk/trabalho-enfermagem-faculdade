@@ -37,6 +37,7 @@ import type {
 import { calculatePaginationMetadata } from '@shared/interfaces/pagination';
 import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import type { Prisma } from '@infrastructure/database';
+import { getCurrentDate } from '@shared/helpers/timeHelper';
 
 @injectable()
 export class NotificationStore
@@ -147,7 +148,7 @@ export class NotificationStore
       where: { id },
       data: {
         isRead: true,
-        readAt: new Date(),
+        readAt: getCurrentDate(),
       },
     });
   }
@@ -166,7 +167,7 @@ export class NotificationStore
       },
       data: {
         isRead: true,
-        readAt: new Date(),
+        readAt: getCurrentDate(),
       },
     });
 

@@ -16,6 +16,11 @@ export * from './contracts';
 export * from './errors';
 
 // ============================================
+// Controllers
+// ============================================
+export { NotificationController } from './controllers/NotificationController';
+
+// ============================================
 // Services
 // ============================================
 export { NotificationService } from './services/NotificationService';
