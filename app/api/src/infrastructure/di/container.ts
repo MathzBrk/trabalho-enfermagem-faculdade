@@ -12,7 +12,7 @@ import { VaccineApplicationService } from '@modules/vaccine-application/services
 import { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
 
 // Notification module imports
-import { NodeEventBus } from '@modules/notifications/infrastructure/NodeEventBus';
+import { NodeEventBus } from '@infrastructure/messaging/NodeEventBus';
 import { NotificationStore } from '@modules/notifications/stores/NotificationStore';
 import { NotificationService } from '@modules/notifications/services/NotificationService';
 import { NotificationBootstrap } from '@modules/notifications/services/NotificationBootstrap';
