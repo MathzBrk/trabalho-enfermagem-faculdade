@@ -108,7 +108,7 @@ export class VaccineSchedulingService {
       );
     }
 
-    if(nurse && nurse.role !== 'NURSE') {
+    if (nurse && nurse.role !== 'NURSE') {
       throw new ValidationError(
         'The assigned nurseId does not belong to a user with NURSE role',
       );
