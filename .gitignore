@@ -1,7 +1,27 @@
+# Dependencies
 node_modules
+app/*/node_modules
+
+# Environment variables
 .env
+app/*/.env
 
 # Prisma
 src/infrastructure/database/generated/
+app/api/src/infrastructure/database/generated/
 
+# Build outputs
 *.tsbuildinfo
+dist
+build
+app/*/dist
+app/*/build
+app/web/.vite
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
