@@ -209,27 +209,37 @@ export class VaccineSchedulingService {
     }
 
     await Promise.all(
-      usersInvolved.map((user) =>
-        this.eventBus.emit<VaccineScheduledEvent>(
-          EventNames.VACCINE_SCHEDULED,
-          {
-            type: EventNames.VACCINE_SCHEDULED,
-            channels: ['in-app'],
-            data: {
-              schedulingId: scheduling.id,
-              userId: user.id,
-              userName: user.name,
-              userEmail: user.email,
-              userRole: user.id === patient.id ? 'patient' : 'nurse',
-              vaccineId: vaccine.id,
-              vaccineName: vaccine.name,
-              scheduledDate: scheduling.scheduledDate,
-              doseNumber: scheduling.doseNumber,
+      usersInvolved.map((user) => {
+        try {
+          this.eventBus.emit<VaccineScheduledEvent>(
+            EventNames.VACCINE_SCHEDULED,
+            {
+              type: EventNames.VACCINE_SCHEDULED,
+              channels: ['in-app'],
+              data: {
+                schedulingId: scheduling.id,
+                userId: user.id,
+                userName: user.name,
+                userEmail: user.email,
+                userRole: user.id === nurse?.id ? 'nurse' : 'patient',
+                vaccineId: vaccine.id,
+                vaccineName: vaccine.name,
+                scheduledDate: scheduling.scheduledDate,
+                doseNumber: scheduling.doseNumber,
+              },
+              priority: 'normal',
             },
-            priority: 'normal',
-          },
-        ),
-      ),
+          );
+          console.log(
+            `[VaccineSchedulingService] Emitted vaccine.scheduled event for user ${user.id}`,
+          );
+        } catch (error) {
+          console.error(
+            `[VaccineSchedulingService] Failed to emit vaccine.scheduled event for user ${user.id}:`,
+            error,
+          );
+        }
+      }),
     );
 
     return scheduling;

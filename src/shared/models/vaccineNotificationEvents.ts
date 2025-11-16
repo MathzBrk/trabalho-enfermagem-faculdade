@@ -43,8 +43,6 @@ export interface VaccineScheduledEventData {
  *     vaccineName: 'COVID-19',
  *     scheduledDate: new Date(),
  *     doseNumber: 1,
- *     nurseName: 'Maria Santos',
- *     nurseEmail: 'maria@hospital.com'
  *   },
  *   priority: 'normal'
  * });

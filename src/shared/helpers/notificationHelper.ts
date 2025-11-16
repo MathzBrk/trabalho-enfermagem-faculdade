@@ -9,6 +9,7 @@
 
 import type { INotificationStore } from '@shared/interfaces/notification';
 import type { VaccineScheduledEventData } from '@shared/models/vaccineNotificationEvents';
+import { formatDate } from './timeHelper';
 
 /**
  * Creates a notification for a patient when their vaccine is scheduled
@@ -21,16 +22,7 @@ export const createPatientVaccineScheduledNotification = async (
   store: INotificationStore,
   data: VaccineScheduledEventData,
 ): Promise<void> => {
-  const formattedDate = new Date(data.scheduledDate).toLocaleDateString(
-    'pt-BR',
-    {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    },
-  );
+  const formattedDate = formatDate(data.scheduledDate, 'DD/MM/YYYY HH:mm');
 
   await store.create({
     userId: data.userId,
@@ -59,16 +51,7 @@ export const createNurseVaccineScheduledNotification = async (
   store: INotificationStore,
   data: VaccineScheduledEventData,
 ): Promise<void> => {
-  const formattedDate = new Date(data.scheduledDate).toLocaleDateString(
-    'pt-BR',
-    {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    },
-  );
+  const formattedDate = formatDate(data.scheduledDate, 'DD/MM/YYYY HH:mm');
 
   await store.create({
     userId: data.userId,

@@ -20,6 +20,7 @@ import { TOKENS } from '@infrastructure/di/tokens';
 import type { INotificationStore } from '@modules/notifications/contracts';
 import type { BatchExpiringEvent } from '@modules/notifications/contracts';
 import type { IUserStore } from '@shared/interfaces/user';
+import { formatDate } from '@shared/helpers/timeHelper';
 
 @injectable()
 export class InAppBatchExpiringHandler {
@@ -49,21 +50,17 @@ export class InAppBatchExpiringHandler {
       const managers = await this.userStore.findByRole('MANAGER');
 
       if (managers.length === 0) {
-        console.warn(
-          '[InAppBatchExpiringHandler] No managers found to notify',
-        );
+        console.warn('[InAppBatchExpiringHandler] No managers found to notify');
         return;
       }
 
-      const formattedExpirationDate = new Date(
+      const formattedExpirationDate = formatDate(
         data.expirationDate,
-      ).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
+        'DD/MM/YYYY',
+      );
 
-      const urgencyLevel = data.daysUntilExpiration <= 7 ? 'URGENTE' : 'IMPORTANTE';
+      const urgencyLevel =
+        data.daysUntilExpiration <= 7 ? 'URGENTE' : 'IMPORTANTE';
       const message = `${urgencyLevel}: Lote ${data.batchNumber} de ${data.vaccineName} (${data.manufacturer}) vence em ${data.daysUntilExpiration} dia(s) (${formattedExpirationDate}). Quantidade restante: ${data.currentQuantity} doses.`;
 
       // Create notification for each manager

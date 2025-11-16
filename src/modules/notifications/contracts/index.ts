@@ -12,7 +12,11 @@
  */
 
 // Event Bus
-export type { IEventBus } from '@shared/interfaces/eventBus';
+export type {
+  IEventBus,
+  EmitResult,
+  HandlerResult,
+} from '@shared/interfaces/eventBus';
 
 // Notification Store
 export type {

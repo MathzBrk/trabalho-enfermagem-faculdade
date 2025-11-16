@@ -16,6 +16,7 @@ import { inject, injectable } from 'tsyringe';
 import { TOKENS } from '@infrastructure/di/tokens';
 import type { INotificationStore } from '@modules/notifications/contracts';
 import type { NurseChangedEvent } from '@modules/notifications/contracts';
+import { formatDate } from '@shared/helpers/timeHelper';
 
 @injectable()
 export class InAppNurseChangedHandler {
@@ -39,16 +40,7 @@ export class InAppNurseChangedHandler {
 
       const { data } = event;
 
-      const formattedDate = new Date(data.scheduledDate).toLocaleDateString(
-        'pt-BR',
-        {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        },
-      );
+      const formattedDate = formatDate(data.scheduledDate, 'DD/MM/YYYY HH:mm');
 
       // Create notification for patient
       const nurseChangeMessage = data.newNurseName
