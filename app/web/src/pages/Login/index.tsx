@@ -119,6 +119,20 @@ export const LoginPage: React.FC = () => {
               </Button>
             </form>
 
+            {/* Register link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Não tem uma conta?{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="font-semibold text-primary-600 hover:text-primary-700 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+                >
+                  Cadastre-se aqui
+                </button>
+              </p>
+            </div>
+
             {/* Demo credentials */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <p className="text-xs font-semibold text-gray-700 mb-2">

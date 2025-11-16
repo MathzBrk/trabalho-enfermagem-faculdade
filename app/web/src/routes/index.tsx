@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '../pages/Login';
+import { Registration } from '../pages/Registration';
 import { DashboardPage } from '../pages/Dashboard';
 import { ProtectedRoute } from './ProtectedRoute';
 import { UserRole } from '../types';
@@ -57,6 +58,7 @@ export const AppRouter: React.FC = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<Registration />} />
 
         {/* Protected routes */}
         <Route
