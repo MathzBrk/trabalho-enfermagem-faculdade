@@ -29,6 +29,9 @@ import {
   getDate,
   getDifferenceBetweenDatesInDays,
 } from '@shared/helpers/timeHelper';
+import type { IEventBus } from '@shared/interfaces/eventBus';
+import { EventNames, type VaccineScheduledEvent } from '@modules/notifications';
+import type { UserResponse } from '@shared/models/user';
 
 /**
  * VaccineSchedulingService - Service layer for vaccine scheduling business logic
@@ -53,6 +56,8 @@ export class VaccineSchedulingService {
     private readonly userService: UserService,
     @inject(TOKENS.IVaccineStore)
     private readonly vaccineStore: IVaccineStore,
+    @inject(TOKENS.IEventBus)
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**
@@ -85,15 +90,15 @@ export class VaccineSchedulingService {
     data: CreateVaccineSchedulingDTO,
     requestingUserId: string,
   ): Promise<VaccineScheduling> {
-    // Fetch requesting user and validate existence in parallel
+    // Fetch requesting user, patient, vaccine, and nurse in parallel
 
-    const [requestingUser, vaccine, nurse, _] = await Promise.all([
+    const [requestingUser, vaccine, nurse, patient] = await Promise.all([
       this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
       this.vaccineStore.findById(data.vaccineId),
       data.nurseId
         ? this.userService.getUserById(data.nurseId, DEFAULT_USER_SYSTEM_ID)
         : Promise.resolve(null),
-      this.userService.validateUserExists(data.userId),
+      this.userService.getUserById(data.userId, DEFAULT_USER_SYSTEM_ID),
     ]);
 
     // Authorization: Non-MANAGER can only create for themselves
@@ -181,18 +186,53 @@ export class VaccineSchedulingService {
     // The store method handles stock validation atomically using pessimistic locking
     // to prevent race conditions where concurrent requests could both pass validation
     // and create schedulings, leading to overbooking
-    return this.vaccineSchedulingStore.createSchedulingWithStockValidation(
-      {
-        scheduledDate,
-        doseNumber: data.doseNumber,
-        notes: data.notes,
-        status: 'SCHEDULED',
-        userId: data.userId,
-        vaccineId: data.vaccineId,
-        nurseId: nurse ? nurse.id : undefined,
-      },
-      data.vaccineId,
+    const scheduling =
+      await this.vaccineSchedulingStore.createSchedulingWithStockValidation(
+        {
+          scheduledDate,
+          doseNumber: data.doseNumber,
+          notes: data.notes,
+          status: 'SCHEDULED',
+          userId: data.userId,
+          vaccineId: data.vaccineId,
+          nurseId: nurse ? nurse.id : undefined,
+        },
+        data.vaccineId,
+      );
+
+    const usersInvolved: UserResponse[] = [];
+
+    usersInvolved.push(patient);
+
+    if (nurse) {
+      usersInvolved.push(nurse);
+    }
+
+    await Promise.all(
+      usersInvolved.map((user) =>
+        this.eventBus.emit<VaccineScheduledEvent>(
+          EventNames.VACCINE_SCHEDULED,
+          {
+            type: EventNames.VACCINE_SCHEDULED,
+            channels: ['in-app'],
+            data: {
+              schedulingId: scheduling.id,
+              userId: user.id,
+              userName: user.name,
+              userEmail: user.email,
+              userRole: user.id === patient.id ? 'patient' : 'nurse',
+              vaccineId: vaccine.id,
+              vaccineName: vaccine.name,
+              scheduledDate: scheduling.scheduledDate,
+              doseNumber: scheduling.doseNumber,
+            },
+            priority: 'normal',
+          },
+        ),
+      ),
     );
+
+    return scheduling;
   }
 
   /**
