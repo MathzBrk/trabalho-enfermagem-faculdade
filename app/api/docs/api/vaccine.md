@@ -710,7 +710,7 @@ Resposta vazia.
 
 - Sempre paginar requisições de listagem para evitar transferências grandes.
 - Para contador de estoque, utilizar o campo `totalStock` do recurso `Vaccine` ou somar `currentQuantity` dos lotes via `/vaccines/:id/batches`.
-- Mensagens de erro seguem o padrão de erro do API (ver `notifications.md` para estilo de erros). 
+- Mensagens de erro seguem o padrão de erro do API (ver documentação de erros da API para estilo de mensagens).
 
 ---
 
