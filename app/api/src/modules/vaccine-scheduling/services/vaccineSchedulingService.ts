@@ -224,9 +224,9 @@ export class VaccineSchedulingService {
               channels: ['in-app'],
               data: {
                 schedulingId: scheduling.id,
-                patientId: user.id,
-                patientName: user.name,
-                patientEmail: user.email,
+                patientId: patient.id,
+                patientName: patient.name,
+                patientEmail: patient.email,
                 nurseId: nurse?.id,
                 nurseName: nurse?.name,
                 nurseEmail: nurse?.email,
