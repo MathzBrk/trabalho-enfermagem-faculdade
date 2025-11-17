@@ -26,6 +26,16 @@ export const NotificationPriority = {
 
 export type NotificationPriority = (typeof NotificationPriority)[keyof typeof NotificationPriority];
 
+export const NotificationType = {
+  SCHEDULING_CONFIRMED: 'SCHEDULING_CONFIRMED',
+  SCHEDULING_CANCELLED: 'SCHEDULING_CANCELLED',
+  SCHEDULING_REMINDER: 'SCHEDULING_REMINDER',
+  VACCINE_DOSE_DUE: 'VACCINE_DOSE_DUE',
+  SYSTEM_ANNOUNCEMENT: 'SYSTEM_ANNOUNCEMENT',
+} as const;
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+
 // ==================== Base Types ====================
 
 export interface User {
@@ -106,13 +116,13 @@ export interface Notification {
   id: string;
   userId: string;
   user?: User;
+  type: NotificationType;
   title: string;
   message: string;
-  priority: NotificationPriority;
   isRead: boolean;
+  readAt: string | null;
   metadata?: Record<string, unknown>;
   createdAt: string;
-  updatedAt: string;
 }
 
 // ==================== API Request Types ====================
@@ -202,6 +212,31 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface NotificationPagination {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface ListNotificationsParams {
+  page?: number;
+  perPage?: number;
+  isRead?: boolean;
+  type?: NotificationType;
+}
+
+export interface ListNotificationsResponse {
+  data: Notification[];
+  pagination: NotificationPagination;
+}
+
+export interface MarkAllAsReadResponse {
+  count: number;
 }
 
 export interface ApiError {

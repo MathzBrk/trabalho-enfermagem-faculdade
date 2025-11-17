@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { RoleBadge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { notificationService } from '../../services/notification.service';
 import { useNavigate } from 'react-router-dom';
 import { getInitials } from '../../utils/formatters';
+import { LogoutConfirmationModal } from './LogoutConfirmationModal';
+
+const POLLING_INTERVAL = 10000; // 10 seconds
 
 /**
  * Header component with user info and notifications
@@ -14,16 +18,46 @@ export const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+  // Fetch unread count on mount and set up polling
   useEffect(() => {
-    if (user) {
-      notificationService.getUnreadCount(user.id).then(setUnreadCount);
-    }
+    if (!user) return;
+
+    // Initial fetch
+    fetchUnreadCount();
+
+    // Set up polling interval
+    const intervalId = setInterval(fetchUnreadCount, POLLING_INTERVAL);
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [user]);
 
-  const handleLogout = () => {
+  const fetchUnreadCount = async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      // Silently fail - don't disrupt user experience
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setIsLogoutModalOpen(false);
     logout();
     navigate('/login');
+  };
+
+  const handleLogoutCancel = () => {
+    setIsLogoutModalOpen(false);
   };
 
   if (!user) return null;
@@ -47,21 +81,16 @@ export const Header: React.FC = () => {
         {/* Right: User info and actions */}
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <button
-            className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full" />
-            )}
-          </button>
+          <NotificationDropdown
+            unreadCount={unreadCount}
+            onUnreadCountChange={setUnreadCount}
+          />
 
           {/* User info */}
           <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-              <div className="flex items-center justify-end gap-2 mt-0.5">
+              <p className="text-sm font-medium text-gray-900 leading-tight">{user.name}</p>
+              <div className="flex items-center justify-end gap-2 mt-1">
                 <RoleBadge role={user.role} />
               </div>
             </div>
@@ -77,7 +106,7 @@ export const Header: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="text-gray-600"
               aria-label="Logout"
             >
@@ -86,6 +115,13 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </header>
   );
 };

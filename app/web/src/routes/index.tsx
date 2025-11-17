@@ -3,8 +3,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '../pages/Login';
 import { Registration } from '../pages/Registration';
 import { DashboardPage } from '../pages/Dashboard';
+import { NotificationsPage } from '../pages/Notifications';
 import { ProtectedRoute } from './ProtectedRoute';
 import { UserRole } from '../types';
+import { Profile } from '../pages/Profile';
 
 // Placeholder components for future pages
 const MyVaccinesPage: React.FC = () => (
@@ -41,14 +43,6 @@ const ReportsPage: React.FC = () => (
     <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
   </div>
 );
-
-const ProfilePage: React.FC = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold">Perfil</h1>
-    <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
-  </div>
-);
-
 /**
  * Main router configuration
  */
@@ -123,7 +117,16 @@ export const AppRouter: React.FC = () => {
           path="/profile"
           element={
             <ProtectedRoute>
-              <ProfilePage />
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

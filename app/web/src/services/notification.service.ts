@@ -1,94 +1,88 @@
-import type { Notification } from '../types';
-import { mockNotifications } from '../utils/mockData';
+import { api, handleApiError } from './api';
+import type {
+  Notification,
+  ListNotificationsParams,
+  ListNotificationsResponse,
+  MarkAllAsReadResponse,
+} from '../types';
 
 /**
  * Notification service
- * Currently using mock data - will integrate with real API later
+ * Handles all notification-related API calls
  */
 export const notificationService = {
   /**
-   * List notifications for a user
+   * List notifications with pagination and filters
    */
-  list: async (userId: string, isRead?: boolean): Promise<Notification[]> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let notifications = mockNotifications.filter((n) => n.userId === userId);
-
-        if (typeof isRead === 'boolean') {
-          notifications = notifications.filter((n) => n.isRead === isRead);
-        }
-
-        resolve(notifications);
-      }, 500);
-    });
-
-    // Real API call (commented out for now)
-    // const params: { userId: string; isRead?: boolean } = { userId };
-    // if (typeof isRead === 'boolean') {
-    //   params.isRead = isRead;
-    // }
-    // const response = await api.get<Notification[]>('/notifications', { params });
-    // return response.data;
+  list: async (params?: ListNotificationsParams): Promise<ListNotificationsResponse> => {
+    try {
+      const response = await api.get<ListNotificationsResponse>('/notifications', { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
   },
 
   /**
    * Mark notification as read
    */
-  markAsRead: async (notificationId: string): Promise<void> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const notification = mockNotifications.find((n) => n.id === notificationId);
-        if (notification) {
-          notification.isRead = true;
-        }
-        resolve();
-      }, 300);
-    });
+  markAsRead: async (notificationId: string): Promise<Notification> => {
+    try {
+      const response = await api.patch<Notification>(`/notifications/${notificationId}/read`);
+      return response.data;
+    } catch (error) {
+      const message = handleApiError(error);
 
-    // Real API call (commented out for now)
-    // await api.patch(`/notifications/${notificationId}/read`);
+      // Provide user-friendly error messages in Portuguese
+      if (message.includes('Authentication') || message.includes('Unauthorized')) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      if (message.includes('own notifications')) {
+        throw new Error('Você não tem permissão para acessar esta notificação.');
+      }
+      if (message.includes('not found')) {
+        throw new Error('Notificação não encontrada.');
+      }
+      if (message.includes('Validation')) {
+        throw new Error('Dados inválidos. Por favor, tente novamente.');
+      }
+
+      throw new Error('Erro ao marcar notificação como lida.');
+    }
   },
 
   /**
-   * Mark all notifications as read for a user
+   * Mark all notifications as read for the authenticated user
    */
-  markAllAsRead: async (userId: string): Promise<void> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        mockNotifications.forEach((notification) => {
-          if (notification.userId === userId) {
-            notification.isRead = true;
-          }
-        });
-        resolve();
-      }, 300);
-    });
+  markAllAsRead: async (): Promise<MarkAllAsReadResponse> => {
+    try {
+      const response = await api.patch<MarkAllAsReadResponse>('/notifications/read-all');
+      return response.data;
+    } catch (error) {
+      const message = handleApiError(error);
 
-    // Real API call (commented out for now)
-    // await api.patch('/notifications/read-all', { userId });
+      if (message.includes('Authentication') || message.includes('Unauthorized')) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
+      throw new Error('Erro ao marcar todas as notificações como lidas.');
+    }
   },
 
   /**
-   * Get unread count for a user
+   * Get unread count for the authenticated user
+   * Uses the list endpoint with isRead=false and perPage=1 to get the total count
    */
-  getUnreadCount: async (userId: string): Promise<number> => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const count = mockNotifications.filter(
-          (n) => n.userId === userId && !n.isRead
-        ).length;
-        resolve(count);
-      }, 300);
-    });
-
-    // Real API call (commented out for now)
-    // const response = await api.get<{ count: number }>('/notifications/unread-count', {
-    //   params: { userId },
-    // });
-    // return response.data.count;
+  getUnreadCount: async (): Promise<number> => {
+    try {
+      const response = await api.get<ListNotificationsResponse>('/notifications', {
+        params: { isRead: false, perPage: 1 },
+      });
+      return response.data.pagination.total;
+    } catch (error) {
+      // Silently fail for unread count - don't disrupt user experience
+      console.error('Error fetching unread count:', error);
+      return 0;
+    }
   },
 };

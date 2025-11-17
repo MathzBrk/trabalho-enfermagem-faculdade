@@ -7,7 +7,7 @@ import type {
   VaccineApplication,
   Notification,
 } from '../types';
-import { UserRole as UserRoleEnum, VaccineApplicationStatus as VaccineApplicationStatusEnum, NotificationPriority as NotificationPriorityEnum } from '../types';
+import { UserRole as UserRoleEnum, VaccineApplicationStatus as VaccineApplicationStatusEnum, NotificationType as NotificationTypeEnum } from '../types';
 
 // Mock Users with passwords for testing
 export const mockUsers: MockUser[] = [
@@ -239,45 +239,45 @@ export const mockNotifications: Notification[] = [
   {
     id: 'n1',
     userId: '1',
+    type: NotificationTypeEnum.SCHEDULING_CONFIRMED,
     title: 'Agendamento Confirmado',
     message: 'Sua vacina contra gripe foi agendada para 20/11/2024 às 10:00',
-    priority: NotificationPriorityEnum.MEDIUM,
     isRead: false,
+    readAt: null,
     metadata: { schedulingId: 's1' },
     createdAt: '2024-11-01T00:00:00Z',
-    updatedAt: '2024-11-01T00:00:00Z',
   },
   {
     id: 'n2',
     userId: '1',
+    type: NotificationTypeEnum.SCHEDULING_REMINDER,
     title: 'Lembrete de Vacina',
     message: 'Sua vacina COVID-19 está agendada para amanhã às 14:00',
-    priority: NotificationPriorityEnum.HIGH,
     isRead: false,
+    readAt: null,
     metadata: { schedulingId: 's2' },
     createdAt: '2024-11-15T00:00:00Z',
-    updatedAt: '2024-11-15T00:00:00Z',
   },
   {
     id: 'n3',
     userId: '2',
+    type: NotificationTypeEnum.SYSTEM_ANNOUNCEMENT,
     title: 'Novos Agendamentos',
     message: 'Você tem 3 novos agendamentos para hoje',
-    priority: NotificationPriorityEnum.MEDIUM,
     isRead: true,
+    readAt: '2024-11-16T08:00:00Z',
     createdAt: '2024-11-16T00:00:00Z',
-    updatedAt: '2024-11-16T00:00:00Z',
   },
   {
     id: 'n4',
     userId: '3',
+    type: NotificationTypeEnum.VACCINE_DOSE_DUE,
     title: 'Lote Próximo ao Vencimento',
     message: 'O lote COV2024001 vence em 30 dias',
-    priority: NotificationPriorityEnum.URGENT,
     isRead: false,
+    readAt: null,
     metadata: { batchId: 'b2' },
     createdAt: '2024-11-16T00:00:00Z',
-    updatedAt: '2024-11-16T00:00:00Z',
   },
 ];
 
