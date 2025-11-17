@@ -7,6 +7,7 @@ import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { notificationService } from '../../services/notification.service';
 import { useNavigate } from 'react-router-dom';
 import { getInitials } from '../../utils/formatters';
+import { LogoutConfirmationModal } from './LogoutConfirmationModal';
 
 const POLLING_INTERVAL = 10000; // 10 seconds
 
@@ -17,6 +18,7 @@ export const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Fetch unread count on mount and set up polling
   useEffect(() => {
@@ -44,9 +46,18 @@ export const Header: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setIsLogoutModalOpen(false);
     logout();
     navigate('/login');
+  };
+
+  const handleLogoutCancel = () => {
+    setIsLogoutModalOpen(false);
   };
 
   if (!user) return null;
@@ -95,7 +106,7 @@ export const Header: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="text-gray-600"
               aria-label="Logout"
             >
@@ -104,6 +115,13 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </header>
   );
 };
