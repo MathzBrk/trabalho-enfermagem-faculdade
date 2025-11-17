@@ -25,7 +25,7 @@ export const createPatientVaccineScheduledNotification = async (
   const formattedDate = formatDate(data.scheduledDate, 'DD/MM/YYYY HH:mm');
 
   await store.create({
-    userId: data.userId,
+    userId: data.patientId,
     type: 'SCHEDULING_CONFIRMED',
     title: 'Vacina Agendada',
     message: `Sua vacina ${data.vaccineName} foi agendada para ${formattedDate}. Dose: ${data.doseNumber}ª dose.`,
@@ -53,20 +53,32 @@ export const createNurseVaccineScheduledNotification = async (
 ): Promise<void> => {
   const formattedDate = formatDate(data.scheduledDate, 'DD/MM/YYYY HH:mm');
 
+  const { nurseEmail, nurseId, nurseName } = data;
+
+  if (!nurseId || !nurseEmail || !nurseName) {
+    console.warn(
+      `[createNurseVaccineScheduledNotification] Missing nurse information for schedulingId: ${data.schedulingId}`,
+    );
+    return;
+  }
+
   await store.create({
-    userId: data.userId,
+    userId: nurseId,
     type: 'GENERAL',
     title: 'Novo Agendamento',
-    message: `Você foi designado(a) para aplicar ${data.vaccineName} em ${data.userName} no dia ${formattedDate}.`,
+    message: `Você foi designado(a) para aplicar ${data.vaccineName} em ${data.patientName} no dia ${formattedDate}.`,
     metadata: {
       schedulingId: data.schedulingId,
       vaccineId: data.vaccineId,
       vaccineName: data.vaccineName,
       scheduledDate: data.scheduledDate,
       doseNumber: data.doseNumber,
-      patientName: data.userName,
-      patientEmail: data.userEmail,
+      patientName: data.patientName,
+      patientEmail: data.patientEmail,
       userRole: data.userRole,
+      nurseId,
+      nurseName,
+      nurseEmail,
     },
   });
 };

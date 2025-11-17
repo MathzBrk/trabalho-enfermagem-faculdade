@@ -19,9 +19,12 @@ import type { NotificationEvent } from './notificationEvent';
  */
 export interface VaccineScheduledEventData {
   schedulingId: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
+  patientId: string;
+  patientName: string;
+  patientEmail: string;
+  nurseId?: string;
+  nurseName?: string;
+  nurseEmail?: string;
   userRole: 'patient' | 'nurse';
   vaccineId: string;
   vaccineName: string;
