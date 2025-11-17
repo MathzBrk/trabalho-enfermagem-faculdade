@@ -53,9 +53,9 @@ export const createNurseVaccineScheduledNotification = async (
 ): Promise<void> => {
   const formattedDate = formatDate(data.scheduledDate, 'DD/MM/YYYY HH:mm');
 
-  const {nurseEmail, nurseId, nurseName} = data;
+  const { nurseEmail, nurseId, nurseName } = data;
 
-  if(!nurseId || !nurseEmail || !nurseName) {
+  if (!nurseId || !nurseEmail || !nurseName) {
     console.warn(
       `[createNurseVaccineScheduledNotification] Missing nurse information for schedulingId: ${data.schedulingId}`,
     );
