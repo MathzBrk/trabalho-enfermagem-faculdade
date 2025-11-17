@@ -55,7 +55,7 @@ export const createNurseVaccineScheduledNotification = async (
 
   const { nurseEmail, nurseId, nurseName } = data;
 
-  if(!nurseId || !nurseEmail || !nurseName) {
+  if (!nurseId || !nurseEmail || !nurseName) {
     console.warn(
       `[createNurseVaccineScheduledNotification] Missing nurse information for schedulingId: ${data.schedulingId}`,
     );
