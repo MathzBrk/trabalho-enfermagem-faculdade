@@ -21,6 +21,7 @@
     "prisma:seed": "ts-node src/infrastructure/database/prisma/seed.ts",
     "prisma:reset": "prisma migrate reset --force",
     "docker:up": "docker compose up -d",
+    "docker:up:safe": "docker ps -q -f name=univas-enfermagem-db | grep -q . && echo 'Container already running' || docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "docker:reset": "docker compose down -v && docker compose up -d",
@@ -29,7 +30,7 @@
     "db:shell": "docker exec -it univas-enfermagem-db psql -U postgres -d univas_enfermagem",
     "db:tables": "docker exec univas-enfermagem-db psql -U postgres -d univas_enfermagem -c '\\dt'",
     "db:users": "docker exec univas-enfermagem-db psql -U postgres -d univas_enfermagem -c 'SELECT * FROM users;'",
-    "dev": "npm run docker:up && npm run start:dev"
+    "dev": "npm run docker:up:safe && npm run start:dev"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
