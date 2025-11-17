@@ -464,10 +464,12 @@ Retorna um objeto paginado conforme padrão do projeto:
       "createdAt": "2025-11-16T12:00:00.000Z"
     }
   ],
-  "total": 1,
   "page": 1,
-  "limit": 10,
-  "totalPages": 1
+  "perPage": 10,
+  "total": 1,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
 }
 ```
 
