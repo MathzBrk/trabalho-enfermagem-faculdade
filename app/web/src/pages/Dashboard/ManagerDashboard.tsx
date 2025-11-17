@@ -81,7 +81,7 @@ export const ManagerDashboard: React.FC = () => {
 
   // Get low stock batches (< 20% available)
   const lowStockBatches = batches.filter(
-    (b) => b.availableQuantity / b.quantity < 0.2
+    (b) => b.currentQuantity / b.initialQuantity < 0.2
   );
 
   if (isLoading) {
@@ -210,7 +210,7 @@ export const ManagerDashboard: React.FC = () => {
                       Estoque baixo
                     </p>
                     <p className="text-xs text-warning-700">
-                      {batch.vaccine?.name} - Apenas {batch.availableQuantity}{' '}
+                      {batch.vaccine?.name} - Apenas {batch.currentQuantity}{' '}
                       doses disponíveis
                     </p>
                   </div>

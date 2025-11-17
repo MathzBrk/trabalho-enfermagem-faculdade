@@ -52,13 +52,26 @@ export interface User {
   updatedAt: string;
 }
 
+export const VaccineBatchStatus = {
+  AVAILABLE: 'AVAILABLE',
+  EXPIRED: 'EXPIRED',
+  DEPLETED: 'DEPLETED',
+  DISCARDED: 'DISCARDED',
+} as const;
+
+export type VaccineBatchStatus = (typeof VaccineBatchStatus)[keyof typeof VaccineBatchStatus];
+
 export interface Vaccine {
   id: string;
   name: string;
   manufacturer: string;
-  description?: string;
+  description?: string | null;
   dosesRequired: number;
-  intervalDays?: number;
+  intervalDays?: number | null;
+  minStockLevel?: number | null;
+  totalStock: number;
+  isObligatory: boolean;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -68,10 +81,12 @@ export interface VaccineBatch {
   vaccineId: string;
   vaccine?: Vaccine;
   batchNumber: string;
-  manufacturingDate: string;
+  initialQuantity: number;
+  currentQuantity: number;
   expirationDate: string;
-  quantity: number;
-  availableQuantity: number;
+  receivedDate: string;
+  status: VaccineBatchStatus;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -177,15 +192,35 @@ export interface CreateVaccineData {
   manufacturer: string;
   description?: string;
   dosesRequired: number;
+  isObligatory: boolean;
   intervalDays?: number;
+  minStockLevel?: number;
+}
+
+export interface UpdateVaccineData {
+  name?: string;
+  manufacturer?: string;
+  description?: string;
+  dosesRequired?: number;
+  isObligatory?: boolean;
+  intervalDays?: number;
+  minStockLevel?: number;
 }
 
 export interface CreateVaccineBatchData {
   vaccineId: string;
   batchNumber: string;
-  manufacturingDate: string;
-  expirationDate: string;
   quantity: number;
+  expirationDate: string;
+  receivedDate?: string;
+}
+
+export interface UpdateVaccineBatchData {
+  batchNumber?: string;
+  quantity?: number;
+  expirationDate?: string;
+  receivedDate?: string;
+  status?: VaccineBatchStatus;
 }
 
 // ==================== API Response Types ====================
@@ -206,12 +241,18 @@ export interface PaginationParams {
   limit?: number;
 }
 
+export interface Pagination {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: Pagination;
 }
 
 export interface NotificationPagination {
@@ -237,6 +278,26 @@ export interface ListNotificationsResponse {
 
 export interface MarkAllAsReadResponse {
   count: number;
+}
+
+export interface ListVaccinesParams {
+  page?: number;
+  perPage?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  manufacturer?: string;
+  isObligatory?: boolean;
+}
+
+export interface ListVaccineBatchesParams {
+  page?: number;
+  perPage?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  status?: VaccineBatchStatus;
+  expiringBefore?: string;
+  expiringAfter?: string;
+  minQuantity?: number;
 }
 
 export interface ApiError {
