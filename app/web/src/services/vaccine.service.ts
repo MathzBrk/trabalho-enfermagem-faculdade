@@ -1,13 +1,17 @@
-import { api } from './api';
+import { api, handleApiError } from './api';
 import type {
   Vaccine,
   VaccineBatch,
   VaccineScheduling,
   VaccineApplication,
   CreateVaccineData,
+  UpdateVaccineData,
   CreateVaccineBatchData,
   CreateVaccineSchedulingData,
   CreateVaccineApplicationData,
+  ListVaccinesParams,
+  PaginatedResponse,
+  ListVaccineBatchesParams,
 } from '../types';
 import {
   mockVaccines,
@@ -18,11 +22,147 @@ import {
 
 /**
  * Vaccine service
- * Currently using mock data - will integrate with real API later
+ * Handles all vaccine-related API calls
  */
 export const vaccineService = {
   /**
-   * List all vaccines
+   * List vaccines with pagination and filters
+   */
+  list: async (params?: ListVaccinesParams): Promise<PaginatedResponse<Vaccine>> => {
+    try {
+      const response = await api.get<PaginatedResponse<Vaccine>>('/vaccines', { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  /**
+   * Get vaccine by ID
+   */
+  getById: async (vaccineId: string, includeBatches = false): Promise<Vaccine | (Vaccine & { batches: PaginatedResponse<VaccineBatch> })> => {
+    try {
+      const params = includeBatches ? { include: 'batches' } : undefined;
+      const response = await api.get(`/vaccines/${vaccineId}`, { params });
+      return response.data;
+    } catch (error) {
+      const message = handleApiError(error);
+
+      if (message.includes('not found')) {
+        throw new Error('Vacina não encontrada.');
+      }
+      if (message.includes('Authentication') || message.includes('Unauthorized')) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
+      throw new Error('Erro ao buscar vacina.');
+    }
+  },
+
+  /**
+   * Get vaccine batches
+   */
+  getBatches: async (vaccineId: string, params?: ListVaccineBatchesParams): Promise<PaginatedResponse<VaccineBatch>> => {
+    try {
+      const response = await api.get<PaginatedResponse<VaccineBatch>>(`/vaccines/${vaccineId}/batches`, { params });
+      return response.data;
+    } catch (error) {
+      const message = handleApiError(error);
+
+      if (message.includes('not found')) {
+        throw new Error('Vacina não encontrada.');
+      }
+
+      throw new Error('Erro ao buscar lotes da vacina.');
+    }
+  },
+
+  /**
+   * Create a new vaccine
+   */
+  create: async (data: CreateVaccineData): Promise<Vaccine> => {
+    try {
+      const response = await api.post<Vaccine>('/vaccines', data);
+      return response.data;
+    } catch (error) {
+      const message = handleApiError(error);
+
+      if (message.includes('Authentication') || message.includes('Unauthorized')) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      if (message.includes('Forbidden')) {
+        throw new Error('Você não tem permissão para criar vacinas.');
+      }
+      if (message.includes('already exists') || message.includes('duplicate')) {
+        throw new Error('Já existe uma vacina com este nome e fabricante.');
+      }
+      if (message.includes('Validation')) {
+        throw new Error('Dados inválidos. Verifique os campos e tente novamente.');
+      }
+
+      throw new Error('Erro ao criar vacina.');
+    }
+  },
+
+  /**
+   * Update vaccine
+   */
+  update: async (vaccineId: string, data: UpdateVaccineData): Promise<Vaccine> => {
+    try {
+      const response = await api.patch<Vaccine>(`/vaccines/${vaccineId}`, data);
+      return response.data;
+    } catch (error) {
+      const message = handleApiError(error);
+
+      if (message.includes('Authentication') || message.includes('Unauthorized')) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      if (message.includes('Forbidden')) {
+        throw new Error('Você não tem permissão para editar vacinas.');
+      }
+      if (message.includes('not found')) {
+        throw new Error('Vacina não encontrada.');
+      }
+      if (message.includes('already exists') || message.includes('duplicate')) {
+        throw new Error('Já existe uma vacina com este nome e fabricante.');
+      }
+      if (message.includes('Validation')) {
+        throw new Error('Dados inválidos. Verifique os campos e tente novamente.');
+      }
+
+      throw new Error('Erro ao atualizar vacina.');
+    }
+  },
+
+  /**
+   * Delete vaccine
+   */
+  delete: async (vaccineId: string): Promise<void> => {
+    try {
+      await api.delete(`/vaccines/${vaccineId}`);
+    } catch (error) {
+      const message = handleApiError(error);
+
+      if (message.includes('Authentication') || message.includes('Unauthorized')) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      if (message.includes('Forbidden')) {
+        throw new Error('Apenas gerentes podem excluir vacinas.');
+      }
+      if (message.includes('not found')) {
+        throw new Error('Vacina não encontrada.');
+      }
+      if (message.includes('cannot be deleted') || message.includes('has associated')) {
+        throw new Error('Não é possível excluir esta vacina pois existem registros associados.');
+      }
+
+      throw new Error('Erro ao excluir vacina.');
+    }
+  },
+
+  // Legacy methods for compatibility
+  /**
+   * List all vaccines (legacy)
    */
   listVaccines: async (): Promise<Vaccine[]> => {
     // Mock implementation
@@ -31,23 +171,17 @@ export const vaccineService = {
         resolve(mockVaccines);
       }, 500);
     });
-
-    // Real API call (commented out for now)
-    // const response = await api.get<Vaccine[]>('/vaccines');
-    // return response.data;
   },
 
   /**
-   * Create a new vaccine
+   * Create a new vaccine (legacy)
    */
   createVaccine: async (data: CreateVaccineData): Promise<Vaccine> => {
-    // Real API call
-    const response = await api.post<Vaccine>('/vaccines', data);
-    return response.data;
+    return vaccineService.create(data);
   },
 
   /**
-   * List all vaccine batches
+   * List all vaccine batches (legacy)
    */
   listBatches: async (): Promise<VaccineBatch[]> => {
     // Mock implementation
@@ -56,14 +190,10 @@ export const vaccineService = {
         resolve(mockVaccineBatches);
       }, 500);
     });
-
-    // Real API call (commented out for now)
-    // const response = await api.get<VaccineBatch[]>('/vaccine-batches');
-    // return response.data;
   },
 
   /**
-   * Create a new vaccine batch
+   * Create a new vaccine batch (legacy)
    */
   createBatch: async (data: CreateVaccineBatchData): Promise<VaccineBatch> => {
     // Real API call

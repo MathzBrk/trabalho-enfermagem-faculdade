@@ -87,6 +87,19 @@ export const formatStatus = (status: string): string => {
 };
 
 /**
+ * Format vaccine batch status to display name
+ */
+export const formatBatchStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    AVAILABLE: 'Disponível',
+    EXPIRED: 'Expirado',
+    DEPLETED: 'Esgotado',
+    DISCARDED: 'Descartado',
+  };
+  return statusMap[status] || status;
+};
+
+/**
  * Format priority to display name
  */
 export const formatPriority = (priority: string): string => {

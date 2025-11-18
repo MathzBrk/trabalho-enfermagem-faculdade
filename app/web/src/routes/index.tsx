@@ -4,6 +4,8 @@ import { LoginPage } from '../pages/Login';
 import { Registration } from '../pages/Registration';
 import { DashboardPage } from '../pages/Dashboard';
 import { NotificationsPage } from '../pages/Notifications';
+import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
+import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { UserRole } from '../types';
 import { Profile } from '../pages/Profile';
@@ -19,13 +21,6 @@ const MyVaccinesPage: React.FC = () => (
 const SchedulePage: React.FC = () => (
   <div className="p-6">
     <h1 className="text-2xl font-bold">Agenda</h1>
-    <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
-  </div>
-);
-
-const VaccinesPage: React.FC = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold">Gerenciar Vacinas</h1>
     <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
   </div>
 );
@@ -84,16 +79,26 @@ export const AppRouter: React.FC = () => {
           }
         />
 
-        {/* Manager routes */}
+        {/* Manager and Nurse routes - Vaccine Management */}
         <Route
           path="/vaccines"
           element={
-            <ProtectedRoute allowedRoles={[UserRole.MANAGER]}>
-              <VaccinesPage />
+            <ProtectedRoute allowedRoles={[UserRole.MANAGER, UserRole.NURSE]}>
+              <VaccinesListPage />
             </ProtectedRoute>
           }
         />
 
+        <Route
+          path="/vaccines/:id"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.MANAGER, UserRole.NURSE]}>
+              <VaccineDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Manager routes */}
         <Route
           path="/users"
           element={
