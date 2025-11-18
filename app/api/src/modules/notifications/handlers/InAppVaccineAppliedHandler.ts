@@ -1,17 +1,20 @@
 /**
- * InAppVaccineScheduledHandler - Vaccine scheduled event handler
+ * InAppVaccineAppliedHandler - Vaccine applied event handler
  *
- * Creates in-app notifications when a vaccine is scheduled.
+ * Creates in-app notifications when a vaccine application is recorded (vaccine applied).
  *
- * This handler now works with parallel notifications emitted per user.
- * Each event contains a single user (either patient or nurse) identified by userRole.
+ * This handler works with parallel notifications emitted per user. Each event contains
+ * a single user (for example, the receiver/patient or the applicator/nurse) identified
+ * by the event payload.
  *
  * Notification recipients:
- * - Patient (userRole: 'patient') - receives confirmation of their scheduling
- * - Nurse (userRole: 'nurse') - receives notification of new assignment
+ * - Patient (receiver) - receives confirmation that the vaccine was applied
+ * - Applicator (appliedBy) - receives confirmation/record that they applied the vaccine
  *
  * Triggered by:
- * - VaccineSchedulingService.create() (emits parallel events for patient and nurse)
+ * - VaccineApplicationService.create() (emits parallel events for involved users)
+ *
+ * Event type: EventNames.VACCINE_APPLIED
  */
 
 import { TOKENS } from '@infrastructure/di/tokens';
@@ -44,10 +47,10 @@ export class InAppVaccineAppliedHandler {
   ) {}
 
   /**
-   * Handle vaccine scheduled event
+   * Handle vaccine applied event
    *
-   * Routes notification creation to the appropriate helper based on userRole.
-   * Errors are logged but don't throw to prevent event bus failures.
+   * Routes notification creation to the appropriate helper based on the event data
+   * (receiver/applicator). Errors are logged but not thrown to avoid breaking the event bus.
    */
   async handle(event: VaccineAppliedEvent): Promise<void> {
     try {
@@ -59,7 +62,7 @@ export class InAppVaccineAppliedHandler {
 
       if (type !== EventNames.VACCINE_APPLIED) {
         throw new Error(
-          `[InAppVaccineScheduledHandler] Invalid event type: ${type}`,
+          `[InAppVaccineAppliedHandler] Invalid event type: ${type}`,
         );
       }
 
@@ -72,17 +75,31 @@ export class InAppVaccineAppliedHandler {
           this.userStore.findById(data.appliedById),
         ]);
 
+      if (!application || !batch || !vaccine || !receiver || !applicator) {
+        console.error(
+          '[InAppVaccineAppliedHandler] Missing required entity for notification creation:',
+          {
+            applicationMissing: !application,
+            batchMissing: !batch,
+            vaccineMissing: !vaccine,
+            receiverMissing: !receiver,
+            applicatorMissing: !applicator,
+          },
+        );
+        return;
+      }
+
       await createVaccineAppliedNotification(
         this.notificationStore,
-        applicator!,
-        receiver!,
-        application!,
-        vaccine!,
-        batch!,
+        applicator,
+        receiver,
+        application,
+        vaccine,
+        batch,
       );
     } catch (error) {
       console.error(
-        '[InAppVaccineScheduledHandler] Error creating notification:',
+        '[InAppVaccineAppliedHandler] Error creating notification:',
         error,
       );
     }
