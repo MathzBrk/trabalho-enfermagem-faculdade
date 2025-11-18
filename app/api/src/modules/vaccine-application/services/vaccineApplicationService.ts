@@ -48,6 +48,7 @@ import type { User } from '@shared/models/user';
 import type { IVaccineSchedulingStore } from '@shared/interfaces/vaccineScheduling';
 import { VaccineSchedulingNotFoundError } from '@modules/vaccine-scheduling';
 import type { IUserStore } from '@shared/interfaces/user';
+import { EventNames, IEventBus, VaccineAppliedEvent } from '@modules/notifications/contracts';
 
 /**
  * Response structure for vaccination history endpoint
@@ -134,6 +135,8 @@ export class VaccineApplicationService {
     private readonly vaccineStore: IVaccineStore,
     @inject(TOKENS.IVaccineBatchStore)
     private readonly vaccineBatchStore: IVaccineBatchStore,
+    @inject(TOKENS.IEventBus)
+    private readonly eventBus: IEventBus,
   ) {}
 
   /**
@@ -200,15 +203,34 @@ export class VaccineApplicationService {
       );
     }
 
+    let application: VaccineApplication;
+
     if (isScheduledApplication(data)) {
-      return this.createApplicationWithExistingScheduling(
+      application = await this.createApplicationWithExistingScheduling(
         data,
         batch,
         requestingUser,
       );
+    } else {
+      application = await this.createWalkInApplication(data, batch, requestingUser);
     }
 
-    return this.createWalkInApplication(data, batch, requestingUser);
+    await this.eventBus.emit<VaccineAppliedEvent>(EventNames.VACCINE_APPLIED, {
+      channels: ['in-app'],
+      type: EventNames.VACCINE_APPLIED,
+      priority: 'normal',
+      data: {
+        applicationId: application.id,
+        receiverId: application.userId,
+        vaccineId: application.vaccineId,
+        doseNumber: application.doseNumber,
+        appliedById: application.appliedById,
+        batchId: batch.id,
+      },
+    });
+
+    return application;
+
   }
 
   async createApplicationWithExistingScheduling(

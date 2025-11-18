@@ -7,7 +7,11 @@
  * different event handlers.
  */
 
+import type { User } from '@infrastructure/database';
 import type { INotificationStore } from '@shared/interfaces/notification';
+import type { Vaccine } from '@shared/models/vaccine';
+import type { VaccineApplication } from '@shared/models/vaccineApplication';
+import type { VaccineBatch } from '@shared/models/vaccineBatch';
 import type { VaccineScheduledEventData } from '@shared/models/vaccineNotificationEvents';
 import { formatDate } from './timeHelper';
 
@@ -81,4 +85,53 @@ export const createNurseVaccineScheduledNotification = async (
       nurseEmail,
     },
   });
+};
+
+export const createVaccineAppliedNotification = async (
+  store: INotificationStore,
+  applicator: User,
+  receiver: User,
+  application: VaccineApplication,
+  vaccine: Vaccine,
+  batch: VaccineBatch,
+): Promise<void> => {
+  const formattedDate = formatDate(application.createdAt, 'DD/MM/YYYY HH:mm');
+
+  await Promise.all([
+    store.create({
+      userId: receiver.id,
+      type: 'VACCINE_APPLIED',
+      title: 'Vacina Aplicada',
+      message: `A vacina ${vaccine.name} foi aplicada em você por ${applicator.name} no dia ${formattedDate}. Dose: ${application.doseNumber}ª dose.`,
+      metadata: {
+        applicationId: application.id,
+        vaccineId: vaccine.id,
+        vaccineName: vaccine.name,
+        batchId: batch.id,
+        appliedAt: application.createdAt,
+        doseNumber: application.doseNumber,
+        receiverId: receiver.id,
+        receiverName: receiver.name,
+        receiverEmail: receiver.email,
+      },
+    }),
+    store.create({
+      userId: applicator.id,
+      type: 'VACCINE_APPLIED',
+      title: 'Vacina Aplicada',
+      message: `Você aplicou a vacina ${vaccine.name} em ${receiver.name} no dia ${formattedDate}. Dose: ${application.doseNumber}ª dose.`,
+      metadata: {
+        applicationId: application.id,
+        vaccineId: vaccine.id,
+        vaccineName: vaccine.name,
+        batchId: batch.id,
+        appliedAt: application.createdAt,
+        doseNumber: application.doseNumber,
+        receiverName: receiver.name,
+        applicatorId: applicator.id,
+        applicatorName: applicator.name,
+        applicatorEmail: applicator.email,
+      },
+    }),
+  ]);
 };

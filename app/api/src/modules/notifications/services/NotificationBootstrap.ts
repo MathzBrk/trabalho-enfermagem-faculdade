@@ -19,15 +19,16 @@
  * ```
  */
 
-import { inject, injectable } from 'tsyringe';
 import { TOKENS } from '@infrastructure/di/tokens';
 import type { IEventBus } from '@modules/notifications/contracts';
 import { EventNames } from '@modules/notifications/contracts';
-import type { InAppVaccineScheduledHandler } from '../handlers/InAppVaccineScheduledHandler';
-import type { InAppNurseChangedHandler } from '../handlers/InAppNurseChangedHandler';
+import { inject, injectable } from 'tsyringe';
 import type { InAppBatchExpiringHandler } from '../handlers/InAppBatchExpiringHandler';
 import type { InAppLowStockHandler } from '../handlers/InAppLowStockHandler';
+import type { InAppNurseChangedHandler } from '../handlers/InAppNurseChangedHandler';
 import type { InAppReportGeneratedHandler } from '../handlers/InAppReportGeneratedHandler';
+import type { InAppVaccineAppliedHandler } from '../handlers/InAppVaccineAppliedHandler';
+import type { InAppVaccineScheduledHandler } from '../handlers/InAppVaccineScheduledHandler';
 
 @injectable()
 export class NotificationBootstrap {
@@ -44,6 +45,8 @@ export class NotificationBootstrap {
     private readonly lowStockHandler: InAppLowStockHandler,
     @inject(TOKENS.ReportGeneratedHandler)
     private readonly reportGeneratedHandler: InAppReportGeneratedHandler,
+    @inject(TOKENS.VaccineAppliedHandler)
+    private readonly vaccineAppliedHandler: InAppVaccineAppliedHandler,
   ) {}
 
   /**
@@ -61,6 +64,12 @@ export class NotificationBootstrap {
     this.eventBus.on(
       EventNames.VACCINE_SCHEDULED,
       this.vaccineScheduledHandler.handle.bind(this.vaccineScheduledHandler),
+    );
+
+    // Register vaccine applied events
+    this.eventBus.on(
+      EventNames.VACCINE_APPLIED,
+      this.vaccineAppliedHandler.handle.bind(this.vaccineAppliedHandler),
     );
 
     this.eventBus.on(

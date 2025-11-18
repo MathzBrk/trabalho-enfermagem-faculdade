@@ -116,17 +116,11 @@ export type NurseChangedEvent = NotificationEvent<NurseChangedEventData>;
  */
 export interface VaccineAppliedEventData {
   applicationId: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
+  receiverId: string;
   vaccineId: string;
-  vaccineName: string;
   doseNumber: number;
   appliedById: string;
-  appliedByName: string;
-  applicationDate: Date;
-  batchNumber: string;
-  nextDoseDate?: Date; // If applicable for multi-dose vaccines
+  batchId: string;
 }
 
 /**
