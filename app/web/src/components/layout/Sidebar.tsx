@@ -8,6 +8,8 @@ import {
   ClipboardList,
   BarChart3,
   User,
+  FileText,
+  Activity,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
@@ -26,6 +28,11 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    label: 'Cartão de Vacinação',
+    path: '/vaccination-card',
+    icon: FileText,
+  },
+  {
     label: 'Minhas Vacinas',
     path: '/my-vaccines',
     icon: Syringe,
@@ -38,10 +45,16 @@ const navItems: NavItem[] = [
     roles: ['NURSE'],
   },
   {
+    label: 'Aplicações de Vacinas',
+    path: '/vaccine-applications',
+    icon: Activity,
+    roles: ['NURSE'],
+  },
+  {
     label: 'Gerenciar Vacinas',
     path: '/vaccines',
     icon: ClipboardList,
-    roles: ['MANAGER'],
+    roles: ['MANAGER', 'NURSE'],
   },
   {
     label: 'Usuários',

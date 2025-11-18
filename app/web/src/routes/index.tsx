@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '../pages/Login';
 import { Registration } from '../pages/Registration';
@@ -6,6 +5,8 @@ import { DashboardPage } from '../pages/Dashboard';
 import { NotificationsPage } from '../pages/Notifications';
 import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
 import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
+import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
+import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCardPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { UserRole } from '../types';
 import { Profile } from '../pages/Profile';
@@ -94,6 +95,45 @@ export const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={[UserRole.MANAGER, UserRole.NURSE]}>
               <VaccineDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Nurse routes - Vaccine Applications */}
+        <Route
+          path="/vaccine-applications"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.NURSE]}>
+              <VaccineApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/vaccine-applications/new"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.NURSE]}>
+              <VaccineApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* All users - Vaccination Card */}
+        <Route
+          path="/vaccination-card"
+          element={
+            <ProtectedRoute>
+              <VaccinationCardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Nurse can view any user's vaccination card */}
+        <Route
+          path="/vaccination-card/:userId"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.NURSE]}>
+              <VaccinationCardPage />
             </ProtectedRoute>
           }
         />

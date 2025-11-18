@@ -7,7 +7,7 @@ import type {
   VaccineApplication,
   Notification,
 } from '../types';
-import { UserRole as UserRoleEnum, VaccineApplicationStatus as VaccineApplicationStatusEnum, NotificationType as NotificationTypeEnum } from '../types';
+import { UserRole as UserRoleEnum, NotificationType as NotificationTypeEnum } from '../types';
 
 // Mock Users with passwords for testing
 export const mockUsers: MockUser[] = [
@@ -221,14 +221,13 @@ export const mockApplications: VaccineApplication[] = [
     vaccine: mockVaccines[0],
     batchId: 'b1',
     batch: mockVaccineBatches[0],
-    nurseId: '2',
-    nurse: mockUsers[1],
+    appliedById: '2',
+    appliedBy: mockUsers[1],
     schedulingId: 's1',
     applicationDate: '2024-10-15T10:00:00Z',
     doseNumber: 1,
     applicationSite: 'Braço direito',
     observations: 'Aplicação sem intercorrências',
-    status: VaccineApplicationStatusEnum.APPLIED,
     createdAt: '2024-10-15T10:00:00Z',
     updatedAt: '2024-10-15T10:00:00Z',
   },
@@ -240,13 +239,12 @@ export const mockApplications: VaccineApplication[] = [
     vaccine: mockVaccines[3],
     batchId: 'b1',
     batch: mockVaccineBatches[0],
-    nurseId: '5',
-    nurse: mockUsers[4],
+    appliedById: '5',
+    appliedBy: mockUsers[4],
     applicationDate: '2024-09-20T14:00:00Z',
     doseNumber: 1,
     applicationSite: 'Braço esquerdo',
     observations: 'Paciente apresentou leve vermelhidão local',
-    status: VaccineApplicationStatusEnum.APPLIED,
     createdAt: '2024-09-20T14:00:00Z',
     updatedAt: '2024-09-20T14:00:00Z',
   },

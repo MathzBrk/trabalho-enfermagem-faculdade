@@ -114,15 +114,14 @@ export interface VaccineApplication {
   vaccine?: Vaccine;
   batchId: string;
   batch?: VaccineBatch;
-  nurseId: string;
-  nurse?: User;
-  schedulingId?: string;
+  appliedById: string;
+  appliedBy?: User;
+  schedulingId?: string | null;
   scheduling?: VaccineScheduling;
   applicationDate: string;
   doseNumber: number;
-  applicationSite?: string;
-  observations?: string;
-  status: VaccineApplicationStatus;
+  applicationSite: string;
+  observations?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -174,17 +173,33 @@ export interface CreateVaccineSchedulingData {
   notes?: string;
 }
 
-export interface CreateVaccineApplicationData {
-  userId: string;
-  vaccineId: string;
+// Scheduled application (Type A)
+export interface CreateScheduledApplicationData {
+  schedulingId: string;
   batchId: string;
-  nurseId: string;
-  schedulingId?: string;
-  applicationDate: string;
+  applicationSite: string;
+  observations?: string;
+}
+
+// Walk-in application (Type B)
+export interface CreateWalkInApplicationData {
+  receivedById: string;
+  vaccineId: string;
   doseNumber: number;
+  batchId: string;
+  applicationSite: string;
+  observations?: string;
+}
+
+// Union type for application creation
+export type CreateVaccineApplicationData =
+  | CreateScheduledApplicationData
+  | CreateWalkInApplicationData;
+
+// Update application data
+export interface UpdateVaccineApplicationData {
   applicationSite?: string;
   observations?: string;
-  status: VaccineApplicationStatus;
 }
 
 export interface CreateVaccineData {
@@ -326,4 +341,108 @@ export interface DashboardStats {
 
 export interface MockUser extends User {
   password: string;
+}
+
+// ==================== Vaccine Application Types ====================
+
+export interface ListVaccineApplicationsParams {
+  page?: number;
+  perPage?: number;
+  sortBy?: 'applicationDate' | 'doseNumber' | 'createdAt' | 'updatedAt';
+  sortOrder?: 'asc' | 'desc';
+  userId?: string;
+  vaccineId?: string;
+  appliedById?: string;
+  batchId?: string;
+  doseNumber?: number;
+}
+
+export interface ListVaccineApplicationsResponse extends PaginatedResponse<VaccineApplication> {}
+
+// ==================== Vaccination History Types ====================
+
+export interface VaccinationHistorySummary {
+  totalVaccinesApplied: number;
+  totalVaccinesCompleted: number;
+  totalMandatoryPending: number;
+  totalDosesPending: number;
+  compliancePercentage: number;
+}
+
+export interface DoseApplication {
+  id: string;
+  doseNumber: number;
+  applicationDate: string;
+  applicationSite: string;
+  observations?: string | null;
+  batchId: string;
+  appliedById: string;
+  batch: {
+    id: string;
+    batchNumber: string;
+    expirationDate: string;
+  };
+  appliedBy: {
+    id: string;
+    name: string;
+    email: string;
+    coren?: string | null;
+  };
+}
+
+export interface VaccineWithDoses {
+  vaccine: {
+    id: string;
+    name: string;
+    manufacturer: string;
+    dosesRequired: number;
+    intervalDays: number | null;
+    isObligatory: boolean;
+  };
+  doses: DoseApplication[];
+  isComplete: boolean;
+  completionPercentage: number;
+  totalDosesRequired: number;
+  dosesApplied: number;
+}
+
+export interface AppliedVaccine {
+  id: string;
+  vaccineId: string;
+  doseNumber: number;
+  applicationDate: string;
+  applicationSite: string;
+  observations?: string | null;
+}
+
+export interface MandatoryVaccineNotTaken {
+  id: string;
+  name: string;
+  manufacturer: string;
+  dosesRequired: number;
+  intervalDays: number | null;
+  isObligatory: boolean;
+}
+
+export interface PendingDose {
+  vaccine: {
+    id: string;
+    name: string;
+    manufacturer: string;
+    dosesRequired: number;
+    intervalDays: number | null;
+    isObligatory: boolean;
+  };
+  currentDose: number;
+  nextDose: number;
+  expectedDate: string;
+}
+
+export interface VaccinationHistory {
+  issuedAt: string;
+  summary: VaccinationHistorySummary;
+  vaccinesByType: VaccineWithDoses[];
+  applied: AppliedVaccine[];
+  mandatoryNotTaken: MandatoryVaccineNotTaken[];
+  pendingDoses: PendingDose[];
 }
