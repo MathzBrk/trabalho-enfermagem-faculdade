@@ -419,7 +419,7 @@ async function main() {
       name: 'Tríplice Viral (SCR)',
       manufacturer: 'GlaxoSmithKline',
       description:
-        'Vacina contra sarampo, caxumba e rubéola. Proteção tripla em dose única.',
+        'Vacina contra sarampo, caxumba e rubéola. Proteção tripla com duas doses recomendadas.',
       dosesRequired: 2,
       intervalDays: 30,
       isObligatory: true,
