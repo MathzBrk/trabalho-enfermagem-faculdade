@@ -6,9 +6,9 @@
  */
 
 import type {
-  Notification as PrismaNotification,
   NotificationType,
   Prisma,
+  Notification as PrismaNotification,
 } from '@infrastructure/database/generated/prisma';
 
 // ============================================
@@ -79,7 +79,7 @@ export interface NotificationFilterParams {
  */
 export interface NotificationCreateInput {
   userId: string;
-  type: NotificationType;
+  type: NotificationTypes;
   title: string;
   message: string;
   metadata?: any; // JSON field for event-specific data (schedulingId, vaccineId, etc.)
@@ -95,6 +95,14 @@ export interface NotificationUpdateInput {
   isRead?: boolean;
   readAt?: Date | null;
 }
+
+export type NotificationTypes =
+  | 'DOSE_REMINDER'
+  | 'VACCINE_EXPIRING'
+  | 'LOW_STOCK'
+  | 'SCHEDULING_CONFIRMED'
+  | 'GENERAL'
+  | 'VACCINE_APPLIED';
 
 // ============================================
 // Response Types

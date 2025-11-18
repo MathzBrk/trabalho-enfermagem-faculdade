@@ -1,27 +1,28 @@
-import { container } from 'tsyringe';
-import { UserStore } from '@modules/user/stores/userStore';
 import { UserService } from '@modules/user/services/userService';
-import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
-import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
-import { VaccineApplicationStore } from '@modules/vaccine-application/stores/vaccineApplicationStore';
-import { VaccineSchedulingStore } from '@modules/vaccine-scheduling/stores/vaccineSchedulingStore';
-import { TOKENS } from './tokens';
-import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBatchService';
-import { VaccineService } from '@modules/vaccines/services/vaccineService';
+import { UserStore } from '@modules/user/stores/userStore';
 import { VaccineApplicationService } from '@modules/vaccine-application/services/vaccineApplicationService';
+import { VaccineApplicationStore } from '@modules/vaccine-application/stores/vaccineApplicationStore';
 import { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
+import { VaccineSchedulingStore } from '@modules/vaccine-scheduling/stores/vaccineSchedulingStore';
+import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBatchService';
+import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
+import { VaccineService } from '@modules/vaccines/services/vaccineService';
+import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
+import { container } from 'tsyringe';
+import { TOKENS } from './tokens';
 
 // Notification module imports
 import { NodeEventBus } from '@infrastructure/messaging/NodeEventBus';
-import { NotificationStore } from '@modules/notifications/stores/NotificationStore';
-import { NotificationService } from '@modules/notifications/services/NotificationService';
-import { NotificationBootstrap } from '@modules/notifications/services/NotificationBootstrap';
 import { NotificationController } from '@modules/notifications/controllers/NotificationController';
-import { InAppVaccineScheduledHandler } from '@modules/notifications/handlers/InAppVaccineScheduledHandler';
-import { InAppNurseChangedHandler } from '@modules/notifications/handlers/InAppNurseChangedHandler';
 import { InAppBatchExpiringHandler } from '@modules/notifications/handlers/InAppBatchExpiringHandler';
 import { InAppLowStockHandler } from '@modules/notifications/handlers/InAppLowStockHandler';
+import { InAppNurseChangedHandler } from '@modules/notifications/handlers/InAppNurseChangedHandler';
 import { InAppReportGeneratedHandler } from '@modules/notifications/handlers/InAppReportGeneratedHandler';
+import { InAppVaccineAppliedHandler } from '@modules/notifications/handlers/InAppVaccineAppliedHandler';
+import { InAppVaccineScheduledHandler } from '@modules/notifications/handlers/InAppVaccineScheduledHandler';
+import { NotificationBootstrap } from '@modules/notifications/services/NotificationBootstrap';
+import { NotificationService } from '@modules/notifications/services/NotificationService';
+import { NotificationStore } from '@modules/notifications/stores/NotificationStore';
 
 /**
  * DI Container Setup
@@ -56,8 +57,14 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.IUserStore, UserStore);
   container.registerSingleton(TOKENS.IVaccineStore, VaccineStore);
   container.registerSingleton(TOKENS.IVaccineBatchStore, VaccineBatchStore);
-  container.registerSingleton(TOKENS.IVaccineApplicationStore, VaccineApplicationStore);
-  container.registerSingleton(TOKENS.IVaccineSchedulingStore, VaccineSchedulingStore);
+  container.registerSingleton(
+    TOKENS.IVaccineApplicationStore,
+    VaccineApplicationStore,
+  );
+  container.registerSingleton(
+    TOKENS.IVaccineSchedulingStore,
+    VaccineSchedulingStore,
+  );
 
   // Register notification module stores
   container.registerSingleton(TOKENS.INotificationStore, NotificationStore);
@@ -68,26 +75,53 @@ export function setupContainer(): void {
   container.registerSingleton(TOKENS.UserService, UserService);
   container.registerSingleton(TOKENS.VaccineService, VaccineService);
   container.registerSingleton(TOKENS.VaccineBatchService, VaccineBatchService);
-  container.registerSingleton(TOKENS.VaccineApplicationService, VaccineApplicationService);
-  container.registerSingleton(TOKENS.VaccineSchedulingService, VaccineSchedulingService);
+  container.registerSingleton(
+    TOKENS.VaccineApplicationService,
+    VaccineApplicationService,
+  );
+  container.registerSingleton(
+    TOKENS.VaccineSchedulingService,
+    VaccineSchedulingService,
+  );
 
   // Register notification module services and infrastructure
   container.registerSingleton(TOKENS.IEventBus, NodeEventBus);
   container.registerSingleton(TOKENS.NotificationService, NotificationService);
-  container.registerSingleton(TOKENS.NotificationBootstrap, NotificationBootstrap);
+  container.registerSingleton(
+    TOKENS.NotificationBootstrap,
+    NotificationBootstrap,
+  );
 
   // Register notification event handlers
-  container.registerSingleton(TOKENS.VaccineScheduledHandler, InAppVaccineScheduledHandler);
-  container.registerSingleton(TOKENS.NurseChangedHandler, InAppNurseChangedHandler);
-  container.registerSingleton(TOKENS.BatchExpiringHandler, InAppBatchExpiringHandler);
+  container.registerSingleton(
+    TOKENS.VaccineScheduledHandler,
+    InAppVaccineScheduledHandler,
+  );
+  container.registerSingleton(
+    TOKENS.NurseChangedHandler,
+    InAppNurseChangedHandler,
+  );
+  container.registerSingleton(
+    TOKENS.BatchExpiringHandler,
+    InAppBatchExpiringHandler,
+  );
   container.registerSingleton(TOKENS.LowStockHandler, InAppLowStockHandler);
-  container.registerSingleton(TOKENS.ReportGeneratedHandler, InAppReportGeneratedHandler);
+  container.registerSingleton(
+    TOKENS.ReportGeneratedHandler,
+    InAppReportGeneratedHandler,
+  );
+  container.registerSingleton(
+    TOKENS.VaccineAppliedHandler,
+    InAppVaccineAppliedHandler,
+  );
 
   // Register notification controller
   container.registerSingleton(NotificationController);
 
   // Initialize notification system (register event handlers with event bus)
-  const notificationBootstrap = container.resolve<NotificationBootstrap>(TOKENS.NotificationBootstrap);
+  const notificationBootstrap = container.resolve<NotificationBootstrap>(
+    TOKENS.NotificationBootstrap,
+  );
   notificationBootstrap.initialize();
 
   console.log('📦 DI Container configured');
@@ -95,8 +129,12 @@ export function setupContainer(): void {
   console.log('   └─ IUserStore → Using UserStore (Prisma)');
   console.log('   └─ IVaccineStore → Using VaccineStore (Prisma)');
   console.log('   └─ IVaccineBatchStore → Using VaccineBatchStore (Prisma)');
-  console.log('   └─ IVaccineApplicationStore → Using VaccineApplicationStore (Prisma)');
-  console.log('   └─ IVaccineSchedulingStore → Using VaccineSchedulingStore (Prisma)');
+  console.log(
+    '   └─ IVaccineApplicationStore → Using VaccineApplicationStore (Prisma)',
+  );
+  console.log(
+    '   └─ IVaccineSchedulingStore → Using VaccineSchedulingStore (Prisma)',
+  );
   console.log('   └─ INotificationStore → Using NotificationStore (Prisma)');
   console.log('   Services:');
   console.log('   └─ UserService → Registered as singleton');

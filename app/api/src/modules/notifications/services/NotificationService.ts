@@ -12,21 +12,21 @@
  * - NotificationController (REST API endpoints)
  */
 
-import { inject, injectable } from 'tsyringe';
 import { TOKENS } from '@infrastructure/di/tokens';
 import type { INotificationStore } from '@modules/notifications/contracts';
-import type {
-  Notification,
-  NotificationFilterParams,
-} from '@shared/models/notification';
-import type {
-  PaginatedResponse,
-  PaginationParams,
-} from '@shared/interfaces/pagination';
 import {
   NotificationNotFoundError,
   UnauthorizedNotificationAccessError,
 } from '@modules/notifications/errors';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+} from '@shared/interfaces/pagination';
+import type {
+  Notification,
+  NotificationFilterParams,
+} from '@shared/models/notification';
+import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class NotificationService {

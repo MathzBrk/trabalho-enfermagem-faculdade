@@ -114,4 +114,5 @@ export const TOKENS = {
    * Report generated in-app notification handler
    */
   ReportGeneratedHandler: Symbol.for('ReportGeneratedHandler'),
+  VaccineAppliedHandler: Symbol.for('VaccineAppliedHandler'),
 } as const;
