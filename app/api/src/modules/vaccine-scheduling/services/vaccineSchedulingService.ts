@@ -295,7 +295,7 @@ export class VaccineSchedulingService {
       }
     }
 
-    const daysInMonth = getMonthDays(month);
+    const daysInMonth = getMonthDays(month, year);
 
     const response: Record<string, VaccineSchedulingWithRelations[]> = {};
 
