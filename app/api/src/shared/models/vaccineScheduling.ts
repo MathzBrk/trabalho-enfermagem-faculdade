@@ -20,6 +20,11 @@ export interface UpdateVaccineSchedulingDTO {
   status?: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 }
 
+export interface IntervalDateNurseScheduling {
+  year: number;
+  month: number;
+}
+
 // Store input types (independent of Prisma implementation)
 export interface VaccineSchedulingCreateInput {
   userId: string;

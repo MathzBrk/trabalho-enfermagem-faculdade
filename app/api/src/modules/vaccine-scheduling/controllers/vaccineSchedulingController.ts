@@ -1,14 +1,15 @@
-import type { NextFunction, Request, Response } from 'express';
+import { TOKENS } from '@infrastructure/di/tokens';
 import type { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
+import type { ListVaccineSchedulingsDTO } from '@modules/vaccine-scheduling/validators/listVaccineSchedulingsValidator';
+import type { GetNurseSchedulingMonthlyDTO } from '@modules/vaccine-scheduling/validators/getNurseSchedulingMonthlyValidator';
+import { getDate } from '@shared/helpers/timeHelper';
+import type { VaccineSchedulingFilterParams } from '@shared/interfaces/vaccineScheduling';
 import type {
   CreateVaccineSchedulingDTO,
   UpdateVaccineSchedulingDTO,
 } from '@shared/models/vaccineScheduling';
-import type { ListVaccineSchedulingsDTO } from '@modules/vaccine-scheduling/validators/listVaccineSchedulingsValidator';
-import type { VaccineSchedulingFilterParams } from '@shared/interfaces/vaccineScheduling';
+import type { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'tsyringe';
-import { TOKENS } from '@infrastructure/di/tokens';
-import { getDate } from '@shared/helpers/timeHelper';
 
 /**
  * VaccineSchedulingController - HTTP request handler for vaccine scheduling endpoints
@@ -102,6 +103,31 @@ export class VaccineSchedulingController {
       );
 
       res.status(200).json(scheduling);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getNurseSchedulingsDetailed(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const requestingUserId = req.user?.userId;
+
+      const { month, year } = req.query as unknown as GetNurseSchedulingMonthlyDTO;
+
+      const schedulings =
+        await this.vaccineSchedulingService.getNurseSchedulingsDetailed(
+          requestingUserId!,
+          {
+            month,
+            year,
+          },
+        );
+
+      res.status(200).json(schedulings);
     } catch (error) {
       next(error);
     }

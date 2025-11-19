@@ -8,6 +8,7 @@ import {
 import { ListVaccineSchedulingsQuerySchema } from '@modules/vaccine-scheduling/validators/listVaccineSchedulingsValidator';
 import { GetVaccineSchedulingParamsSchema } from '@modules/vaccine-scheduling/validators/getVaccineSchedulingValidator';
 import { DeleteVaccineSchedulingParamsSchema } from '@modules/vaccine-scheduling/validators/deleteVaccineSchedulingValidator';
+import { GetNurseSchedulingMonthlyQuerySchema } from '@modules/vaccine-scheduling/validators/getNurseSchedulingMonthlyValidator';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { validateRequest } from '@shared/middlewares/validateRequest';
 import { Router } from 'express';
@@ -25,6 +26,16 @@ vaccineSchedulingRoutes.post(
   authMiddleware,
   validateRequest({ body: CreateVaccineSchedulingBodySchema }),
   vaccineSchedulingController.create.bind(vaccineSchedulingController),
+);
+
+// GET /vaccine-schedulings/nurse/monthly - Get nurse monthly schedulings
+vaccineSchedulingRoutes.get(
+  '/nurse/monthly',
+  authMiddleware,
+  validateRequest({ query: GetNurseSchedulingMonthlyQuerySchema }),
+  vaccineSchedulingController.getNurseSchedulingsDetailed.bind(
+    vaccineSchedulingController,
+  ),
 );
 
 // GET /vaccine-schedulings/:id - Get single vaccine scheduling

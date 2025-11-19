@@ -1,37 +1,41 @@
 import { TOKENS } from '@infrastructure/di/tokens';
+import { EventNames, type VaccineScheduledEvent } from '@modules/notifications';
+import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
+import { ForbiddenError, ValidationError } from '@modules/user/errors';
 import type { UserService } from '@modules/user/services/userService';
-import { ValidationError } from '@modules/user/errors';
+import { VaccineNotFoundError } from '@modules/vaccines/errors';
+import {
+  createDate,
+  formatDate,
+  getCurrentDate,
+  getDate,
+  getDifferenceBetweenDatesInDays,
+  getMonthDays,
+} from '@shared/helpers/timeHelper';
+import type { IEventBus } from '@shared/interfaces/eventBus';
+import type { IVaccineStore } from '@shared/interfaces/vaccine';
 import type {
   IVaccineSchedulingStore,
   VaccineSchedulingFilterParams,
 } from '@shared/interfaces/vaccineScheduling';
+import type { UserResponse } from '@shared/models/user';
 import type {
+  CreateVaccineSchedulingDTO,
+  IntervalDateNurseScheduling,
+  UpdateVaccineSchedulingDTO,
   VaccineScheduling,
   VaccineSchedulingWithRelations,
-  CreateVaccineSchedulingDTO,
-  UpdateVaccineSchedulingDTO,
 } from '@shared/models/vaccineScheduling';
-import type { IVaccineStore } from '@shared/interfaces/vaccine';
 import { inject, injectable } from 'tsyringe';
 import {
-  VaccineSchedulingNotFoundError,
-  UnauthorizedSchedulingAccessError,
-  InvalidSchedulingDateError,
-  SchedulingAlreadyCompletedError,
-  InvalidDoseNumberError,
   DuplicateSchedulingError,
+  InvalidDoseNumberError,
+  InvalidSchedulingDateError,
   MissingPreviousDoseError,
+  SchedulingAlreadyCompletedError,
+  UnauthorizedSchedulingAccessError,
+  VaccineSchedulingNotFoundError,
 } from '../errors';
-import { VaccineNotFoundError } from '@modules/vaccines/errors';
-import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
-import {
-  getCurrentDate,
-  getDate,
-  getDifferenceBetweenDatesInDays,
-} from '@shared/helpers/timeHelper';
-import type { IEventBus } from '@shared/interfaces/eventBus';
-import { EventNames, type VaccineScheduledEvent } from '@modules/notifications';
-import type { UserResponse } from '@shared/models/user';
 
 /**
  * VaccineSchedulingService - Service layer for vaccine scheduling business logic
@@ -252,6 +256,66 @@ export class VaccineSchedulingService {
     );
 
     return scheduling;
+  }
+
+  async getNurseSchedulingsDetailed(
+    requestingUserId: string,
+    intervalDate: IntervalDateNurseScheduling,
+  ): Promise<Record<string, VaccineSchedulingWithRelations[]>> {
+    const user = await this.userService.getUserById(
+      requestingUserId,
+      DEFAULT_USER_SYSTEM_ID,
+    );
+
+    if (user.role !== 'NURSE') {
+      throw new ForbiddenError(
+        `You are not a nurse and are not allowed to see nurse's schedulings`,
+      );
+    }
+
+    const { year, month } = intervalDate;
+
+    const currentYear = getCurrentDate().getFullYear();
+    // JavaScript month is 0-indexed (0 = January, 11 = December)
+    const currentMonth = getCurrentDate().getMonth();
+
+    if (year > currentYear) {
+      throw new ValidationError(
+        `The year must not be in the future. Year received ${year} - Actual Year ${currentYear}`,
+      );
+    }
+
+    if (year === currentYear) {
+      const isMonthInFuture = month > currentMonth;
+
+      if (isMonthInFuture) {
+        throw new ValidationError(
+          `The month must not be in the future when the year is the current. Month received ${month} - Actual Month ${currentMonth}`,
+        );
+      }
+    }
+
+    const daysInMonth = getMonthDays(month, year);
+
+    const response: Record<string, VaccineSchedulingWithRelations[]> = {};
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = createDate(i, month, year);
+      const dateKey = formatDate(date, 'YYYY-MM-DD');
+
+      const schedulingInDay =
+        await this.vaccineSchedulingStore.getSchedulingsByDate(user.id, date);
+
+      response[dateKey] = schedulingInDay;
+    }
+
+    if (!Object.keys(response).length) {
+      console.log(
+        `User ${requestingUserId} doesn't have any scheduling in IntervalDate -> ${month + 1}/${year}`,
+      );
+    }
+
+    return response;
   }
 
   /**

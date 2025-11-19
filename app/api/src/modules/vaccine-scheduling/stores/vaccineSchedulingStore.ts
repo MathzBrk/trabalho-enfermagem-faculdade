@@ -1,5 +1,16 @@
-import type { VaccineScheduling, Vaccine } from '@infrastructure/database';
+import type { Vaccine, VaccineScheduling } from '@infrastructure/database';
 import type { Prisma } from '@infrastructure/database/generated/prisma';
+import {
+  InsufficientStockError,
+  VaccineNotFoundError,
+} from '@modules/vaccines/errors';
+import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
+import { getEndOfDay, getStartOfDay } from '@shared/helpers/timeHelper';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+} from '@shared/interfaces/pagination';
+import { calculatePaginationMetadata } from '@shared/interfaces/pagination';
 import type {
   IVaccineSchedulingStore,
   VaccineSchedulingFilterParams,
@@ -10,19 +21,9 @@ import type {
   VaccineSchedulingUpdateInput,
   VaccineSchedulingWithRelations,
 } from '@shared/models/vaccineScheduling';
-import type {
-  PaginatedResponse,
-  PaginationParams,
-} from '@shared/interfaces/pagination';
-import { calculatePaginationMetadata } from '@shared/interfaces/pagination';
 import { BaseStore } from '@shared/stores/baseStore';
-import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
-import { allowedVaccineSchedulingSortFields } from '../constants';
 import { injectable } from 'tsyringe';
-import {
-  InsufficientStockError,
-  VaccineNotFoundError,
-} from '@modules/vaccines/errors';
+import { allowedVaccineSchedulingSortFields } from '../constants';
 
 @injectable()
 export class VaccineSchedulingStore
@@ -64,6 +65,34 @@ export class VaccineSchedulingStore
         deletedAt: null,
       },
       orderBy: { scheduledDate: 'asc' },
+    });
+  }
+
+  async getSchedulingsByDate(
+    userId: string,
+    date: Date,
+  ): Promise<VaccineSchedulingWithRelations[]> {
+    const start = getStartOfDay(date);
+    const end = getEndOfDay(date);
+    return this.model.findMany({
+      where: {
+        scheduledDate: {
+          gte: start,
+          lte: end,
+        },
+        assignedNurseId: userId,
+        deletedAt: null,
+      },
+      include: {
+        user: {
+          omit: {
+            password: true,
+          },
+        },
+        vaccine: true,
+        assignedNurse: true,
+        application: true,
+      },
     });
   }
 
