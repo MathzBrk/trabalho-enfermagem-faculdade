@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Plus, Users, Search, Eye } from 'lucide-react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { UnifiedApplicationForm } from '../../components/vaccineApplications/UnifiedApplicationForm';
+import { VaccinationCardModal } from '../../components/vaccineApplications/VaccinationCardModal';
 import { useVaccineApplications } from '../../hooks/useVaccineApplications';
 import { userService } from '../../services/user.service';
 import type { VaccineApplication, User } from '../../types';
@@ -16,7 +17,6 @@ import type { VaccineApplication, User } from '../../types';
  * Features user search to view vaccination cards
  */
 export const VaccineApplicationsPage: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const {
@@ -38,6 +38,10 @@ export const VaccineApplicationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  // Vaccination card modal state
+  const [showVaccinationCardModal, setShowVaccinationCardModal] = useState(false);
+  const [vaccinationCardUserId, setVaccinationCardUserId] = useState<string | null>(null);
 
   // Auto-open modal if navigating to /vaccine-applications/new
   useEffect(() => {
@@ -119,8 +123,14 @@ export const VaccineApplicationsPage: React.FC = () => {
 
   const handleViewVaccinationCard = () => {
     if (selectedUser) {
-      navigate(`/vaccination-card/${selectedUser.id}`);
+      setVaccinationCardUserId(selectedUser.id);
+      setShowVaccinationCardModal(true);
     }
+  };
+
+  const handleCloseVaccinationCardModal = () => {
+    setShowVaccinationCardModal(false);
+    setVaccinationCardUserId(null);
   };
 
   return (
@@ -360,6 +370,15 @@ export const VaccineApplicationsPage: React.FC = () => {
           isLoading={isSubmitting}
         />
       </Modal>
+
+      {/* Vaccination Card Modal */}
+      {vaccinationCardUserId && (
+        <VaccinationCardModal
+          userId={vaccinationCardUserId}
+          isOpen={showVaccinationCardModal}
+          onClose={handleCloseVaccinationCardModal}
+        />
+      )}
     </DashboardLayout>
   );
 };

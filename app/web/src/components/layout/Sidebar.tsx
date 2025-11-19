@@ -45,6 +45,12 @@ const navItems: NavItem[] = [
     roles: ['NURSE'],
   },
   {
+    label: 'Minha Agenda',
+    path: '/nurse-schedule',
+    icon: Calendar,
+    roles: ['NURSE'],
+  },
+  {
     label: 'Aplicações de Vacinas',
     path: '/vaccine-applications',
     icon: Activity,

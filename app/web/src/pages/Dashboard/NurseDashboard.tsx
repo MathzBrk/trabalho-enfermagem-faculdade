@@ -171,7 +171,7 @@ export const NurseDashboard: React.FC = () => {
             <Button
               variant="outline"
               className="justify-start"
-              onClick={() => navigate('/schedule')}
+              onClick={() => navigate('/nurse-schedule')}
             >
               <Calendar className="h-5 w-5" />
               Ver Agenda Completa

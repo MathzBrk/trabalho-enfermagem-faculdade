@@ -1,51 +1,74 @@
-import React, { useEffect } from 'react';
-import { Download, Calendar, User as UserIcon } from 'lucide-react';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { VaccineHistoryStats } from '../../components/vaccineApplications/VaccineHistoryStats';
-import { VaccinesByTypeList } from '../../components/vaccineApplications/VaccinesByTypeList';
-import { PendingDosesList } from '../../components/vaccineApplications/PendingDosesList';
-import { MandatoryVaccinesList } from '../../components/vaccineApplications/MandatoryVaccinesList';
+import React, { useEffect, useState } from 'react';
+import { Calendar, User as UserIcon, Download, X } from 'lucide-react';
+import { Modal } from '../ui/Modal';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { VaccineHistoryStats } from './VaccineHistoryStats';
+import { VaccinesByTypeList } from './VaccinesByTypeList';
+import { PendingDosesList } from './PendingDosesList';
+import { MandatoryVaccinesList } from './MandatoryVaccinesList';
 import { useVaccinationHistory } from '../../hooks/useVaccinationHistory';
-import { useAuthStore } from '../../store/authStore';
+import { userService } from '../../services/user.service';
+import type { User } from '../../types';
+
+interface VaccinationCardModalProps {
+  userId: string;
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 /**
- * Vaccination Card Page
- * Displays complete vaccination history for the logged-in user
- * Access: EMPLOYEE/MANAGER/NURSE - shows only their own card
- * Note: Nurses view other users' cards via VaccinationCardModal in VaccineApplicationsPage
+ * VaccinationCardModal - Displays vaccination card in a modal
+ * Used by nurses to view patient vaccination history without navigation
  */
-export const VaccinationCardPage: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
+export const VaccinationCardModal: React.FC<VaccinationCardModalProps> = ({
+  userId,
+  isOpen,
+  onClose,
+}) => {
   const { history, isLoading, error, fetchHistory, clearError } = useVaccinationHistory();
+  const [targetUser, setTargetUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(false);
 
-  // Fetch logged-in user's vaccination history
+  // Fetch user info and history when modal opens
   useEffect(() => {
-    if (!user?.id) return;
+    if (!isOpen || !userId) return;
 
-    const fetchUserHistory = async () => {
+    const fetchUserAndHistory = async () => {
+      setLoadingUser(true);
+
       try {
-        await fetchHistory(user.id);
+        // Fetch target user info
+        const userData = await userService.getById(userId);
+        setTargetUser(userData);
+
+        // Fetch vaccination history
+        await fetchHistory(userId);
       } catch (err) {
-        console.error('Error fetching vaccination history:', err);
+        console.error('Error fetching user info:', err);
+      } finally {
+        setLoadingUser(false);
       }
     };
 
-    fetchUserHistory();
-  }, [user?.id, fetchHistory]);
+    fetchUserAndHistory();
+  }, [userId, isOpen, fetchHistory]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setTargetUser(null);
+      clearError();
+    }
+  }, [isOpen, clearError]);
 
   const handleExport = () => {
-    if (!history || !user) return;
+    if (!history || !targetUser) return;
 
     // Create a simple text export
     let exportText = '=== CARTÃO DE VACINAÇÃO ===\n\n';
-    exportText += `Paciente: ${user.name}\n`;
-    exportText += `CPF: ${user.cpf}\n`;
+    exportText += `Paciente: ${targetUser.name}\n`;
+    exportText += `CPF: ${targetUser.cpf}\n`;
     exportText += `Emitido em: ${new Date(history.issuedAt).toLocaleString('pt-BR')}\n\n`;
 
     exportText += '=== RESUMO ===\n';
@@ -73,7 +96,7 @@ export const VaccinationCardPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cartao-vacinacao-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `cartao-vacinacao-${targetUser.name.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -81,31 +104,24 @@ export const VaccinationCardPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Meu Cartão de Vacinação</h1>
-            <p className="text-gray-600 mt-1">
-              Seu histórico completo de vacinação e doses pendentes
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExport} disabled={!history}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
-            </Button>
-            <Button variant="outline" onClick={handlePrint} disabled={!history}>
-              <Download className="h-4 w-4 mr-2" />
-              Imprimir
-            </Button>
-          </div>
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" showCloseButton={false}>
+      {/* Custom Header with close button */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-gray-900">Cartão de Vacinação</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={!history}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
+      </div>
 
+      <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
         {/* User Info Card */}
-        {user && (
+        {targetUser && (
           <Card className="border-primary-200 bg-primary-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -113,21 +129,33 @@ export const VaccinationCardPage: React.FC = () => {
                   <UserIcon className="h-6 w-6 text-primary-700" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900">{user.name}</h2>
+                  <h3 className="text-lg font-semibold text-gray-900">{targetUser.name}</h3>
                   <div className="flex gap-4 mt-1">
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">CPF:</span> {user.cpf}
+                      <span className="font-medium">CPF:</span> {targetUser.cpf}
                     </p>
-                    {user.email && (
+                    {targetUser.email && (
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">Email:</span> {user.email}
+                        <span className="font-medium">Email:</span> {targetUser.email}
                       </p>
                     )}
                   </div>
                 </div>
-                <span className="px-3 py-1 bg-primary-600 text-white text-sm rounded-full">
-                  Seu cartão
+                <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
+                  Visualizando como enfermeiro(a)
                 </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading User State */}
+        {loadingUser && !targetUser && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="text-gray-600">Carregando informações do usuário...</p>
               </div>
             </CardContent>
           </Card>
@@ -143,7 +171,7 @@ export const VaccinationCardPage: React.FC = () => {
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Loading History State */}
         {isLoading && !history && (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -161,9 +189,7 @@ export const VaccinationCardPage: React.FC = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    Emitido em: {new Date(history.issuedAt).toLocaleString('pt-BR')}
-                  </span>
+                  <span>Emitido em: {new Date(history.issuedAt).toLocaleString('pt-BR')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -203,6 +229,6 @@ export const VaccinationCardPage: React.FC = () => {
           </Card>
         )}
       </div>
-    </DashboardLayout>
+    </Modal>
   );
 };

@@ -7,6 +7,7 @@ import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
 import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
 import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
 import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCardPage';
+import { NurseSchedulePage } from '../pages/NurseSchedule/NurseSchedulePage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { UserRole } from '../types';
 import { Profile } from '../pages/Profile';
@@ -80,6 +81,15 @@ export const AppRouter: React.FC = () => {
           }
         />
 
+        <Route
+          path="/nurse-schedule"
+          element={
+            <ProtectedRoute allowedRoles={[UserRole.NURSE]}>
+              <NurseSchedulePage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Manager and Nurse routes - Vaccine Management */}
         <Route
           path="/vaccines"
@@ -118,21 +128,11 @@ export const AppRouter: React.FC = () => {
           }
         />
 
-        {/* All users - Vaccination Card */}
+        {/* All users - Vaccination Card (own card only) */}
         <Route
           path="/vaccination-card"
           element={
             <ProtectedRoute>
-              <VaccinationCardPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Nurse can view any user's vaccination card */}
-        <Route
-          path="/vaccination-card/:userId"
-          element={
-            <ProtectedRoute allowedRoles={[UserRole.NURSE]}>
               <VaccinationCardPage />
             </ProtectedRoute>
           }
