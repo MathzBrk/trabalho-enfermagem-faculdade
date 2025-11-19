@@ -51,8 +51,8 @@ export const transformDateToTimestamp = (date: Date): number => {
   return dayjs(date).valueOf();
 };
 
-export const getMonthDays = (month: number) => {
-  return dayjs().month(month).daysInMonth();
+export const getMonthDays = (month: number, year: number) => {
+  return dayjs().year(year).month(month).daysInMonth();
 };
 
 export const createDate = (day: number, month: number, year: number) => {
