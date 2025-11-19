@@ -39,6 +39,22 @@ export const isDateInPast = (date: Date): boolean => {
   return dayjs(date).isBefore(dayjs());
 };
 
+export const getStartOfDay = (date: Date): Date => {
+  return dayjs(date).startOf('day').toDate();
+};
+
+export const getEndOfDay = (date: Date): Date => {
+  return dayjs(date).endOf('day').toDate();
+};
+
 export const transformDateToTimestamp = (date: Date): number => {
   return dayjs(date).valueOf();
+};
+
+export const getMonthDays = (month: number) => {
+  return dayjs().month(month).daysInMonth();
+};
+
+export const createDate = (day: number, month: number, year: number) => {
+  return dayjs().year(year).month(month).date(day).toDate();
 };
