@@ -600,7 +600,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         "manufacturer": "Pfizer",
         "dosesRequired": 2,
         "intervalDays": 90,
-        "isMandatory": true
+        "isObligatory": true
       },
       "doses": [
         {
