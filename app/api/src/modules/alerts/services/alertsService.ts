@@ -50,28 +50,20 @@ export class AlertsService {
       return daysDiff > 0 && daysDiff <= 30;
     });
 
-    const response: AlertPayload[] = [];
-
-    if (vaccinesWithLowStock.length > 0) {
-      response.push({
+    const response: AlertPayload[] = [
+      {
         alertType: 'LOW_STOCK',
         objects: vaccinesWithLowStock,
-      });
-    }
-
-    if (expiredBatches.length > 0) {
-      response.push({
+      },
+      {
         alertType: 'EXPIRED_BATCH',
         objects: expiredBatches,
-      });
-    }
-
-    if (batchesNearingExpiration.length > 0) {
-      response.push({
+      },
+      {
         alertType: 'NEARING_EXPIRATION_BATCH',
         objects: batchesNearingExpiration,
-      });
-    }
+      },
+    ];
 
     return response;
   }
