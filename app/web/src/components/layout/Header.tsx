@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { notificationService } from '../../services/notification.service';
+import { getInitials } from '../../utils/formatters';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { RoleBadge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { NotificationDropdown } from '../notifications/NotificationDropdown';
-import { notificationService } from '../../services/notification.service';
-import { useNavigate } from 'react-router-dom';
-import { getInitials } from '../../utils/formatters';
 import { LogoutConfirmationModal } from './LogoutConfirmationModal';
 
 const POLLING_INTERVAL = 10000; // 10 seconds
@@ -89,7 +90,9 @@ export const Header: React.FC = () => {
           {/* User info */}
           <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900 leading-tight">{user.name}</p>
+              <p className="font-medium items-center flex text-gray-900 leading-tight">
+                {user.name}
+              </p>
               <div className="flex items-center justify-end gap-2 mt-1">
                 <RoleBadge role={user.role} />
               </div>

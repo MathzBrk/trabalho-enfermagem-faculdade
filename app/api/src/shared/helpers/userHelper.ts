@@ -109,12 +109,13 @@ export const canAccessUser = ({
   dataUpdates,
 }: PermissionCheckParams): boolean => {
   const isManager = requester.role === 'MANAGER';
+  const isNurse = requester.role === 'NURSE';
   const isSelf = requester.id === targetUser.id;
 
   switch (reqType) {
     case 'view': {
       // MANAGER can view any user, others can only view themselves
-      return isManager || isSelf;
+      return isManager || isSelf || isNurse;
     }
 
     case 'modify': {

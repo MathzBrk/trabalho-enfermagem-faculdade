@@ -276,23 +276,11 @@ export class VaccineSchedulingService {
     const { year, month } = intervalDate;
 
     const currentYear = getCurrentDate().getFullYear();
-    // JavaScript month is 0-indexed (0 = January, 11 = December)
-    const currentMonth = getCurrentDate().getMonth();
 
     if (year > currentYear) {
       throw new ValidationError(
         `The year must not be in the future. Year received ${year} - Actual Year ${currentYear}`,
       );
-    }
-
-    if (year === currentYear) {
-      const isMonthInFuture = month > currentMonth;
-
-      if (isMonthInFuture) {
-        throw new ValidationError(
-          `The month must not be in the future when the year is the current. Month received ${month} - Actual Month ${currentMonth}`,
-        );
-      }
     }
 
     const daysInMonth = getMonthDays(month, year);
