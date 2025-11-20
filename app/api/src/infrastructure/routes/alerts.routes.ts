@@ -100,8 +100,7 @@ const alertsController = container.resolve(AlertsController);
  *
  * Middleware Chain:
  * 1. authMiddleware - Verifies JWT token, sets req.user
- * 2. validateRequest - Validates query params (currently empty schema)
- * 3. alertsController.getAllAlerts - Handles business logic
+ * 2. alertsController.getAllAlerts - Handles business logic
  */
 alertsRoutes.get(
   '/',
