@@ -157,13 +157,11 @@ The response is an array of alert objects. Each alert object contains:
 - `id` (string): Unique identifier for the vaccine (UUID)
 - `name` (string): Name of the vaccine
 - `manufacturer` (string): Manufacturer name
-- `diseasesPrevented` (array): List of diseases this vaccine prevents
 - `currentStock` (number): Current stock level (below minimumStock)
 - `minimumStock` (number): Configured minimum stock threshold
 - `description` (string): Detailed description of the vaccine
-- `ageGroup` (string): Target age group for this vaccine
 - `dosesRequired` (number): Number of doses required for full immunization
-- `intervalBetweenDoses` (number|null): Days between doses (null if single dose)
+- `intervalDays` (number|null): Days between doses (null if single dose)
 - `createdAt` (ISO 8601 datetime): Record creation timestamp
 - `updatedAt` (ISO 8601 datetime): Last update timestamp
 
