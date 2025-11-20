@@ -16,11 +16,11 @@
  * - After vaccine application (if stock drops below minimum)
  */
 
-import { inject, injectable } from 'tsyringe';
 import { TOKENS } from '@infrastructure/di/tokens';
 import type { INotificationStore } from '@modules/notifications/contracts';
 import type { LowStockEvent } from '@modules/notifications/contracts';
 import type { IUserStore } from '@shared/interfaces/user';
+import { inject, injectable } from 'tsyringe';
 
 @injectable()
 export class InAppLowStockHandler {
@@ -60,8 +60,6 @@ export class InAppLowStockHandler {
 
       const message = `${urgencyLevel}: Estoque de ${data.vaccineName} está abaixo do mínimo. Quantidade atual: ${data.currentStock} dose(s). Mínimo recomendado: ${data.minStockLevel} dose(s). Nível: ${stockPercentage.toFixed(0)}% do mínimo.`;
 
-      // Create notification for each manager
-      // Using Promise.all for parallel creation
       await Promise.all(
         managers.map((manager) =>
           this.notificationStore.create({

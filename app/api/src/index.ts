@@ -8,14 +8,14 @@
  */
 
 // Step 1: Enable decorators and reflection (MUST be first)
-import "reflect-metadata";
+import 'reflect-metadata';
 
 // Step 2: Setup DI container (MUST be before app import)
-import { setupContainer } from "@infrastructure/di/container";
+import { setupContainer } from '@infrastructure/di/container';
 setupContainer();
 
 // Step 3: Import app (after container is configured)
-import app from "@infrastructure/http/app";
+import app from '@infrastructure/http/app';
 
 const PORT = process.env.APP_PORT || 3000;
 
