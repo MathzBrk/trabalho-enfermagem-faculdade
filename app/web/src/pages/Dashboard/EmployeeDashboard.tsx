@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/Card';
-import { Badge, StatusBadge } from '../../components/ui/Badge';
+import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { vaccineService } from '../../services/vaccine.service';
@@ -311,10 +311,10 @@ export const EmployeeDashboard: React.FC = () => {
                         {application.doseNumber}ª dose
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
-                        {application.nurse?.name}
+                        {application.appliedBy?.name}
                       </td>
                       <td className="py-3 px-4">
-                        <StatusBadge status={application.status} />
+                        <Badge variant="success">Aplicada</Badge>
                       </td>
                     </tr>
                   ))}

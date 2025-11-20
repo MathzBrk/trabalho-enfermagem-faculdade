@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Syringe,
@@ -23,6 +24,7 @@ import { formatDateTime, formatDate } from '../../utils/formatters';
  */
 export const NurseDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [schedulings, setSchedulings] = useState<VaccineScheduling[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -158,11 +160,19 @@ export const NurseDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="primary" className="justify-start">
+            <Button
+              variant="primary"
+              className="justify-start"
+              onClick={() => navigate('/vaccine-applications/new')}
+            >
               <Syringe className="h-5 w-5" />
               Aplicar Vacina
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => navigate('/nurse-schedule')}
+            >
               <Calendar className="h-5 w-5" />
               Ver Agenda Completa
             </Button>

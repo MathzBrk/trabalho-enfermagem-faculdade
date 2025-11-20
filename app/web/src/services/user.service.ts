@@ -44,4 +44,14 @@ export const userService = {
     });
     return response.data;
   },
+
+  /**
+   * List all users (simplified for compatibility)
+   */
+  listUsers: async (): Promise<User[]> => {
+    const response = await api.get<PaginatedResponse<User>>('/users', {
+      params: { page: 1, limit: 1000 },
+    });
+    return response.data.data;
+  },
 };
