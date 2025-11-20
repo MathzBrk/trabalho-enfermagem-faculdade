@@ -28,7 +28,7 @@ const alertsController = container.resolve(AlertsController);
  * Authorization: Only MANAGER role can access alerts (enforced in service layer)
  *
  * This endpoint aggregates multiple alert types in a single response:
- * - LOW_STOCK: Vaccines where currentStock < minimumStock
+ * - LOW_STOCK: Vaccines where totalStock <= minStockLevel
  * - EXPIRED_BATCH: Batches where expirationDate < current date
  * - NEARING_EXPIRATION_BATCH: Batches expiring within 30 days
  *
