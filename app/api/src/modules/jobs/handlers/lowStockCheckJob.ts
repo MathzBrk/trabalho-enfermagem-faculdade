@@ -29,7 +29,7 @@ export class LowStockCheckJob implements ICronJob {
     this.name = LOW_STOCK_CHECK_JOB_NAME;
     this.schedule = '0 10 * * *'; // Every day at 10:00 AM
     this.task = undefined;
-    this.intializePlimit();
+    this.initializePlimit();
   }
 
   initialize(): void {
@@ -47,7 +47,7 @@ export class LowStockCheckJob implements ICronJob {
     );
   }
 
-  intializePlimit(): void {
+  initializePlimit(): void {
     this.limit = pLimit(5);
   }
 

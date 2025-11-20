@@ -120,18 +120,18 @@ export function setupContainer(): void {
   // Register notification controller
   container.registerSingleton(NotificationController);
 
+  // Initialize notification system (register event handlers with event bus)
+  const notificationBootstrap = container.resolve<NotificationBootstrap>(
+    TOKENS.NotificationBootstrap,
+  );
+  notificationBootstrap.initialize();
+
   container.registerSingleton(JobServiceManager);
   const jobServiceManager = container.resolve(JobServiceManager);
 
   const jobs = getAndResolveAllCronJobs(container);
   jobServiceManager.registerMany(jobs);
   jobServiceManager.initializeAll();
-
-  // Initialize notification system (register event handlers with event bus)
-  const notificationBootstrap = container.resolve<NotificationBootstrap>(
-    TOKENS.NotificationBootstrap,
-  );
-  notificationBootstrap.initialize();
 
   console.log('📦 DI Container configured');
   console.log('   Stores:');
