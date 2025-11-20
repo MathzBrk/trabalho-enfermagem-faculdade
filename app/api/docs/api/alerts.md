@@ -17,9 +17,9 @@ The Alerts API provides real-time inventory monitoring and alerting functionalit
 The system monitors three types of critical inventory conditions:
 
 ### 1. LOW_STOCK
-Vaccines where the current stock level has fallen below the configured minimum stock threshold.
+Vaccines where the total stock level has fallen below the configured minimum stock threshold.
 
-**Business Rule**: `currentStock < minimumStock`
+**Business Rule**: `totalStock < minStockLevel`
 
 **Purpose**: Enables managers to reorder vaccines before running out completely.
 
@@ -81,29 +81,31 @@ The response is an array of alert objects. Each alert object contains:
         "id": "550e8400-e29b-41d4-a716-446655440000",
         "name": "BCG",
         "manufacturer": "Fundação Ataulpho de Paiva",
-        "diseasesPrevented": ["Tuberculose"],
-        "currentStock": 5,
-        "minimumStock": 10,
         "description": "Vacina BCG contra tuberculose",
-        "ageGroup": "Recém-nascidos",
         "dosesRequired": 1,
-        "intervalBetweenDoses": null,
+        "intervalDays": null,
+        "totalStock": 5,
+        "minStockLevel": 10,
+        "isObligatory": true,
+        "createdById": "user-123",
         "createdAt": "2025-01-01T00:00:00.000Z",
-        "updatedAt": "2025-11-15T10:30:00.000Z"
+        "updatedAt": "2025-11-15T10:30:00.000Z",
+        "deletedAt": null
       },
       {
         "id": "661f9512-f39c-52e5-b827-557766551111",
         "name": "Hepatite B",
         "manufacturer": "Instituto Butantan",
-        "diseasesPrevented": ["Hepatite B"],
-        "currentStock": 3,
-        "minimumStock": 15,
         "description": "Vacina contra hepatite B",
-        "ageGroup": "Todas as idades",
         "dosesRequired": 3,
-        "intervalBetweenDoses": 30,
+        "intervalDays": 30,
+        "totalStock": 3,
+        "minStockLevel": 15,
+        "isObligatory": true,
+        "createdById": "user-123",
         "createdAt": "2025-01-01T00:00:00.000Z",
-        "updatedAt": "2025-11-18T14:20:00.000Z"
+        "updatedAt": "2025-11-18T14:20:00.000Z",
+        "deletedAt": null
       }
     ]
   },
@@ -112,12 +114,32 @@ The response is an array of alert objects. Each alert object contains:
     "objects": [
       {
         "id": "770g0622-g40d-63f6-c938-668877662222",
-        "batchNumber": "BATCH-2024-001",
-        "expirationDate": "2025-10-15T00:00:00.000Z",
-        "quantity": 50,
         "vaccineId": "550e8400-e29b-41d4-a716-446655440000",
+        "batchNumber": "BATCH-2024-001",
+        "initialQuantity": 100,
+        "currentQuantity": 50,
+        "expirationDate": "2025-10-15T00:00:00.000Z",
+        "receivedDate": "2024-01-10T00:00:00.000Z",
+        "status": "EXPIRED",
+        "createdById": "user-123",
         "createdAt": "2024-01-15T00:00:00.000Z",
-        "updatedAt": "2024-01-15T00:00:00.000Z"
+        "updatedAt": "2024-01-15T00:00:00.000Z",
+        "deletedAt": null,
+        "vaccine": {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "name": "BCG",
+          "manufacturer": "Fundação Ataulpho de Paiva",
+          "description": "Vacina BCG contra tuberculose",
+          "dosesRequired": 1,
+          "intervalDays": null,
+          "totalStock": 5,
+          "minStockLevel": 10,
+          "isObligatory": true,
+          "createdById": "user-123",
+          "createdAt": "2025-01-01T00:00:00.000Z",
+          "updatedAt": "2025-11-15T10:30:00.000Z",
+          "deletedAt": null
+        }
       }
     ]
   },
@@ -126,21 +148,61 @@ The response is an array of alert objects. Each alert object contains:
     "objects": [
       {
         "id": "881h1733-h51e-74g7-d049-779988773333",
-        "batchNumber": "BATCH-2025-042",
-        "expirationDate": "2025-12-10T00:00:00.000Z",
-        "quantity": 100,
         "vaccineId": "661f9512-f39c-52e5-b827-557766551111",
+        "batchNumber": "BATCH-2025-042",
+        "initialQuantity": 150,
+        "currentQuantity": 100,
+        "expirationDate": "2025-12-10T00:00:00.000Z",
+        "receivedDate": "2025-02-01T00:00:00.000Z",
+        "status": "AVAILABLE",
+        "createdById": "user-123",
         "createdAt": "2025-02-10T00:00:00.000Z",
-        "updatedAt": "2025-02-10T00:00:00.000Z"
+        "updatedAt": "2025-02-10T00:00:00.000Z",
+        "deletedAt": null,
+        "vaccine": {
+          "id": "661f9512-f39c-52e5-b827-557766551111",
+          "name": "Hepatite B",
+          "manufacturer": "Instituto Butantan",
+          "description": "Vacina contra hepatite B",
+          "dosesRequired": 3,
+          "intervalDays": 30,
+          "totalStock": 3,
+          "minStockLevel": 15,
+          "isObligatory": true,
+          "createdById": "user-123",
+          "createdAt": "2025-01-01T00:00:00.000Z",
+          "updatedAt": "2025-11-18T14:20:00.000Z",
+          "deletedAt": null
+        }
       },
       {
         "id": "992i2844-i62f-85h8-e150-880099884444",
-        "batchNumber": "BATCH-2025-055",
-        "expirationDate": "2025-12-20T00:00:00.000Z",
-        "quantity": 75,
         "vaccineId": "550e8400-e29b-41d4-a716-446655440000",
+        "batchNumber": "BATCH-2025-055",
+        "initialQuantity": 100,
+        "currentQuantity": 75,
+        "expirationDate": "2025-12-20T00:00:00.000Z",
+        "receivedDate": "2025-02-25T00:00:00.000Z",
+        "status": "AVAILABLE",
+        "createdById": "user-123",
         "createdAt": "2025-03-01T00:00:00.000Z",
-        "updatedAt": "2025-03-01T00:00:00.000Z"
+        "updatedAt": "2025-03-01T00:00:00.000Z",
+        "deletedAt": null,
+        "vaccine": {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "name": "BCG",
+          "manufacturer": "Fundação Ataulpho de Paiva",
+          "description": "Vacina BCG contra tuberculose",
+          "dosesRequired": 1,
+          "intervalDays": null,
+          "totalStock": 5,
+          "minStockLevel": 10,
+          "isObligatory": true,
+          "createdById": "user-123",
+          "createdAt": "2025-01-01T00:00:00.000Z",
+          "updatedAt": "2025-11-15T10:30:00.000Z",
+          "deletedAt": null
+        }
       }
     ]
   }
@@ -157,22 +219,31 @@ The response is an array of alert objects. Each alert object contains:
 - `id` (string): Unique identifier for the vaccine (UUID)
 - `name` (string): Name of the vaccine
 - `manufacturer` (string): Manufacturer name
-- `currentStock` (number): Current stock level (below minimumStock)
-- `minimumStock` (number): Configured minimum stock threshold
-- `description` (string): Detailed description of the vaccine
+- `description` (string|null): Detailed description of the vaccine
 - `dosesRequired` (number): Number of doses required for full immunization
 - `intervalDays` (number|null): Days between doses (null if single dose)
+- `totalStock` (number): Current total stock level (below minStockLevel)
+- `minStockLevel` (number): Configured minimum stock threshold
+- `isObligatory` (boolean): Whether the vaccine is mandatory
+- `createdById` (string): ID of the user who created this vaccine
 - `createdAt` (ISO 8601 datetime): Record creation timestamp
 - `updatedAt` (ISO 8601 datetime): Last update timestamp
+- `deletedAt` (ISO 8601 datetime|null): Soft delete timestamp (null if not deleted)
 
 **Vaccine Batch Object Fields** (for EXPIRED_BATCH and NEARING_EXPIRATION_BATCH alerts):
 - `id` (string): Unique identifier for the batch (UUID)
-- `batchNumber` (string): Batch number/identifier from manufacturer
-- `expirationDate` (ISO 8601 datetime): Expiration date of the batch
-- `quantity` (number): Number of doses in this batch
 - `vaccineId` (string): Reference to the vaccine this batch belongs to (UUID)
+- `batchNumber` (string): Batch number/identifier from manufacturer (unique)
+- `initialQuantity` (number): Initial quantity when batch was received
+- `currentQuantity` (number): Current remaining quantity in this batch
+- `expirationDate` (ISO 8601 datetime): Expiration date of the batch
+- `receivedDate` (ISO 8601 datetime): Date when batch was received
+- `status` (string): Batch status - AVAILABLE, EXPIRED, DEPLETED, or DISCARDED
+- `createdById` (string): ID of the user who created this batch
 - `createdAt` (ISO 8601 datetime): Record creation timestamp
 - `updatedAt` (ISO 8601 datetime): Last update timestamp
+- `deletedAt` (ISO 8601 datetime|null): Soft delete timestamp (null if not deleted)
+- `vaccine` (Vaccine object): Full vaccine object with all fields (see Vaccine Object Fields above)
 
 #### Error Responses
 
@@ -222,7 +293,7 @@ The response is an array of alert objects. Each alert object contains:
    - Expired batches: Any batch where `expirationDate < current date`
    - Nearing expiration: Any batch where the expiration date is between 1 and 30 days in the future
 
-5. **Stock Comparison**: Low stock alerts are triggered when `currentStock < minimumStock` (strict less than, not less than or equal to).
+5. **Stock Comparison**: Low stock alerts are triggered when `totalStock < minStockLevel` (strict less than, not less than or equal to).
 
 ### Edge Cases
 
@@ -305,29 +376,38 @@ try {
 ```typescript
 type AlertType = 'LOW_STOCK' | 'EXPIRED_BATCH' | 'NEARING_EXPIRATION_BATCH';
 
+type BatchStatus = 'AVAILABLE' | 'EXPIRED' | 'DEPLETED' | 'DISCARDED';
+
 interface Vaccine {
   id: string;
   name: string;
   manufacturer: string;
-  diseasesPrevented: string[];
-  currentStock: number;
-  minimumStock: number;
-  description: string;
-  ageGroup: string;
+  description: string | null;
   dosesRequired: number;
-  intervalBetweenDoses: number | null;
+  intervalDays: number | null;
+  totalStock: number;
+  minStockLevel: number;
+  isObligatory: boolean;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 interface VaccineBatch {
   id: string;
-  batchNumber: string;
-  expirationDate: string;
-  quantity: number;
   vaccineId: string;
+  batchNumber: string;
+  initialQuantity: number;
+  currentQuantity: number;
+  expirationDate: string;
+  receivedDate: string;
+  status: BatchStatus;
+  createdById: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+  vaccine: Vaccine;
 }
 
 type AlertPayload =

@@ -42,8 +42,9 @@ export class AlertsController {
    *       {
    *         "id": "uuid",
    *         "name": "Vaccine Name",
-   *         "currentStock": 5,
-   *         "minimumStock": 10,
+   *         "totalStock": 5,
+   *         "minStockLevel": 10,
+   *         "isObligatory": true,
    *         ...
    *       }
    *     ]
@@ -54,21 +55,34 @@ export class AlertsController {
    *       {
    *         "id": "uuid",
    *         "batchNumber": "BATCH-001",
+   *         "currentQuantity": 50,
    *         "expirationDate": "2025-10-15T00:00:00.000Z",
+   *         "status": "EXPIRED",
+   *         "vaccine": { ... },
    *         ...
    *       }
    *     ]
    *   },
    *   {
    *     "alertType": "NEARING_EXPIRATION_BATCH",
-   *     "objects": [...]
+   *     "objects": [
+   *       {
+   *         "id": "uuid",
+   *         "batchNumber": "BATCH-002",
+   *         "currentQuantity": 100,
+   *         "expirationDate": "2025-12-10T00:00:00.000Z",
+   *         "status": "AVAILABLE",
+   *         "vaccine": { ... },
+   *         ...
+   *       }
+   *     ]
    *   }
    * ]
    *
    * Alert Types:
-   * - LOW_STOCK: Vaccines with stock below minimum threshold
-   * - EXPIRED_BATCH: Vaccine batches that have already expired
-   * - NEARING_EXPIRATION_BATCH: Vaccine batches expiring within 30 days
+   * - LOW_STOCK: Vaccines with totalStock below minStockLevel
+   * - EXPIRED_BATCH: Vaccine batches that have already expired (includes vaccine relation)
+   * - NEARING_EXPIRATION_BATCH: Vaccine batches expiring within 30 days (includes vaccine relation)
    *
    * Errors:
    * - 401 Unauthorized: No authentication token
