@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   Package,
   Calendar,
+  RefreshCw,
+  CheckCircle,
 } from 'lucide-react';
 import {
   Card,
@@ -13,13 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
 import { userService } from '../../services/user.service';
 import { vaccineService } from '../../services/vaccine.service';
+import { useAlerts } from '../../hooks/useAlerts';
+import { AlertCard } from '../../components/alerts/AlertCard';
 import type {
   User,
   Vaccine,
-  VaccineBatch,
   VaccineApplication,
   VaccineScheduling,
 } from '../../types';
@@ -31,27 +33,27 @@ import { formatDate } from '../../utils/formatters';
 export const ManagerDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [vaccines, setVaccines] = useState<Vaccine[]>([]);
-  const [batches, setBatches] = useState<VaccineBatch[]>([]);
   const [applications, setApplications] = useState<VaccineApplication[]>([]);
   const [schedulings, setSchedulings] = useState<VaccineScheduling[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch real-time alerts from API
+  const { alerts, loading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useAlerts();
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [usersData, vaccinesData, batchesData, applicationsData, schedulingsData] =
+        const [usersData, vaccinesData, applicationsData, schedulingsData] =
           await Promise.all([
             userService.list({ page: 1, limit: 100 }),
             vaccineService.listVaccines(),
-            vaccineService.listBatches(),
             vaccineService.listApplications(),
             vaccineService.listSchedulings(),
           ]);
 
         setUsers(usersData.data);
         setVaccines(vaccinesData);
-        setBatches(batchesData);
         setApplications(applicationsData);
         setSchedulings(schedulingsData);
       } catch (error) {
@@ -72,17 +74,8 @@ export const ManagerDashboard: React.FC = () => {
     (a) => new Date(a.applicationDate) >= thisMonth
   ).length;
 
-  // Get expiring batches (within 30 days)
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-  const expiringBatches = batches.filter(
-    (b) => new Date(b.expirationDate) <= thirtyDaysFromNow
-  );
-
-  // Get low stock batches (< 20% available)
-  const lowStockBatches = batches.filter(
-    (b) => b.currentQuantity / b.initialQuantity < 0.2
-  );
+  // Get total alerts count from API instead of calculating locally
+  const totalAlertsCount = alerts.reduce((sum, alert) => sum + alert.objects.length, 0);
 
   if (isLoading) {
     return (
@@ -158,9 +151,9 @@ export const ManagerDashboard: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Lotes a Vencer</p>
+                <p className="text-sm text-gray-600">Alertas Ativos</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {expiringBatches.length}
+                  {totalAlertsCount}
                 </p>
               </div>
               <div className="w-12 h-12 bg-danger-100 rounded-lg flex items-center justify-center">
@@ -171,58 +164,87 @@ export const ManagerDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Alerts */}
-      {(expiringBatches.length > 0 || lowStockBatches.length > 0) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Alertas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {expiringBatches.slice(0, 3).map((batch) => (
-                <div
-                  key={batch.id}
-                  className="flex items-center gap-3 p-3 bg-danger-50 border border-danger-200 rounded-lg"
-                >
-                  <AlertTriangle className="h-5 w-5 text-danger-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-danger-900">
-                      Lote próximo ao vencimento
-                    </p>
-                    <p className="text-xs text-danger-700">
-                      {batch.vaccine?.name} - Lote {batch.batchNumber} vence em{' '}
-                      {formatDate(batch.expirationDate)}
-                    </p>
-                  </div>
-                  <Badge variant="danger" size="sm">
-                    Urgente
-                  </Badge>
+      {/* Real-time Alerts from API */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Alertas do Sistema</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Monitoramento em tempo real de estoque e validade
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={refetchAlerts}
+            disabled={alertsLoading}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Atualizar alertas"
+          >
+            <RefreshCw className={`h-4 w-4 ${alertsLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </button>
+        </div>
+
+        {/* Loading State */}
+        {alertsLoading && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center text-gray-500">
+                <RefreshCw className="h-8 w-8 animate-spin mb-3" />
+                <p>Carregando alertas...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error State */}
+        {!alertsLoading && alertsError && (
+          <Card className="border-danger-200 bg-danger-50">
+            <CardContent className="py-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-danger-600 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-medium text-danger-900">
+                    Erro ao carregar alertas
+                  </p>
+                  <p className="text-sm text-danger-700 mt-1">{alertsError}</p>
+                  <button
+                    type="button"
+                    onClick={refetchAlerts}
+                    className="mt-3 text-sm font-medium text-danger-600 hover:text-danger-700 underline"
+                  >
+                    Tentar novamente
+                  </button>
                 </div>
-              ))}
-              {lowStockBatches.slice(0, 2).map((batch) => (
-                <div
-                  key={batch.id}
-                  className="flex items-center gap-3 p-3 bg-warning-50 border border-warning-200 rounded-lg"
-                >
-                  <Package className="h-5 w-5 text-warning-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-warning-900">
-                      Estoque baixo
-                    </p>
-                    <p className="text-xs text-warning-700">
-                      {batch.vaccine?.name} - Apenas {batch.currentQuantity}{' '}
-                      doses disponíveis
-                    </p>
-                  </div>
-                  <Badge variant="warning" size="sm">
-                    Atenção
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* No Alerts State */}
+        {!alertsLoading && !alertsError && alerts.length === 0 && (
+          <Card className="border-success-200 bg-success-50">
+            <CardContent className="py-8">
+              <div className="flex flex-col items-center justify-center text-success-700">
+                <CheckCircle className="h-12 w-12 mb-3" />
+                <p className="font-medium text-lg">Nenhum alerta ativo</p>
+                <p className="text-sm text-success-600 mt-1">
+                  Sistema operando normalmente. Todos os indicadores estão dentro dos parâmetros.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Alerts List */}
+        {!alertsLoading && !alertsError && alerts.length > 0 && (
+          <div className="grid grid-cols-1 gap-4">
+            {alerts.map((alert, index) => (
+              <AlertCard key={`${alert.alertType}-${index}`} alert={alert} />
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Vaccination coverage chart placeholder */}

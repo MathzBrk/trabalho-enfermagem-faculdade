@@ -118,7 +118,7 @@ export class VaccineService {
       isObligatory: data.isObligatory,
       intervalDays: data.intervalDays,
       minStockLevel: data.minStockLevel,
-      createdById: userId,  // Simple ID, Store handles Prisma conversion
+      createdById: userId, // Simple ID, Store handles Prisma conversion
     });
 
     return newVaccine;
@@ -155,7 +155,12 @@ export class VaccineService {
   ): Promise<PaginatedResponse<Vaccine>> {
     // Validate user exists and get role for potential transformations
     // This delegates to UserService, respecting bounded contexts
-    const userRole = await this.userService.getUserRole(userId);
+
+    const user = await this.userService.getUserAndValidateRequestingRoles(
+      userId,
+      ['EMPLOYEE', 'NURSE', 'MANAGER'],
+      'getPaginatedVaccines',
+    );
 
     // Normalize manufacturer filter for consistent querying
     const normalizedFilters = filters
@@ -173,7 +178,7 @@ export class VaccineService {
     );
 
     return {
-      data: this.transformVaccinesBasedOnUserRole(result.data, userRole),
+      data: this.transformVaccinesBasedOnUserRole(result.data, user.role),
       pagination: result.pagination,
     };
   }

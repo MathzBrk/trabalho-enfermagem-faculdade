@@ -15,7 +15,8 @@ export const VaccineApplicationStatus = {
   CANCELLED: 'CANCELLED',
 } as const;
 
-export type VaccineApplicationStatus = (typeof VaccineApplicationStatus)[keyof typeof VaccineApplicationStatus];
+export type VaccineApplicationStatus =
+  (typeof VaccineApplicationStatus)[keyof typeof VaccineApplicationStatus];
 
 export const NotificationPriority = {
   LOW: 'LOW',
@@ -24,7 +25,8 @@ export const NotificationPriority = {
   URGENT: 'URGENT',
 } as const;
 
-export type NotificationPriority = (typeof NotificationPriority)[keyof typeof NotificationPriority];
+export type NotificationPriority =
+  (typeof NotificationPriority)[keyof typeof NotificationPriority];
 
 export const NotificationType = {
   SCHEDULING_CONFIRMED: 'SCHEDULING_CONFIRMED',
@@ -34,7 +36,8 @@ export const NotificationType = {
   SYSTEM_ANNOUNCEMENT: 'SYSTEM_ANNOUNCEMENT',
 } as const;
 
-export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 // ==================== Base Types ====================
 
@@ -59,7 +62,8 @@ export const VaccineBatchStatus = {
   DISCARDED: 'DISCARDED',
 } as const;
 
-export type VaccineBatchStatus = (typeof VaccineBatchStatus)[keyof typeof VaccineBatchStatus];
+export type VaccineBatchStatus =
+  (typeof VaccineBatchStatus)[keyof typeof VaccineBatchStatus];
 
 export interface Vaccine {
   id: string;
@@ -357,7 +361,8 @@ export interface ListVaccineApplicationsParams {
   doseNumber?: number;
 }
 
-export interface ListVaccineApplicationsResponse extends PaginatedResponse<VaccineApplication> {}
+export interface ListVaccineApplicationsResponse
+  extends PaginatedResponse<VaccineApplication> {}
 
 // ==================== Vaccination History Types ====================
 
@@ -446,3 +451,7 @@ export interface VaccinationHistory {
   mandatoryNotTaken: MandatoryVaccineNotTaken[];
   pendingDoses: PendingDose[];
 }
+
+// ==================== Alert Types ====================
+
+export * from './alerts';

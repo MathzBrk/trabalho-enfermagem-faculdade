@@ -7,6 +7,7 @@ import vaccineBatchRoutes from './vaccineBatch.routes';
 import vaccineApplicationRoutes from './vaccineApplication.routes';
 import vaccineSchedulingRoutes from './vaccineScheduling.routes';
 import notificationRoutes from './notification.routes';
+import alertsRoutes from './alerts.routes';
 
 /**
  * Main Routes Index
@@ -74,5 +75,18 @@ routes.use('/vaccine-schedulings', vaccineSchedulingRoutes);
  * - PATCH /api/notifications/read-all - Mark all notifications as read
  */
 routes.use('/notifications', notificationRoutes);
+
+/**
+ * Alerts routes
+ * Prefix: /api/alerts
+ *
+ * Provides real-time inventory alerts for managers:
+ * - Low stock alerts
+ * - Expired batch alerts
+ * - Nearing expiration alerts (within 30 days)
+ *
+ * - GET /api/alerts - Get all alerts (MANAGER only)
+ */
+routes.use('/alerts', alertsRoutes);
 
 export default routes;
