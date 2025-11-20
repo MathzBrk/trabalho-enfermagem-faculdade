@@ -113,6 +113,17 @@ export interface IVaccineBatchStore
   // are inherited from IBaseStore
 
   /**
+   * Finds all vaccine batches with vaccine relation included
+   * Useful for alerts and reports where vaccine information is needed
+   *
+   * @returns All batches with vaccine relation
+   *
+   * @example
+   * const batches = await batchStore.findAllWithRelations();
+   */
+  findAllWithRelations(): Promise<VaccineBatch[]>;
+
+  /**
    * Finds a vaccine batch by batch number
    * Batch numbers are unique across the system
    *

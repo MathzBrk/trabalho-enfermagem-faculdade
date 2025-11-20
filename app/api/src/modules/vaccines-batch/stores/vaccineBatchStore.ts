@@ -79,6 +79,17 @@ export class VaccineBatchStore
   }
 
   /**
+   * Finds all vaccine batches with vaccine relation included
+   */
+  async findAllWithRelations(): Promise<VaccineBatch[]> {
+    return this.model.findMany({
+      include: {
+        vaccine: true,
+      },
+    });
+  }
+
+  /**
    * Finds a vaccine batch by batch number
    */
   async findByBatchNumber(batchNumber: string): Promise<VaccineBatch | null> {

@@ -36,7 +36,8 @@ export class AlertsService {
       vaccineStore: this.vaccineStore,
     });
 
-    const allBatches = await this.vaccineBatchStore.findAll();
+    // Fetch all batches with vaccine relation included
+    const allBatches = await this.vaccineBatchStore.findAllWithRelations();
 
     const currentDate = getCurrentDate();
 
