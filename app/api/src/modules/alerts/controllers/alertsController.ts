@@ -84,16 +84,7 @@ export class AlertsController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const userId = req.user?.userId;
-
-      if (!userId) {
-        res.status(401).json({
-          error: 'Unauthorized',
-          message: 'Authentication required',
-        });
-        return;
-      }
-
+      const userId = req.user?.userId!;
       const alerts = await this.alertsService.getAllAlertsForManager(userId);
 
       res.status(200).json(alerts);
