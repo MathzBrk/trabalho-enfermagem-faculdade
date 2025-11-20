@@ -8,6 +8,8 @@ import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBat
 import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
 import { VaccineService } from '@modules/vaccines/services/vaccineService';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
+import { AlertsService } from '@modules/alerts/services/alertsService';
+import { AlertsController } from '@modules/alerts/controllers/alertsController';
 import { container } from 'tsyringe';
 import { TOKENS } from './tokens';
 
@@ -85,6 +87,7 @@ export function setupContainer(): void {
     TOKENS.VaccineSchedulingService,
     VaccineSchedulingService,
   );
+  container.registerSingleton(TOKENS.AlertsService, AlertsService);
 
   // Register notification module services and infrastructure
   container.registerSingleton(TOKENS.IEventBus, NodeEventBus);
@@ -117,8 +120,9 @@ export function setupContainer(): void {
     InAppVaccineAppliedHandler,
   );
 
-  // Register notification controller
+  // Register controllers
   container.registerSingleton(NotificationController);
+  container.registerSingleton(AlertsController);
 
   // Initialize notification system (register event handlers with event bus)
   const notificationBootstrap = container.resolve<NotificationBootstrap>(
@@ -151,6 +155,7 @@ export function setupContainer(): void {
   console.log('   └─ VaccineBatchService → Registered as singleton');
   console.log('   └─ VaccineApplicationService → Registered as singleton');
   console.log('   └─ VaccineSchedulingService → Registered as singleton');
+  console.log('   └─ AlertsService → Registered as singleton');
   console.log('   └─ NotificationService → Registered as singleton');
   console.log('   Infrastructure:');
   console.log('   └─ IEventBus → Using NodeEventBus (EventEmitter)');

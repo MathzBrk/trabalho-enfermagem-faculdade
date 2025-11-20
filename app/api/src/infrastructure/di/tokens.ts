@@ -41,6 +41,7 @@ export const TOKENS = {
   VaccineService: Symbol.for('VaccineService'),
   VaccineApplicationService: Symbol.for('VaccineApplicationService'),
   VaccineSchedulingService: Symbol.for('VaccineSchedulingService'),
+  AlertsService: Symbol.for('AlertsService'),
 
   // ============================================
   // Notification Module Tokens
