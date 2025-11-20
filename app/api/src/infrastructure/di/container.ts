@@ -13,6 +13,7 @@ import { TOKENS } from './tokens';
 
 // Notification module imports
 import { NodeEventBus } from '@infrastructure/messaging/NodeEventBus';
+import { JobServiceManager } from '@modules/jobs/services/jobServiceManager';
 import { NotificationController } from '@modules/notifications/controllers/NotificationController';
 import { InAppBatchExpiringHandler } from '@modules/notifications/handlers/InAppBatchExpiringHandler';
 import { InAppLowStockHandler } from '@modules/notifications/handlers/InAppLowStockHandler';
@@ -23,6 +24,7 @@ import { InAppVaccineScheduledHandler } from '@modules/notifications/handlers/In
 import { NotificationBootstrap } from '@modules/notifications/services/NotificationBootstrap';
 import { NotificationService } from '@modules/notifications/services/NotificationService';
 import { NotificationStore } from '@modules/notifications/stores/NotificationStore';
+import { getAndResolveAllCronJobs } from '@shared/helpers/cronJobHelper';
 
 /**
  * DI Container Setup
@@ -117,6 +119,13 @@ export function setupContainer(): void {
 
   // Register notification controller
   container.registerSingleton(NotificationController);
+
+  container.registerSingleton(JobServiceManager);
+  const jobServiceManager = container.resolve(JobServiceManager);
+
+  const jobs = getAndResolveAllCronJobs(container);
+  jobServiceManager.registerMany(jobs);
+  jobServiceManager.initializeAll();
 
   // Initialize notification system (register event handlers with event bus)
   const notificationBootstrap = container.resolve<NotificationBootstrap>(
