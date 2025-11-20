@@ -327,3 +327,7 @@ export interface DashboardStats {
 export interface MockUser extends User {
   password: string;
 }
+
+// ==================== Alert Types ====================
+
+export * from './alerts';
