@@ -1,9 +1,7 @@
-import { Router } from 'express';
-import { AlertsController } from '@modules/alerts/controllers/alertsController';
 import { container } from '@infrastructure/di/container';
+import { AlertsController } from '@modules/alerts/controllers/alertsController';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
-import { validateRequest } from '@shared/middlewares/validateRequest';
-import { GetAllAlertsQuerySchema } from '@modules/alerts/validators/getAllAlertsValidator';
+import { Router } from 'express';
 
 /**
  * Alerts Routes
@@ -108,7 +106,6 @@ const alertsController = container.resolve(AlertsController);
 alertsRoutes.get(
   '/',
   authMiddleware,
-  validateRequest({ query: GetAllAlertsQuerySchema }),
   alertsController.getAllAlerts.bind(alertsController),
 );
 
