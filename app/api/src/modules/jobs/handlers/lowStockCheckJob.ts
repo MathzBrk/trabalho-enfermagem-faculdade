@@ -73,9 +73,9 @@ export class LowStockCheckJob implements ICronJob {
                 vaccineName: vaccine.name,
                 manufacturer: vaccine.manufacturer,
                 minStockLevel: vaccine.minStockLevel,
-                stockPercentage: Math.round(
-                  (vaccine.totalStock / vaccine.minStockLevel) * 100,
-                ),
+                stockPercentage: vaccine.minStockLevel > 0
+                  ? Math.round((vaccine.totalStock / vaccine.minStockLevel) * 100)
+                  : 0,
               },
             });
           }),
