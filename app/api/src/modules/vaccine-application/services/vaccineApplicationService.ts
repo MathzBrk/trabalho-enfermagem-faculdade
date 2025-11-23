@@ -1,20 +1,10 @@
 import { TOKENS } from '@infrastructure/di/tokens';
+import {
+  EventNames,
+  type IEventBus,
+  type VaccineAppliedEvent,
+} from '@modules/notifications/contracts';
 import { UserNotFoundError, ValidationError } from '@modules/user/errors';
-import type {
-  IVaccineApplicationStore,
-  VaccineApplicationFilterParams,
-} from '@shared/interfaces/vaccineApplication';
-import type { IVaccineStore } from '@shared/interfaces/vaccine';
-import type { IVaccineBatchStore } from '@shared/interfaces/vaccineBatch';
-import type {
-  PaginatedResponse,
-  PaginationParams,
-} from '@shared/interfaces/pagination';
-import type {
-  VaccineApplication,
-  VaccineApplicationWithRelations,
-} from '@shared/models/vaccineApplication';
-import type { Vaccine } from '@shared/models/vaccine';
 import type {
   CreateVaccineApplicationDTO,
   ScheduledApplicationDTO,
@@ -22,33 +12,47 @@ import type {
 } from '@modules/vaccine-application/validators/createVaccineApplicationValidator';
 import { isScheduledApplication } from '@modules/vaccine-application/validators/createVaccineApplicationValidator';
 import type { UpdateVaccineApplicationDTO } from '@modules/vaccine-application/validators/updateVaccineApplicationValidator';
-import { inject, injectable } from 'tsyringe';
+import { VaccineBatchNotFoundError } from '@modules/vaccine-batch/errors';
+import { VaccineSchedulingNotFoundError } from '@modules/vaccine-scheduling';
+import { VaccineNotFoundError } from '@modules/vaccines/errors';
 import { normalizeText } from '@shared/helpers/textHelper';
 import {
-  VaccineApplicationNotFoundError,
+  MILLISECONDS_IN_A_DAY,
+  getCurrentDate,
+  getCurrentTimestamp,
+  transformDateToTimestamp,
+} from '@shared/helpers/timeHelper';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+} from '@shared/interfaces/pagination';
+import type { IUserStore } from '@shared/interfaces/user';
+import type { IVaccineStore } from '@shared/interfaces/vaccine';
+import type {
+  IVaccineApplicationStore,
+  VaccineApplicationFilterParams,
+} from '@shared/interfaces/vaccineApplication';
+import type { IVaccineBatchStore } from '@shared/interfaces/vaccineBatch';
+import type { IVaccineSchedulingStore } from '@shared/interfaces/vaccineScheduling';
+import type { User } from '@shared/models/user';
+import type { Vaccine } from '@shared/models/vaccine';
+import type {
+  VaccineApplication,
+  VaccineApplicationWithRelations,
+} from '@shared/models/vaccineApplication';
+import type { VaccineBatch } from '@shared/models/vaccineBatch';
+import { inject, injectable } from 'tsyringe';
+import {
+  BatchNotAvailableError,
   DuplicateDoseError,
+  ExceededRequiredDosesError,
   InsufficientBatchQuantityError,
   InvalidDoseSequenceError,
   MinimumIntervalNotMetError,
-  BatchNotAvailableError,
-  ExceededRequiredDosesError,
   UnauthorizedApplicationUpdateError,
+  VaccineApplicationNotFoundError,
 } from '../errors';
-import { VaccineNotFoundError } from '@modules/vaccines/errors';
-import { VaccineBatchNotFoundError } from '@modules/vaccines-batch/errors';
-import {
-  getCurrentDate,
-  getCurrentTimestamp,
-  MILLISECONDS_IN_A_DAY,
-  transformDateToTimestamp,
-} from '@shared/helpers/timeHelper';
-import type { VaccineBatch } from '@shared/models/vaccineBatch';
 import type { ValidateApplicationDataParams } from '../types';
-import type { User } from '@shared/models/user';
-import type { IVaccineSchedulingStore } from '@shared/interfaces/vaccineScheduling';
-import { VaccineSchedulingNotFoundError } from '@modules/vaccine-scheduling';
-import type { IUserStore } from '@shared/interfaces/user';
-import { EventNames, IEventBus, VaccineAppliedEvent } from '@modules/notifications/contracts';
 
 /**
  * Response structure for vaccination history endpoint
@@ -212,7 +216,11 @@ export class VaccineApplicationService {
         requestingUser,
       );
     } else {
-      application = await this.createWalkInApplication(data, batch, requestingUser);
+      application = await this.createWalkInApplication(
+        data,
+        batch,
+        requestingUser,
+      );
     }
 
     await this.eventBus.emit<VaccineAppliedEvent>(EventNames.VACCINE_APPLIED, {
@@ -230,7 +238,6 @@ export class VaccineApplicationService {
     });
 
     return application;
-
   }
 
   async createApplicationWithExistingScheduling(
