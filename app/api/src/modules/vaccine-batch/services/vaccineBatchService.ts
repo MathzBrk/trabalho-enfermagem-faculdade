@@ -1,29 +1,29 @@
 import { TOKENS } from '@infrastructure/di/tokens';
+import { ValidationError } from '@modules/user/errors';
 import type { UserService } from '@modules/user/services/userService';
 import {
   BatchNumberAlreadyExistsError,
   ExpiredBatchError,
   InvalidBatchQuantityError,
   VaccineBatchNotFoundError,
-} from '@modules/vaccines-batch/errors';
+} from '@modules/vaccine-batch/errors';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
-import type {
-  IVaccineBatchStore,
-  VaccineBatchFilterParams,
-} from '@shared/interfaces/vaccineBatch';
-import type { IVaccineStore } from '@shared/interfaces/vaccine';
+import { getCurrentDate, isDateInFuture } from '@shared/helpers/timeHelper';
 import type {
   PaginatedResponse,
   PaginationParams,
 } from '@shared/interfaces/pagination';
+import type { IVaccineStore } from '@shared/interfaces/vaccine';
+import type {
+  IVaccineBatchStore,
+  VaccineBatchFilterParams,
+} from '@shared/interfaces/vaccineBatch';
 import type {
   CreateVaccineBatchDTO,
   UpdateVaccineBatchDTO,
   VaccineBatch,
 } from '@shared/models/vaccineBatch';
 import { inject, injectable } from 'tsyringe';
-import { getCurrentDate, isDateInFuture } from '@shared/helpers/timeHelper';
-import { ValidationError } from '@modules/user/errors';
 
 /**
  * VaccineBatchService - Service layer for vaccine batch business logic
@@ -124,8 +124,8 @@ export class VaccineBatchService {
       expirationDate: data.expirationDate,
       receivedDate: data.receivedDate ?? getCurrentDate(),
       status: 'AVAILABLE',
-      vaccineId: data.vaccineId,  // Simple ID, Store handles Prisma conversion
-      createdById: userId,         // Simple ID, Store handles Prisma conversion
+      vaccineId: data.vaccineId, // Simple ID, Store handles Prisma conversion
+      createdById: userId, // Simple ID, Store handles Prisma conversion
     });
 
     // Atomically increment the vaccine's totalStock
@@ -201,11 +201,15 @@ export class VaccineBatchService {
       existingBatch.status === 'AVAILABLE'
     ) {
       // Adjust stock based on quantity correction using atomic operations
-      const stockDelta = normalizedData.quantity - existingBatch.currentQuantity;
+      const stockDelta =
+        normalizedData.quantity - existingBatch.currentQuantity;
 
       if (stockDelta > 0) {
         // Quantity increased - atomically increment
-        await this.vaccineStore.incrementStock(existingBatch.vaccineId, stockDelta);
+        await this.vaccineStore.incrementStock(
+          existingBatch.vaccineId,
+          stockDelta,
+        );
       } else if (stockDelta < 0) {
         // Quantity decreased - atomically decrement
         await this.vaccineStore.decrementStock(

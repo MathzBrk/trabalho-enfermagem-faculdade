@@ -1,15 +1,15 @@
+import { AlertsController } from '@modules/alerts/controllers/alertsController';
+import { AlertsService } from '@modules/alerts/services/alertsService';
 import { UserService } from '@modules/user/services/userService';
 import { UserStore } from '@modules/user/stores/userStore';
 import { VaccineApplicationService } from '@modules/vaccine-application/services/vaccineApplicationService';
 import { VaccineApplicationStore } from '@modules/vaccine-application/stores/vaccineApplicationStore';
+import { VaccineBatchService } from '@modules/vaccine-batch/services/vaccineBatchService';
+import { VaccineBatchStore } from '@modules/vaccine-batch/stores/vaccineBatchStore';
 import { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
 import { VaccineSchedulingStore } from '@modules/vaccine-scheduling/stores/vaccineSchedulingStore';
-import { VaccineBatchService } from '@modules/vaccines-batch/services/vaccineBatchService';
-import { VaccineBatchStore } from '@modules/vaccines-batch/stores/vaccineBatchStore';
 import { VaccineService } from '@modules/vaccines/services/vaccineService';
 import { VaccineStore } from '@modules/vaccines/stores/vaccineStore';
-import { AlertsService } from '@modules/alerts/services/alertsService';
-import { AlertsController } from '@modules/alerts/controllers/alertsController';
 import { container } from 'tsyringe';
 import { TOKENS } from './tokens';
 

@@ -1,7 +1,7 @@
 import { container } from '@infrastructure/di/container';
-import { VaccineBatchController } from '@modules/vaccines-batch';
-import { CreateVaccineBatchBodySchema } from '@modules/vaccines-batch/validators/createVaccineBatchValidator';
-import { UpdateVaccineBatchBodySchema } from '@modules/vaccines-batch/validators/updateVaccineBatchValidator';
+import { VaccineBatchController } from '@modules/vaccine-batch';
+import { CreateVaccineBatchBodySchema } from '@modules/vaccine-batch/validators/createVaccineBatchValidator';
+import { UpdateVaccineBatchBodySchema } from '@modules/vaccine-batch/validators/updateVaccineBatchValidator';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { validateRequest } from '@shared/middlewares/validateRequest';
 import { idParamsSchema } from '@shared/validators/idParamsSchema';

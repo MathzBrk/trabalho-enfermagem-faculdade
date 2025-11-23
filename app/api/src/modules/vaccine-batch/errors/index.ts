@@ -22,7 +22,7 @@ export class BatchNumberAlreadyExistsError extends AppError {
  * Thrown when a requested vaccine batch cannot be found in the database.
  */
 export class VaccineBatchNotFoundError extends AppError {
-  constructor(message: string = 'Vaccine batch not found') {
+  constructor(message = 'Vaccine batch not found') {
     super(message, 404);
     this.name = 'VaccineBatchNotFoundError';
   }
@@ -35,7 +35,7 @@ export class VaccineBatchNotFoundError extends AppError {
  * (e.g., negative numbers, zero, or insufficient stock for operations).
  */
 export class InvalidBatchQuantityError extends AppError {
-  constructor(message: string = 'Invalid batch quantity') {
+  constructor(message = 'Invalid batch quantity') {
     super(message, 400);
     this.name = 'InvalidBatchQuantityError';
   }
@@ -48,9 +48,7 @@ export class InvalidBatchQuantityError extends AppError {
  * that is in the past, or when trying to use an already expired batch.
  */
 export class ExpiredBatchError extends AppError {
-  constructor(
-    message: string = 'Batch has expired or expiration date is invalid',
-  ) {
+  constructor(message = 'Batch has expired or expiration date is invalid') {
     super(message, 400);
     this.name = 'ExpiredBatchError';
   }
