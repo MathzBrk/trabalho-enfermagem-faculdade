@@ -1243,6 +1243,7 @@ curl -X GET "http://localhost:3000/api/vaccine-schedulings/by-date" \
 ## Changelog
 
 ### Version 1.1.0 (2025-11-24)
+- **Breaking Change**: Removed `userId` field from `POST /vaccine-schedulings` request body. Users can now only create schedulings for themselves (the authenticated user).
 - Added `GET /vaccine-schedulings/by-date` endpoint
 - Support for filtering schedulings by specific date or current date
 - EMPLOYEE role restriction for date-based queries
