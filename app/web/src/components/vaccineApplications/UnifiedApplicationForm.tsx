@@ -7,6 +7,7 @@ import type { User, Vaccine, VaccineBatch, VaccineScheduling } from '../../types
 import { FormInput } from '../common/FormInput';
 import { Button } from '../ui/Button';
 import { ModalFooter } from '../ui/Modal';
+import { SchedulingMiniCard } from '../vaccineScheduling/SchedulingMiniCard';
 import { userService } from '../../services/user.service';
 import { vaccineService } from '../../services/vaccine.service';
 
@@ -99,15 +100,17 @@ export const UnifiedApplicationForm: React.FC<UnifiedApplicationFormProps> = ({
     const fetchSchedulings = async () => {
       setLoadingSchedulings(true);
       try {
-        const today = new Date().toISOString().split('T')[0];
-        const allSchedulings = await vaccineService.listSchedulings();
-        // Filter today's schedulings
-        const todaySchedulings = allSchedulings.filter(
-          (s) => s.scheduledDate.split('T')[0] === today
+        // Use the vaccine scheduling service to get today's schedulings
+        const { vaccineSchedulingService } = await import('../../services/vaccineScheduling.service');
+        const todaySchedulings = await vaccineSchedulingService.getByDate();
+        // Filter only SCHEDULED and CONFIRMED appointments
+        const activeSchedulings = todaySchedulings.filter(
+          (s) => s.status === 'SCHEDULED' || s.status === 'CONFIRMED'
         );
-        setSchedulings(todaySchedulings);
+        setSchedulings(activeSchedulings);
       } catch (err) {
         console.error('Error fetching schedulings:', err);
+        setSchedulings([]);
       } finally {
         setLoadingSchedulings(false);
       }
@@ -316,26 +319,7 @@ export const UnifiedApplicationForm: React.FC<UnifiedApplicationFormProps> = ({
 
             {/* Display selected scheduling info */}
             {selectedScheduling && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
-                <div>
-                  <p className="block text-sm font-medium text-gray-700">Paciente</p>
-                  <p className="mt-1 text-sm text-gray-900">{selectedScheduling.user?.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="block text-sm font-medium text-gray-700">Vacina</p>
-                  <p className="mt-1 text-sm text-gray-900">{selectedScheduling.vaccine?.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="block text-sm font-medium text-gray-700">Dose</p>
-                  <p className="mt-1 text-sm text-gray-900">Dose {selectedScheduling.doseNumber}</p>
-                </div>
-                <div>
-                  <p className="block text-sm font-medium text-gray-700">Data Agendada</p>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {new Date(selectedScheduling.scheduledDate).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-              </div>
+              <SchedulingMiniCard scheduling={selectedScheduling} />
             )}
           </div>
         </>

@@ -9,6 +9,7 @@ import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCar
 import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
 import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
 import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
+import { CreateSchedulingPage, SchedulingsListPage } from '../pages/VaccineScheduling';
 import { UsersManagementPage } from '../pages/Users/UsersManagementPage';
 import { UserRole } from '../types';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -113,6 +114,25 @@ export const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute>
               <VaccinationCardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* All users - Vaccine Schedulings */}
+        <Route
+          path="/schedulings"
+          element={
+            <ProtectedRoute>
+              <SchedulingsListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/schedulings/new"
+          element={
+            <ProtectedRoute>
+              <CreateSchedulingPage />
             </ProtectedRoute>
           }
         />

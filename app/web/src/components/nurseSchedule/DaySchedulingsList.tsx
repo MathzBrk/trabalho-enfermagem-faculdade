@@ -10,6 +10,8 @@ interface DaySchedulingsListProps {
   schedulings: MonthlySchedulingItem[];
   onClose: () => void;
   onApplyVaccine?: (schedulingId: string) => void;
+  onCancelScheduling?: (schedulingId: string) => void;
+  onReassignNurse?: (schedulingId: string) => void;
 }
 
 /**
@@ -20,6 +22,8 @@ export const DaySchedulingsList: React.FC<DaySchedulingsListProps> = ({
   schedulings,
   onClose,
   onApplyVaccine,
+  onCancelScheduling,
+  onReassignNurse,
 }) => {
   if (!date) return null;
 
@@ -63,6 +67,8 @@ export const DaySchedulingsList: React.FC<DaySchedulingsListProps> = ({
                 key={scheduling.id}
                 scheduling={scheduling}
                 onApplyVaccine={onApplyVaccine}
+                onCancelScheduling={onCancelScheduling}
+                onReassignNurse={onReassignNurse}
               />
             ))}
           </div>

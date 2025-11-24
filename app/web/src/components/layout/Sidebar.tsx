@@ -33,6 +33,11 @@ const navItems: NavItem[] = [
     icon: FileText,
   },
   {
+    label: 'Meus Agendamentos',
+    path: '/schedulings',
+    icon: Calendar,
+  },
+  {
     label: 'Minhas Vacinas',
     path: '/my-vaccines',
     icon: Syringe,

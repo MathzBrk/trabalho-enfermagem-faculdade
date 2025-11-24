@@ -1,5 +1,5 @@
-import React from 'react';
-import { Clock, User, Syringe, FileText } from 'lucide-react';
+import type React from 'react';
+import { Clock, User, Syringe, FileText, X, UserCog } from 'lucide-react';
 import { Card, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
 import type { MonthlySchedulingItem } from '../../services/vaccineScheduling.service';
@@ -7,6 +7,8 @@ import type { MonthlySchedulingItem } from '../../services/vaccineScheduling.ser
 interface SchedulingCardProps {
   scheduling: MonthlySchedulingItem;
   onApplyVaccine?: (schedulingId: string) => void;
+  onCancelScheduling?: (schedulingId: string) => void;
+  onReassignNurse?: (schedulingId: string) => void;
 }
 
 /**
@@ -15,17 +17,24 @@ interface SchedulingCardProps {
 export const SchedulingCard: React.FC<SchedulingCardProps> = ({
   scheduling,
   onApplyVaccine,
+  onCancelScheduling,
+  onReassignNurse,
 }) => {
   const getStatusBadge = () => {
-    const statusConfig = {
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
       SCHEDULED: {
         bg: 'bg-blue-100',
         text: 'text-blue-700',
         label: 'Agendado',
       },
-      COMPLETED: {
+      CONFIRMED: {
         bg: 'bg-green-100',
         text: 'text-green-700',
+        label: 'Confirmado',
+      },
+      COMPLETED: {
+        bg: 'bg-gray-100',
+        text: 'text-gray-700',
         label: 'Concluído',
       },
       CANCELLED: {
@@ -35,7 +44,7 @@ export const SchedulingCard: React.FC<SchedulingCardProps> = ({
       },
     };
 
-    const config = statusConfig[scheduling.status];
+    const config = statusConfig[scheduling.status] || statusConfig.SCHEDULED;
     return (
       <span className={`px-2 py-1 text-xs rounded-full ${config.bg} ${config.text}`}>
         {config.label}
@@ -118,18 +127,50 @@ export const SchedulingCard: React.FC<SchedulingCardProps> = ({
           )}
         </div>
 
-        {/* Action Button - only show if scheduled and not completed */}
-        {scheduling.status === 'SCHEDULED' && !scheduling.application && onApplyVaccine && (
-          <div className="mt-4">
-            <Button
-              variant="primary"
-              size="sm"
-              className="w-full"
-              onClick={() => onApplyVaccine(scheduling.id)}
-            >
-              <Syringe className="h-4 w-4 mr-2" />
-              Aplicar Vacina
-            </Button>
+        {/* Action Buttons */}
+        {(scheduling.status === 'SCHEDULED' || scheduling.status === 'CONFIRMED') && !scheduling.application && (
+          <div className="mt-4 space-y-2">
+            {/* Apply Vaccine Button */}
+            {onApplyVaccine && (
+              <Button
+                variant="primary"
+                size="sm"
+                className="w-full"
+                onClick={() => onApplyVaccine(scheduling.id)}
+              >
+                <Syringe className="h-4 w-4 mr-2" />
+                Aplicar Vacina
+              </Button>
+            )}
+
+            {/* Secondary actions in a row */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Reassign Nurse Button */}
+              {onReassignNurse && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onReassignNurse(scheduling.id)}
+                  title="Atribuir outra enfermeira"
+                >
+                  <UserCog className="h-4 w-4 mr-1" />
+                  Reatribuir
+                </Button>
+              )}
+
+              {/* Cancel Scheduling Button */}
+              {onCancelScheduling && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => onCancelScheduling(scheduling.id)}
+                  title="Cancelar agendamento"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancelar
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
