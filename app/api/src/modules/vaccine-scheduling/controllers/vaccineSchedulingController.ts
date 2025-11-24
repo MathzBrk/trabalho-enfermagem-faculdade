@@ -199,7 +199,7 @@ export class VaccineSchedulingController {
       if (date) {
         // Extract only the date part (YYYY-MM-DD) to avoid timezone issues
         const datePart = date.split('T')[0];
-        dateToUse = getStartOfDay(getDate(datePart));
+        dateToUse = getDate(datePart);
       }
 
       const schedulings =
