@@ -94,7 +94,7 @@ export class VaccineSchedulingService {
     data: CreateVaccineSchedulingDTO,
     requestingUserId: string,
   ): Promise<VaccineScheduling> {
-    // Fetch requesting user, patient, vaccine, and nurse in parallel
+    // Fetch patient (requesting user), vaccine, and nurse in parallel
 
     const [patient, vaccine, nurse] = await Promise.all([
       this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
