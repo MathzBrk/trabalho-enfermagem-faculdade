@@ -11,7 +11,10 @@ interface FormInputProps extends Omit<InputProps, 'name'> {
  * Form input component that integrates with react-hook-form
  */
 export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
-  ({ register, error, ...props }, ref) => {
+  ({ register, error, ...props }, externalRef) => {
+    // Use register's ref if available, otherwise use external ref
+    const ref = register?.ref || externalRef;
+
     return (
       <Input
         {...props}

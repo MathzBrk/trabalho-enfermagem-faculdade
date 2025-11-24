@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
-import { RegisterFormSchema, type RegisterFormData } from '../utils/validationSchemas';
-import { useRegister } from '../hooks/useRegister';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
 import { FormInput } from '../components/common/FormInput';
 import { MaskedInput } from '../components/common/MaskedInput';
 import { Select } from '../components/common/Select';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
+import { useRegister } from '../hooks/useRegister';
 import { UserRole } from '../types';
+import {
+  type RegisterFormData,
+  RegisterFormSchema,
+} from '../utils/validationSchemas';
 
 /**
  * Registration page component
  * Allows new users to create an account with all required fields
  */
-export const Registration: React.FC = () => {
+export const Registration = () => {
   const navigate = useNavigate();
   const { register: registerUser, isLoading, error } = useRegister();
   const [showPassword, setShowPassword] = useState(false);
@@ -72,7 +75,6 @@ export const Registration: React.FC = () => {
         </div>
 
         <Card>
-
           <CardContent className="pt-6">
             {error && (
               <div className="mb-6 p-3 bg-danger-50 border border-danger-200 rounded-lg">
@@ -165,7 +167,7 @@ export const Registration: React.FC = () => {
                       placeholder="••••••••"
                       register={register('password')}
                       error={errors.password?.message}
-                      helperText="Mínimo 8 caracteres"
+                      helperText="Mínimo 6 caracteres"
                       required
                     />
                     <button
@@ -188,10 +190,16 @@ export const Registration: React.FC = () => {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-9 text-gray-500 hover:text-gray-700"
                     >
-                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showConfirmPassword ? (
+                        <EyeOff size={20} />
+                      ) : (
+                        <Eye size={20} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -225,7 +233,8 @@ export const Registration: React.FC = () => {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
-          &copy; {new Date().getFullYear()} Univas Enfermagem. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} Univas Enfermagem. Todos os direitos
+          reservados.
         </p>
       </div>
     </div>

@@ -28,46 +28,115 @@ export const Profile: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
+  const isManager = authUser?.role === UserRole.MANAGER;
+
   const {
     register,
     handleSubmit,
     reset,
     watch,
-    formState: { errors, isDirty },
+    setValue,
+    formState: { errors },
   } = useForm<UpdateProfileFormData>({
     resolver: zodResolver(UpdateProfileSchema),
-    defaultValues: {
-      name: user?.name || '',
-      phone: user?.phone || '',
-      role: user?.role,
-      coren: user?.coren || '',
-    },
   });
 
-  const selectedRole = watch('role');
+  const watchedName = watch('name');
+  const watchedPhone = watch('phone');
+  const watchedRole = watch('role');
+  const watchedCoren = watch('coren');
 
-  // Reset form when user data loads
+  // Alias for compatibility with JSX
+  const selectedRole = watchedRole;
+
+  // Check if form has changed
+  const hasChanges = React.useMemo(() => {
+    if (!user) return false;
+
+    const nameChanged = watchedName && watchedName.trim() !== user.name;
+    // Phone comparison needs to handle undefined/null/empty string cases
+    const currentPhone = watchedPhone || '';
+    const originalPhone = user.phone || '';
+    const phoneChanged = currentPhone !== originalPhone;
+    const roleChanged = isManager && watchedRole && watchedRole !== user.role;
+    const corenChanged = isManager && watchedRole === 'NURSE' && watchedCoren && watchedCoren.trim() !== (user.coren || '');
+
+    console.log('hasChanges debug:', {
+      watchedPhone,
+      currentPhone,
+      userPhone: user.phone,
+      originalPhone,
+      phoneChanged,
+      nameChanged,
+      roleChanged,
+      corenChanged,
+      result: nameChanged || phoneChanged || roleChanged || corenChanged
+    });
+
+    return nameChanged || phoneChanged || roleChanged || corenChanged;
+  }, [user, watchedName, watchedPhone, watchedRole, watchedCoren, isManager]);
+
+  // Reset form when user data loads or when starting edit
   React.useEffect(() => {
-    if (user) {
-      reset({
+    if (user && isEditing) {
+      const formData = {
         name: user.name,
         phone: user.phone || '',
         role: user.role,
         coren: user.coren || '',
-      });
+      };
+      console.log('Resetting form with:', formData);
+      // Small delay to ensure MaskedInput is mounted
+      setTimeout(() => {
+        reset(formData);
+      }, 0);
     }
-  }, [user, reset]);
+  }, [user, isEditing, reset]);
 
   const onSubmit = async (data: UpdateProfileFormData) => {
     try {
-      // Only send fields that have values
-      const updateData: any = {};
-      if (data.name) updateData.name = data.name;
-      if (data.phone) updateData.phone = data.phone;
-      if (data.role) updateData.role = data.role;
-      if (data.coren) updateData.coren = data.coren;
+      if (!user) return;
 
-      await updateProfile(updateData);
+      console.log('Form submitted with data:', data);
+
+      // Build update data with only changed fields
+      const updateData: any = {};
+
+      // Check what changed and only send those fields
+      if (data.name && data.name.trim() !== user.name) {
+        updateData.name = data.name.trim();
+      }
+
+      // Check if phone changed
+      const currentPhone = data.phone || '';
+      const originalPhone = user.phone || '';
+      if (currentPhone !== originalPhone) {
+        updateData.phone = currentPhone;
+        console.log('Phone changed:', { from: originalPhone, to: currentPhone });
+      }
+
+      // Only MANAGER can update role and coren
+      if (isManager) {
+        if (data.role && data.role !== user.role) {
+          updateData.role = data.role;
+        }
+
+        // Only send coren if role is NURSE and it changed
+        if (data.role === 'NURSE') {
+          if (data.coren && data.coren.trim() !== (user.coren || '')) {
+            updateData.coren = data.coren.trim();
+          }
+        }
+      }
+
+      // Only call API if there are actual changes
+      if (Object.keys(updateData).length > 0) {
+        console.log('Sending to API:', updateData);
+        await updateProfile(updateData);
+      } else {
+        console.log('No changes detected, skipping API call');
+      }
+
       setIsEditing(false);
     } catch (err) {
       console.error('Update profile error:', err);
@@ -111,8 +180,6 @@ export const Profile: React.FC = () => {
     { value: UserRole.NURSE, label: 'Enfermeiro' },
     { value: UserRole.MANAGER, label: 'Gerente' },
   ];
-
-  const isManager = authUser?.role === UserRole.MANAGER;
 
   if (isLoading && !user) {
     return (
@@ -353,6 +420,9 @@ export const Profile: React.FC = () => {
                       placeholder="(00) 00000-0000"
                       register={register('phone')}
                       error={errors.phone?.message}
+                      defaultValue={user.phone || ''}
+                      setValue={(value) => setValue('phone', value, { shouldValidate: true, shouldDirty: true })}
+                      key={isEditing ? 'editing' : 'viewing'}
                     />
                   </div>
                 </div>
@@ -391,7 +461,7 @@ export const Profile: React.FC = () => {
                   <Button
                     type="submit"
                     isLoading={isLoading}
-                    disabled={isLoading || !isDirty}
+                    disabled={isLoading || !hasChanges}
                     className="flex-1"
                   >
                     {isLoading ? 'Salvando...' : 'Salvar Alterações'}

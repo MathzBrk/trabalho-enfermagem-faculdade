@@ -57,8 +57,8 @@ const navItems: NavItem[] = [
     roles: ['MANAGER', 'NURSE'],
   },
   {
-    label: 'Usuários',
-    path: '/users',
+    label: 'Funcionários',
+    path: '/funcionarios',
     icon: Users,
     roles: ['MANAGER'],
   },

@@ -261,6 +261,11 @@ export class UserService {
     data: UpdateUserDTO,
     requestingUserId: string,
   ): Promise<UserResponse> {
+    if (!Object.keys(data).length) {
+      throw new ValidationError(
+        'At least one field must be provided for update',
+      );
+    }
     // Fetch user to update
     const user = await this.userStore.findById(id);
 

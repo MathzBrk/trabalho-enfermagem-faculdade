@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import { UserRole } from '../types';
 
 /**
  * Registration form validation schema
- * Matches backend RegisterSchema exactly
+ * Matches backend RegisterSchema (password min 6 characters)
  */
 export const RegisterFormSchema = z.object({
   email: z
@@ -15,16 +14,12 @@ export const RegisterFormSchema = z.object({
     .max(255, 'Email muito longo'),
   password: z
     .string()
-    .min(8, 'Senha deve ter no mínimo 8 caracteres')
-    .max(128, 'Senha muito longa')
-    .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
-    .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
-    .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
-    .regex(/[^A-Za-z0-9]/, 'Senha deve conter pelo menos um caractere especial'),
+    .min(6, 'Senha deve ter no mínimo 6 caracteres')
+    .max(128, 'Senha muito longa'),
   confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
   name: z
     .string()
-    .min(2, 'Nome deve ter no mínimo 2 caracteres')
+    .min(3, 'Nome deve ter no mínimo 3 caracteres')
     .max(255, 'Nome muito longo')
     .trim(),
   cpf: z
@@ -33,8 +28,8 @@ export const RegisterFormSchema = z.object({
     .regex(/^\d{11}$/, 'CPF deve conter exatamente 11 dígitos'),
   phone: z
     .string()
-    .min(1, 'Telefone é obrigatório')
-    .regex(/^\d{10,11}$/, 'Telefone deve ter 10 ou 11 dígitos'),
+    .optional()
+    .or(z.literal('')),
   role: z.enum(['EMPLOYEE', 'NURSE', 'MANAGER'], {
     errorMap: () => ({ message: 'Selecione uma função válida' }),
   }),
@@ -76,7 +71,6 @@ export const UpdateProfileSchema = z.object({
     .optional(),
   phone: z
     .string()
-    .regex(/^\d{10,11}$/, 'Telefone deve ter 10 ou 11 dígitos')
     .optional()
     .or(z.literal('')),
   role: z.enum(['EMPLOYEE', 'NURSE', 'MANAGER']).optional(),

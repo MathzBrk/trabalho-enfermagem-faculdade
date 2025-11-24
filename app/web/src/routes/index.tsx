@@ -9,6 +9,7 @@ import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCar
 import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
 import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
 import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
+import { UsersManagementPage } from '../pages/Users/UsersManagementPage';
 import { UserRole } from '../types';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -16,13 +17,6 @@ import { ProtectedRoute } from './ProtectedRoute';
 const MyVaccinesPage: React.FC = () => (
   <div className="p-6">
     <h1 className="text-2xl font-bold">Minhas Vacinas</h1>
-    <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
-  </div>
-);
-
-const UsersPage: React.FC = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold">Usuários</h1>
     <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
   </div>
 );
@@ -125,12 +119,18 @@ export const AppRouter: React.FC = () => {
 
         {/* Manager routes */}
         <Route
-          path="/users"
+          path="/funcionarios"
           element={
             <ProtectedRoute allowedRoles={[UserRole.MANAGER]}>
-              <UsersPage />
+              <UsersManagementPage />
             </ProtectedRoute>
           }
+        />
+
+        {/* Legacy redirect for old /users path */}
+        <Route
+          path="/users"
+          element={<Navigate to="/funcionarios" replace />}
         />
 
         <Route
