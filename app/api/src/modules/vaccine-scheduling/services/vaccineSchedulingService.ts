@@ -317,7 +317,8 @@ export class VaccineSchedulingService {
     id: string,
     requestingUserId: string,
   ): Promise<VaccineSchedulingWithRelations> {
-    const scheduling = await this.vaccineSchedulingStore.findByIdWithRelations(id);
+    const scheduling =
+      await this.vaccineSchedulingStore.findByIdWithRelations(id);
 
     if (!scheduling) {
       throw new VaccineSchedulingNotFoundError();
@@ -325,8 +326,9 @@ export class VaccineSchedulingService {
 
     // Authorization check
     const isOwner = scheduling.userId === requestingUserId;
+    const isNurseAssigned = scheduling.assignedNurseId === requestingUserId;
 
-    if (!isOwner) {
+    if (!isOwner && !isNurseAssigned) {
       throw new UnauthorizedSchedulingAccessError();
     }
 
@@ -438,17 +440,11 @@ export class VaccineSchedulingService {
       throw new VaccineSchedulingNotFoundError();
     }
 
-    // Get requesting user role
-    const requestingUser = await this.userService.getUserById(
-      requestingUserId,
-      DEFAULT_USER_SYSTEM_ID,
-    );
-
     // Authorization check
     const isOwner = scheduling.userId === requestingUserId;
-    const isManager = requestingUser.role === 'MANAGER';
+    const isNurseAssigned = scheduling.assignedNurseId === requestingUserId;
 
-    if (!isOwner && !isManager) {
+    if (!isOwner && !isNurseAssigned) {
       throw new UnauthorizedSchedulingAccessError();
     }
 
