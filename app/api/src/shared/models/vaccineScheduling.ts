@@ -5,7 +5,6 @@ import type {
 
 // DTOs (Data Transfer Objects) for API layer
 export interface CreateVaccineSchedulingDTO {
-  userId: string;
   nurseId?: string;
   vaccineId: string;
   scheduledDate: string;

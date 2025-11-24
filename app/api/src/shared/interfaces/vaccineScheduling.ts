@@ -41,8 +41,9 @@ export interface IVaccineSchedulingStore
   ): Promise<VaccineScheduling[]>;
   findByVaccineId(vaccineId: string): Promise<VaccineScheduling[]>;
   getSchedulingsByDate(
-    userId: string,
     date: Date,
+    userId?: string,
+    nurseId?: string,
   ): Promise<VaccineSchedulingWithRelations[]>;
   /**
    * Creates a vaccine scheduling with atomic stock validation
