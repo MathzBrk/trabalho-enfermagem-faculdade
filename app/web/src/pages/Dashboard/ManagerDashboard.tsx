@@ -66,8 +66,8 @@ export const ManagerDashboard: React.FC = () => {
     loadData();
   }, []);
 
-  // Calculate stats
-  const totalEmployees = users.filter((u) => u.role === 'EMPLOYEE').length;
+  // Calculate stats - count all active users (employees, nurses, managers)
+  const totalEmployees = users.filter((u) => u.isActive).length;
   const thisMonth = new Date();
   thisMonth.setDate(1);
   const monthlyApplications = applications.filter(
