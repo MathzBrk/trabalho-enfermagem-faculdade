@@ -146,67 +146,60 @@ export const createNurseChangedNotification = async (
   console.log(
     '[createNurseChangedNotification] Creating nurse changed notifications',
   );
-  try {
-    const formattedDate = formatDate(
-      scheduling.scheduledDate,
-      'DD/MM/YYYY HH:mm',
-    );
+  const formattedDate = formatDate(
+    scheduling.scheduledDate,
+    'DD/MM/YYYY HH:mm',
+  );
 
-    await Promise.all([
-      store.create({
-        userId: oldNurse.id,
-        type: 'GENERAL',
-        title: 'Remoção de Agendamento',
-        message: `Você foi removido(a) do agendamento da vacina ${scheduling.vaccine.name} para ${scheduling.user.name}, que estava marcado para ${formattedDate}.`,
-        metadata: {
-          schedulingId: scheduling.id,
-          vaccineId: scheduling.vaccine.id,
-          vaccineName: scheduling.vaccine.name,
-          scheduledDate: scheduling.scheduledDate,
-          doseNumber: scheduling.doseNumber,
-          patientName: scheduling.user.name,
-          patientEmail: scheduling.user.email,
-        },
-      }),
-      store.create({
-        userId: newNurse.id,
-        type: 'GENERAL',
-        title: 'Novo Agendamento',
-        message: `Você foi designado(a) para aplicar ${scheduling.vaccine.name} em ${scheduling.user.name} no dia ${formattedDate}.`,
-        metadata: {
-          schedulingId: scheduling.id,
-          vaccineId: scheduling.vaccine.id,
-          vaccineName: scheduling.vaccine.name,
-          scheduledDate: scheduling.scheduledDate,
-          doseNumber: scheduling.doseNumber,
-          patientName: scheduling.user.name,
-          patientEmail: scheduling.user.email,
-        },
-      }),
-      store.create({
-        userId: scheduling.user.id,
-        type: 'GENERAL',
-        title: 'Alteração de Enfermagem',
-        message: `Seu(a) enfermeiro(a) responsável pela aplicação da vacina ${scheduling.vaccine.name} foi alterado(a). O novo enfermeiro(a) é ${newNurse.name}.`,
-        metadata: {
-          schedulingId: scheduling.id,
-          vaccineId: scheduling.vaccine.id,
-          vaccineName: scheduling.vaccine.name,
-          scheduledDate: scheduling.scheduledDate,
-          doseNumber: scheduling.doseNumber,
-          newNurseName: scheduling.assignedNurse!.name,
-          newNurseEmail: scheduling.assignedNurse!.email,
-        },
-      }),
-    ]);
+  await Promise.all([
+    store.create({
+      userId: oldNurse.id,
+      type: 'GENERAL',
+      title: 'Remoção de Agendamento',
+      message: `Você foi removido(a) do agendamento da vacina ${scheduling.vaccine.name} para ${scheduling.user.name}, que estava marcado para ${formattedDate}.`,
+      metadata: {
+        schedulingId: scheduling.id,
+        vaccineId: scheduling.vaccine.id,
+        vaccineName: scheduling.vaccine.name,
+        scheduledDate: scheduling.scheduledDate,
+        doseNumber: scheduling.doseNumber,
+        patientName: scheduling.user.name,
+        patientEmail: scheduling.user.email,
+      },
+    }),
+    store.create({
+      userId: newNurse.id,
+      type: 'GENERAL',
+      title: 'Novo Agendamento',
+      message: `Você foi designado(a) para aplicar ${scheduling.vaccine.name} em ${scheduling.user.name} no dia ${formattedDate}.`,
+      metadata: {
+        schedulingId: scheduling.id,
+        vaccineId: scheduling.vaccine.id,
+        vaccineName: scheduling.vaccine.name,
+        scheduledDate: scheduling.scheduledDate,
+        doseNumber: scheduling.doseNumber,
+        patientName: scheduling.user.name,
+        patientEmail: scheduling.user.email,
+      },
+    }),
+    store.create({
+      userId: scheduling.user.id,
+      type: 'GENERAL',
+      title: 'Alteração de Enfermagem',
+      message: `Seu(a) enfermeiro(a) responsável pela aplicação da vacina ${scheduling.vaccine.name} foi alterado(a). O novo enfermeiro(a) é ${newNurse.name}.`,
+      metadata: {
+        schedulingId: scheduling.id,
+        vaccineId: scheduling.vaccine.id,
+        vaccineName: scheduling.vaccine.name,
+        scheduledDate: scheduling.scheduledDate,
+        doseNumber: scheduling.doseNumber,
+        newNurseName: scheduling.assignedNurse!.name,
+        newNurseEmail: scheduling.assignedNurse!.email,
+      },
+    }),
+  ]);
 
-    console.log(
-      '[createNurseChangedNotification] Nurse changed notifications created successfully',
-    );
-  } catch (error) {
-    console.error(
-      '[createNurseChangedNotification] Error creating nurse changed notifications:',
-      error,
-    );
-  }
+  console.log(
+    '[createNurseChangedNotification] Nurse changed notifications created successfully',
+  );
 };
