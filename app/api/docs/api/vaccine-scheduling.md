@@ -32,8 +32,7 @@ Create a new vaccine appointment with automatic stock validation and dose sequen
 #### Request Body
 
 | Field           | Type   | Required | Description                                    |
-|-----------------|--------|----------|------------------------------------------------|
-| `userId`        | string | Yes      | Patient ID (UUID format)                       |
+|-----------------|--------|----------|------------------------------------------------|                    |
 | `vaccineId`     | string | Yes      | Vaccine ID (UUID format)                       |
 | `nurseId`       | string | No       | Assigned nurse ID (UUID format, must be NURSE) |
 | `scheduledDate` | string | Yes      | Appointment date (ISO 8601 datetime)           |
@@ -48,7 +47,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
 {
-  "userId": "550e8400-e29b-41d4-a716-446655440000",
   "vaccineId": "660f9511-f39c-52e5-b827-557766551111",
   "nurseId": "770g0622-g40d-63f6-c938-668877662222",
   "scheduledDate": "2025-12-15T10:00:00.000Z",
@@ -83,15 +81,6 @@ Content-Type: application/json
   "error": "UnauthorizedError",
   "message": "Authentication token is required",
   "statusCode": 401
-}
-```
-
-**403 Forbidden** - EMPLOYEE/NURSE trying to create for another user
-```json
-{
-  "error": "ValidationError",
-  "message": "You can only create vaccine schedules for yourself",
-  "statusCode": 403
 }
 ```
 
@@ -514,7 +503,144 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 5. Update Vaccine Scheduling
+### 5. Get Schedulings by Date
+
+Retrieve all vaccine schedulings for a specific date. If no date is provided, returns schedulings for the current date.
+
+**Endpoint**: `GET /api/vaccine-schedulings/by-date`
+
+**Authentication**: Required (JWT token)
+
+**Authorization**:
+- MANAGER: Can view all schedulings for the date
+- NURSE: Can view their own assigned schedulings for the date
+- EMPLOYEE: Not allowed (403 Forbidden)
+
+#### Query Parameters
+
+| Parameter | Type   | Required | Default       | Description                                    |
+|-----------|--------|----------|---------------|------------------------------------------------|
+| `date`    | string | No       | Current date  | Date to filter schedulings (ISO 8601 datetime) |
+
+#### Request Examples
+
+**Get schedulings for a specific date:**
+```http
+GET /api/vaccine-schedulings/by-date?date=2025-12-15T00:00:00.000Z
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Get schedulings for current date:**
+```http
+GET /api/vaccine-schedulings/by-date
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Success Response (200 OK)
+
+```json
+[
+  {
+    "id": "880h1733-h51e-74g7-d049-779988773333",
+    "userId": "550e8400-e29b-41d4-a716-446655440000",
+    "vaccineId": "660f9511-f39c-52e5-b827-557766551111",
+    "assignedNurseId": "770g0622-g40d-63f6-c938-668877662222",
+    "scheduledDate": "2025-12-15T10:00:00.000Z",
+    "doseNumber": 1,
+    "status": "SCHEDULED",
+    "notes": "First dose scheduling",
+    "createdAt": "2025-11-18T14:30:00.000Z",
+    "updatedAt": "2025-11-18T14:30:00.000Z",
+    "deletedAt": null,
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "João Silva",
+      "email": "joao@example.com",
+      "cpf": "123.456.789-00",
+      "role": "EMPLOYEE"
+    },
+    "vaccine": {
+      "id": "660f9511-f39c-52e5-b827-557766551111",
+      "name": "COVID-19 Pfizer",
+      "manufacturer": "Pfizer",
+      "dosesRequired": 2,
+      "intervalDays": 30
+    },
+    "assignedNurse": {
+      "id": "770g0622-g40d-63f6-c938-668877662222",
+      "name": "Maria Santos",
+      "email": "maria@example.com",
+      "cpf": "987.654.321-00",
+      "role": "NURSE"
+    },
+    "application": null
+  },
+  {
+    "id": "990i2844-i62f-85h8-e150-880099884444",
+    "userId": "661f9512-f39c-52e5-b827-557766551222",
+    "vaccineId": "771g0623-g40d-63f6-c938-668877662333",
+    "assignedNurseId": "770g0622-g40d-63f6-c938-668877662222",
+    "scheduledDate": "2025-12-15T14:00:00.000Z",
+    "doseNumber": 2,
+    "status": "CONFIRMED",
+    "notes": "Second dose",
+    "createdAt": "2025-11-20T10:00:00.000Z",
+    "updatedAt": "2025-11-22T15:00:00.000Z",
+    "deletedAt": null,
+    "user": {
+      "id": "661f9512-f39c-52e5-b827-557766551222",
+      "name": "Ana Costa",
+      "email": "ana@example.com",
+      "cpf": "111.222.333-44",
+      "role": "EMPLOYEE"
+    },
+    "vaccine": {
+      "id": "771g0623-g40d-63f6-c938-668877662333",
+      "name": "Hepatitis B",
+      "manufacturer": "GSK",
+      "dosesRequired": 3
+    },
+    "assignedNurse": {
+      "id": "770g0622-g40d-63f6-c938-668877662222",
+      "name": "Maria Santos",
+      "email": "maria@example.com",
+      "cpf": "987.654.321-00",
+      "role": "NURSE"
+    },
+    "application": null
+  }
+]
+```
+
+**Response Structure**:
+- Array of schedulings with full relations
+- All schedulings matching the specified date (or current date)
+- Includes user, vaccine, nurse, and application data
+- Empty array if no schedulings found for the date
+
+#### Error Responses
+
+**403 Forbidden** - EMPLOYEE users cannot access
+```json
+{
+  "error": "ForbiddenError",
+  "message": "EMPLOYEE users are not allowed to access vaccine schedulings by date",
+  "statusCode": 403
+}
+```
+
+**400 Bad Request** - Invalid date format
+```json
+{
+  "error": "ValidationError",
+  "message": "Invalid date format. Must be ISO 8601 datetime",
+  "statusCode": 400
+}
+```
+
+---
+
+### 6. Update Vaccine Scheduling
 
 Update an existing vaccine scheduling. Cannot update completed schedulings.
 
@@ -615,7 +741,7 @@ Content-Type: application/json
 
 ---
 
-### 6. Delete Vaccine Scheduling
+### 7. Delete Vaccine Scheduling
 
 Soft delete a vaccine scheduling. Sets `deletedAt` timestamp and status to `CANCELLED`.
 
@@ -1065,6 +1191,20 @@ curl -X GET "http://localhost:3000/api/vaccine-schedulings?userId=550e8400-e29b-
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
+### Example 7: Get Schedulings for Specific Date
+
+```bash
+curl -X GET "http://localhost:3000/api/vaccine-schedulings/by-date?date=2025-12-15T00:00:00.000Z" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example 8: Get Schedulings for Current Date
+
+```bash
+curl -X GET "http://localhost:3000/api/vaccine-schedulings/by-date" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
 ---
 
 ## Troubleshooting
@@ -1101,6 +1241,12 @@ curl -X GET "http://localhost:3000/api/vaccine-schedulings?userId=550e8400-e29b-
 ---
 
 ## Changelog
+
+### Version 1.1.0 (2025-11-24)
+- **Breaking Change**: Removed `userId` field from `POST /vaccine-schedulings` request body. Users can now only create schedulings for themselves (the authenticated user).
+- Added `GET /vaccine-schedulings/by-date` endpoint
+- Support for filtering schedulings by specific date or current date
+- EMPLOYEE role restriction for date-based queries
 
 ### Version 1.0.0 (2025-11-18)
 - Initial release

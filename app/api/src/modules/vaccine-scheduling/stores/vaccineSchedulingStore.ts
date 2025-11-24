@@ -69,8 +69,11 @@ export class VaccineSchedulingStore
   }
 
   async getSchedulingsByDate(
-    userId: string,
     date: Date,
+    relations?: {
+      userId?: string;
+      nurseId?: string;
+    },
   ): Promise<VaccineSchedulingWithRelations[]> {
     const start = getStartOfDay(date);
     const end = getEndOfDay(date);
@@ -80,7 +83,8 @@ export class VaccineSchedulingStore
           gte: start,
           lte: end,
         },
-        assignedNurseId: userId,
+        assignedNurseId: relations?.nurseId,
+        userId: relations?.userId,
         deletedAt: null,
       },
       include: {

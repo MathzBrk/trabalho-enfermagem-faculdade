@@ -6,5 +6,6 @@ export * from './validators/updateVaccineSchedulingValidator';
 export * from './validators/listVaccineSchedulingsValidator';
 export * from './validators/getVaccineSchedulingValidator';
 export * from './validators/deleteVaccineSchedulingValidator';
+export * from './validators/getSchedulingsByDateValidator';
 export * from './errors';
 export * from './constants';

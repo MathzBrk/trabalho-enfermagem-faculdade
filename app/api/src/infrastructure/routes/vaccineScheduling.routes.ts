@@ -9,6 +9,7 @@ import { ListVaccineSchedulingsQuerySchema } from '@modules/vaccine-scheduling/v
 import { GetVaccineSchedulingParamsSchema } from '@modules/vaccine-scheduling/validators/getVaccineSchedulingValidator';
 import { DeleteVaccineSchedulingParamsSchema } from '@modules/vaccine-scheduling/validators/deleteVaccineSchedulingValidator';
 import { GetNurseSchedulingMonthlyQuerySchema } from '@modules/vaccine-scheduling/validators/getNurseSchedulingMonthlyValidator';
+import { GetSchedulingsByDateQuerySchema } from '@modules/vaccine-scheduling/validators/getSchedulingsByDateValidator';
 import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { validateRequest } from '@shared/middlewares/validateRequest';
 import { Router } from 'express';
@@ -34,6 +35,16 @@ vaccineSchedulingRoutes.get(
   authMiddleware,
   validateRequest({ query: GetNurseSchedulingMonthlyQuerySchema }),
   vaccineSchedulingController.getNurseSchedulingsDetailed.bind(
+    vaccineSchedulingController,
+  ),
+);
+
+// GET /vaccine-schedulings/by-date - Get schedulings by date
+vaccineSchedulingRoutes.get(
+  '/by-date',
+  authMiddleware,
+  validateRequest({ query: GetSchedulingsByDateQuerySchema }),
+  vaccineSchedulingController.getSchedulingsByDate.bind(
     vaccineSchedulingController,
   ),
 );

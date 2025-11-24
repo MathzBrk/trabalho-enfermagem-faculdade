@@ -1,7 +1,7 @@
 import { TOKENS } from '@infrastructure/di/tokens';
 import type { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
-import type { ListVaccineSchedulingsDTO } from '@modules/vaccine-scheduling/validators/listVaccineSchedulingsValidator';
 import type { GetNurseSchedulingMonthlyDTO } from '@modules/vaccine-scheduling/validators/getNurseSchedulingMonthlyValidator';
+import type { ListVaccineSchedulingsDTO } from '@modules/vaccine-scheduling/validators/listVaccineSchedulingsValidator';
 import { getDate } from '@shared/helpers/timeHelper';
 import type { VaccineSchedulingFilterParams } from '@shared/interfaces/vaccineScheduling';
 import type {
@@ -116,7 +116,8 @@ export class VaccineSchedulingController {
     try {
       const requestingUserId = req.user?.userId;
 
-      const { month, year } = req.query as unknown as GetNurseSchedulingMonthlyDTO;
+      const { month, year } =
+        req.query as unknown as GetNurseSchedulingMonthlyDTO;
 
       const schedulings =
         await this.vaccineSchedulingService.getNurseSchedulingsDetailed(
@@ -180,6 +181,34 @@ export class VaccineSchedulingController {
       );
 
       res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getSchedulingsByDate(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const requestingUserId = req.user?.userId;
+      const { date } = req.query as { date?: string };
+
+      let dateToUse: Date | undefined;
+      if (date) {
+        // Extract only the date part (YYYY-MM-DD) to avoid timezone issues
+        const datePart = date.split('T')[0];
+        dateToUse = getDate(datePart);
+      }
+
+      const schedulings =
+        await this.vaccineSchedulingService.getSchedulingsByDate(
+          requestingUserId!,
+          dateToUse,
+        );
+
+      res.status(200).json(schedulings);
     } catch (error) {
       next(error);
     }

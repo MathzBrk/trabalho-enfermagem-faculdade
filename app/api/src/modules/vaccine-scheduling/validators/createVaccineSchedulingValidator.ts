@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const CreateVaccineSchedulingBodySchema = z.object({
-  userId: z.string().uuid('User ID must be a valid UUID'),
   vaccineId: z.string().uuid('Vaccine ID must be a valid UUID'),
   scheduledDate: z
     .string()

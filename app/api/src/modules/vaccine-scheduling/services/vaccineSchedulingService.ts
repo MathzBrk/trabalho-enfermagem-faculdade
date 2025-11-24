@@ -94,23 +94,15 @@ export class VaccineSchedulingService {
     data: CreateVaccineSchedulingDTO,
     requestingUserId: string,
   ): Promise<VaccineScheduling> {
-    // Fetch requesting user, patient, vaccine, and nurse in parallel
+    // Fetch patient (requesting user), vaccine, and nurse in parallel
 
-    const [requestingUser, vaccine, nurse, patient] = await Promise.all([
+    const [patient, vaccine, nurse] = await Promise.all([
       this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
       this.vaccineStore.findById(data.vaccineId),
       data.nurseId
         ? this.userService.getUserById(data.nurseId, DEFAULT_USER_SYSTEM_ID)
         : Promise.resolve(null),
-      this.userService.getUserById(data.userId, DEFAULT_USER_SYSTEM_ID),
     ]);
-
-    // Authorization: Non-MANAGER can only create for themselves
-    if (requestingUser.role !== 'MANAGER' && data.userId !== requestingUserId) {
-      throw new ValidationError(
-        'You can only create vaccine schedules for yourself',
-      );
-    }
 
     if (nurse && nurse.role !== 'NURSE') {
       throw new ValidationError(
@@ -142,7 +134,7 @@ export class VaccineSchedulingService {
     // Check for duplicate scheduling (same user + vaccine + dose with active status)
     const duplicateExists =
       await this.vaccineSchedulingStore.existsByUserVaccineDose(
-        data.userId,
+        patient.id,
         data.vaccineId,
         data.doseNumber,
       );
@@ -156,7 +148,7 @@ export class VaccineSchedulingService {
     if (data.doseNumber > 1) {
       const vaccineSchedulings =
         await this.vaccineSchedulingStore.findByUserAndVaccine(
-          data.userId,
+          patient.id,
           data.vaccineId,
         );
 
@@ -203,7 +195,7 @@ export class VaccineSchedulingService {
           doseNumber: data.doseNumber,
           notes: data.notes,
           status: 'SCHEDULED',
-          userId: data.userId,
+          userId: patient.id,
           vaccineId: data.vaccineId,
           nurseId: nurse ? nurse.id : undefined,
         },
@@ -292,7 +284,9 @@ export class VaccineSchedulingService {
       const dateKey = formatDate(date, 'YYYY-MM-DD');
 
       const schedulingInDay =
-        await this.vaccineSchedulingStore.getSchedulingsByDate(user.id, date);
+        await this.vaccineSchedulingStore.getSchedulingsByDate(date, {
+          nurseId: requestingUserId,
+        });
 
       response[dateKey] = schedulingInDay;
     }
@@ -323,10 +317,7 @@ export class VaccineSchedulingService {
     id: string,
     requestingUserId: string,
   ): Promise<VaccineSchedulingWithRelations> {
-    const [requestingUser, scheduling] = await Promise.all([
-      this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
-      this.vaccineSchedulingStore.findByIdWithRelations(id),
-    ]);
+    const scheduling = await this.vaccineSchedulingStore.findByIdWithRelations(id);
 
     if (!scheduling) {
       throw new VaccineSchedulingNotFoundError();
@@ -334,9 +325,8 @@ export class VaccineSchedulingService {
 
     // Authorization check
     const isOwner = scheduling.userId === requestingUserId;
-    const isManager = requestingUser.role === 'MANAGER';
 
-    if (!isOwner && !isManager) {
+    if (!isOwner) {
       throw new UnauthorizedSchedulingAccessError();
     }
 
@@ -386,6 +376,31 @@ export class VaccineSchedulingService {
       { page, perPage: limit },
       filterParams,
     );
+  }
+
+  async getSchedulingsByDate(
+    userId: string,
+    date?: Date,
+  ): Promise<VaccineSchedulingWithRelations[]> {
+    const requestingUser = await this.userService.getUserById(
+      userId,
+      DEFAULT_USER_SYSTEM_ID,
+    );
+
+    if (requestingUser.role === 'EMPLOYEE') {
+      throw new ForbiddenError(
+        'EMPLOYEE users are not allowed to access vaccine schedulings by date',
+      );
+    }
+    const dateToUse = date || getCurrentDate();
+
+    if (requestingUser.role === 'NURSE') {
+      return this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse, {
+        nurseId: userId,
+      });
+    }
+
+    return this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse);
   }
 
   /**
