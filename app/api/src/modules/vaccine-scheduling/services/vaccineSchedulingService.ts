@@ -1,5 +1,9 @@
 import { TOKENS } from '@infrastructure/di/tokens';
-import { EventNames, type VaccineScheduledEvent } from '@modules/notifications';
+import {
+  EventNames,
+  type NurseChangedEvent,
+  type VaccineScheduledEvent,
+} from '@modules/notifications';
 import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
 import { ForbiddenError, ValidationError } from '@modules/user/errors';
 import type { UserService } from '@modules/user/services/userService';
@@ -471,12 +475,36 @@ export class VaccineSchedulingService {
     }
 
     // Update the scheduling
-    return this.vaccineSchedulingStore.update(id, {
+    const updatedScheduling = await this.vaccineSchedulingStore.update(id, {
       scheduledDate,
       notes: data.notes,
       status: data.status,
       nurseId: data.nurseId,
     });
+
+    const oldSchedulingHadNurse = Boolean(scheduling.assignedNurseId);
+
+    const newUserId = data.nurseId;
+
+    const nurseChanged =
+      oldSchedulingHadNurse &&
+      newUserId &&
+      scheduling.assignedNurseId !== newUserId;
+
+    if (nurseChanged) {
+      await this.eventBus.emit<NurseChangedEvent>(EventNames.NURSE_CHANGED, {
+        type: EventNames.NURSE_CHANGED,
+        channels: ['in-app'],
+        data: {
+          schedulingId: updatedScheduling.id,
+          newNurseId: updatedScheduling.assignedNurseId!,
+          oldNurseId: scheduling.assignedNurseId!,
+        },
+        priority: 'normal',
+      });
+    }
+
+    return updatedScheduling;
   }
 
   /**
