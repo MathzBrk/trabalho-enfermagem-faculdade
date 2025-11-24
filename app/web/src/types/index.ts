@@ -95,19 +95,32 @@ export interface VaccineBatch {
   updatedAt: string;
 }
 
+export const VaccineSchedulingStatus = {
+  SCHEDULED: 'SCHEDULED',
+  CONFIRMED: 'CONFIRMED',
+  CANCELLED: 'CANCELLED',
+  COMPLETED: 'COMPLETED',
+} as const;
+
+export type VaccineSchedulingStatus =
+  (typeof VaccineSchedulingStatus)[keyof typeof VaccineSchedulingStatus];
+
 export interface VaccineScheduling {
   id: string;
   userId: string;
   user?: User;
   vaccineId: string;
   vaccine?: Vaccine;
-  assignedNurseId?: string;
-  assignedNurse?: User;
+  assignedNurseId?: string | null;
+  assignedNurse?: User | null;
   scheduledDate: string;
   doseNumber: number;
-  notes?: string;
+  status: VaccineSchedulingStatus;
+  notes?: string | null;
+  application?: VaccineApplication | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface VaccineApplication {
@@ -169,12 +182,28 @@ export interface UpdateUserData {
 }
 
 export interface CreateVaccineSchedulingData {
-  userId: string;
   vaccineId: string;
-  assignedNurseId?: string;
+  nurseId?: string;
   scheduledDate: string;
   doseNumber: number;
   notes?: string;
+}
+
+export interface UpdateVaccineSchedulingData {
+  scheduledDate?: string;
+  nurseId?: string;
+  notes?: string;
+  status?: VaccineSchedulingStatus;
+}
+
+export interface ListVaccineSchedulingsParams {
+  page?: number;
+  limit?: number;
+  userId?: string;
+  vaccineId?: string;
+  status?: VaccineSchedulingStatus;
+  startDate?: string;
+  endDate?: string;
 }
 
 // Scheduled application (Type A)

@@ -72,14 +72,18 @@ export const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
 export const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const statusVariants: Record<string, BadgeVariant> = {
     SCHEDULED: 'info',
+    CONFIRMED: 'success',
     APPLIED: 'success',
+    COMPLETED: 'default',
     MISSED: 'warning',
     CANCELLED: 'danger',
   };
 
   const statusLabels: Record<string, string> = {
     SCHEDULED: 'Agendado',
+    CONFIRMED: 'Confirmado',
     APPLIED: 'Aplicado',
+    COMPLETED: 'Concluído',
     MISSED: 'Perdido',
     CANCELLED: 'Cancelado',
   };

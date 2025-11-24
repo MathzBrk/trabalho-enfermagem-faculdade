@@ -22,18 +22,20 @@ import { useVaccineApplications } from '../../hooks/useVaccineApplications';
 import { vaccineSchedulingService } from '../../services/vaccineScheduling.service';
 import type { MonthlySchedulingsResponse } from '../../services/vaccineScheduling.service';
 import { useAuthStore } from '../../store/authStore';
+import { userService } from '../../services/user.service';
+import { UserRole } from '../../types';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 /**
  * NurseSchedulePage - Monthly calendar view of nurse schedulings
  * Access: NURSE only
  */
 export const NurseSchedulePage: React.FC = () => {
-  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { createApplication } = useVaccineApplications();
 
   // Month/Year state
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const currentDate = new Date();
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
 
@@ -53,6 +55,14 @@ export const NurseSchedulePage: React.FC = () => {
     string | null
   >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reassign nurse modal state
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [reassignSchedulingId, setReassignSchedulingId] = useState<string | null>(null);
+  const [nurses, setNurses] = useState<any[]>([]);
+  const [selectedNurseId, setSelectedNurseId] = useState<string>('');
+  const [loadingNurses, setLoadingNurses] = useState(false);
+  const [isReassigning, setIsReassigning] = useState(false);
 
   // Fetch schedulings when month/year changes
   useEffect(() => {
@@ -140,6 +150,82 @@ export const NurseSchedulePage: React.FC = () => {
       console.error('Error creating application:', err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelScheduling = async (schedulingId: string) => {
+    if (!window.confirm('Tem certeza que deseja cancelar este agendamento?')) {
+      return;
+    }
+
+    try {
+      await vaccineSchedulingService.delete(schedulingId);
+
+      // Refresh schedulings
+      if (user?.id) {
+        const refreshedData = await vaccineSchedulingService.getNurseMonthlySchedulings(
+          user.id,
+          year,
+          month - 1,
+        );
+        setSchedulings(refreshedData);
+      }
+    } catch (err) {
+      console.error('Error canceling scheduling:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao cancelar agendamento');
+    }
+  };
+
+  const handleReassignNurse = async (schedulingId: string) => {
+    setReassignSchedulingId(schedulingId);
+    setShowReassignModal(true);
+
+    // Load nurses
+    setLoadingNurses(true);
+    try {
+      const response = await userService.list({ role: UserRole.NURSE, page: 1, perPage: 100 });
+      setNurses(response.data);
+    } catch (err) {
+      console.error('Error loading nurses:', err);
+      setError('Erro ao carregar lista de enfermeiros');
+    } finally {
+      setLoadingNurses(false);
+    }
+  };
+
+  const handleCloseReassignModal = () => {
+    setShowReassignModal(false);
+    setReassignSchedulingId(null);
+    setSelectedNurseId('');
+  };
+
+  const handleConfirmReassign = async () => {
+    if (!reassignSchedulingId || !selectedNurseId) {
+      return;
+    }
+
+    setIsReassigning(true);
+    try {
+      await vaccineSchedulingService.update(reassignSchedulingId, {
+        nurseId: selectedNurseId,
+      });
+
+      handleCloseReassignModal();
+
+      // Refresh schedulings
+      if (user?.id) {
+        const refreshedData = await vaccineSchedulingService.getNurseMonthlySchedulings(
+          user.id,
+          year,
+          month - 1,
+        );
+        setSchedulings(refreshedData);
+      }
+    } catch (err) {
+      console.error('Error reassigning nurse:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao reatribuir enfermeiro');
+    } finally {
+      setIsReassigning(false);
     }
   };
 
@@ -290,6 +376,8 @@ export const NurseSchedulePage: React.FC = () => {
                   schedulings={getSelectedDateSchedulings()}
                   onClose={handleCloseDayList}
                   onApplyVaccine={handleApplyVaccine}
+                  onCancelScheduling={handleCancelScheduling}
+                  onReassignNurse={handleReassignNurse}
                 />
               ) : (
                 <Card>
@@ -327,8 +415,66 @@ export const NurseSchedulePage: React.FC = () => {
           onSubmit={handleApplicationSubmit}
           onCancel={handleCloseApplicationModal}
           isLoading={isSubmitting}
-          prefilledSchedulingId={selectedSchedulingId || undefined}
         />
+      </Modal>
+
+      {/* Reassign Nurse Modal */}
+      <Modal
+        isOpen={showReassignModal}
+        onClose={handleCloseReassignModal}
+        title="Reatribuir Enfermeiro(a)"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Selecione um novo enfermeiro(a) para este agendamento:
+          </p>
+
+          {loadingNurses ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+            </div>
+          ) : (
+            <div>
+              <label htmlFor="nurseSelect" className="block text-sm font-medium text-gray-700 mb-2">
+                Enfermeiro(a) <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="nurseSelect"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                value={selectedNurseId}
+                onChange={(e) => setSelectedNurseId(e.target.value)}
+                disabled={isReassigning}
+              >
+                <option value="">Selecione um enfermeiro(a)</option>
+                {nurses.map((nurse) => (
+                  <option key={nurse.id} value={nurse.id}>
+                    {nurse.name}
+                    {nurse.coren && ` - COREN: ${nurse.coren}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={handleCloseReassignModal}
+              disabled={isReassigning}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmReassign}
+              disabled={!selectedNurseId || isReassigning}
+              isLoading={isReassigning}
+            >
+              {isReassigning ? 'Reatribuindo...' : 'Confirmar'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </DashboardLayout>
   );
