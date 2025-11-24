@@ -284,11 +284,9 @@ export class VaccineSchedulingService {
       const dateKey = formatDate(date, 'YYYY-MM-DD');
 
       const schedulingInDay =
-        await this.vaccineSchedulingStore.getSchedulingsByDate(
-          date,
-          undefined,
-          user.id,
-        );
+        await this.vaccineSchedulingStore.getSchedulingsByDate(date, {
+          nurseId: requestingUserId,
+        });
 
       response[dateKey] = schedulingInDay;
     }
@@ -398,6 +396,12 @@ export class VaccineSchedulingService {
       );
     }
     const dateToUse = date || getCurrentDate();
+
+    if (requestingUser.role === 'NURSE') {
+      return this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse, {
+        nurseId: userId,
+      });
+    }
 
     return this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse);
   }
