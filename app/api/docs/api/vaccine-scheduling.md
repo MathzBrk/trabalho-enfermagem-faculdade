@@ -513,7 +513,7 @@ Retrieve all vaccine schedulings for a specific date. If no date is provided, re
 
 **Authorization**:
 - MANAGER: Can view all schedulings for the date
-- NURSE: Can view all schedulings for the date
+- NURSE: Can view their own assigned schedulings for the date
 - EMPLOYEE: Not allowed (403 Forbidden)
 
 #### Query Parameters
