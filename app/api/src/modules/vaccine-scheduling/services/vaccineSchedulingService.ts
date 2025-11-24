@@ -317,10 +317,7 @@ export class VaccineSchedulingService {
     id: string,
     requestingUserId: string,
   ): Promise<VaccineSchedulingWithRelations> {
-    const [_, scheduling] = await Promise.all([
-      this.userService.getUserById(requestingUserId, DEFAULT_USER_SYSTEM_ID),
-      this.vaccineSchedulingStore.findByIdWithRelations(id),
-    ]);
+    const scheduling = await this.vaccineSchedulingStore.findByIdWithRelations(id);
 
     if (!scheduling) {
       throw new VaccineSchedulingNotFoundError();
