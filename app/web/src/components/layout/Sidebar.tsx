@@ -1,16 +1,16 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
 import {
+  Activity,
+  BarChart3,
+  Calendar,
+  ClipboardList,
+  FileText,
   LayoutDashboard,
   Syringe,
-  Calendar,
-  Users,
-  ClipboardList,
-  BarChart3,
   User,
-  FileText,
-  Activity,
+  Users,
 } from 'lucide-react';
+import type React from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
 
@@ -37,12 +37,6 @@ const navItems: NavItem[] = [
     path: '/my-vaccines',
     icon: Syringe,
     roles: ['EMPLOYEE'],
-  },
-  {
-    label: 'Agenda',
-    path: '/schedule',
-    icon: Calendar,
-    roles: ['NURSE'],
   },
   {
     label: 'Minha Agenda',
@@ -91,7 +85,7 @@ export const Sidebar: React.FC = () => {
 
   // Filter nav items based on user role
   const filteredNavItems = navItems.filter(
-    (item) => !item.roles || item.roles.includes(user.role)
+    (item) => !item.roles || item.roles.includes(user.role),
   );
 
   return (
@@ -109,7 +103,7 @@ export const Sidebar: React.FC = () => {
                   'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-primary-50 text-primary-700'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
                 )
               }
             >

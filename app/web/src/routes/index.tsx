@@ -1,28 +1,21 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage } from '../pages/Login';
-import { Registration } from '../pages/Registration';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { DashboardPage } from '../pages/Dashboard';
+import { LoginPage } from '../pages/Login';
 import { NotificationsPage } from '../pages/Notifications';
-import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
-import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
-import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
-import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCardPage';
 import { NurseSchedulePage } from '../pages/NurseSchedule/NurseSchedulePage';
-import { ProtectedRoute } from './ProtectedRoute';
-import { UserRole } from '../types';
 import { Profile } from '../pages/Profile';
+import { Registration } from '../pages/Registration';
+import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCardPage';
+import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
+import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
+import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
+import { UserRole } from '../types';
+import { ProtectedRoute } from './ProtectedRoute';
 
 // Placeholder components for future pages
 const MyVaccinesPage: React.FC = () => (
   <div className="p-6">
     <h1 className="text-2xl font-bold">Minhas Vacinas</h1>
-    <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
-  </div>
-);
-
-const SchedulePage: React.FC = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold">Agenda</h1>
     <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
   </div>
 );
@@ -72,14 +65,6 @@ export const AppRouter: React.FC = () => {
         />
 
         {/* Nurse routes */}
-        <Route
-          path="/schedule"
-          element={
-            <ProtectedRoute allowedRoles={[UserRole.NURSE]}>
-              <SchedulePage />
-            </ProtectedRoute>
-          }
-        />
 
         <Route
           path="/nurse-schedule"
