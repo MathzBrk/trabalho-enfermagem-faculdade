@@ -2,7 +2,7 @@ import { TOKENS } from '@infrastructure/di/tokens';
 import type { VaccineSchedulingService } from '@modules/vaccine-scheduling/services/vaccineSchedulingService';
 import type { GetNurseSchedulingMonthlyDTO } from '@modules/vaccine-scheduling/validators/getNurseSchedulingMonthlyValidator';
 import type { ListVaccineSchedulingsDTO } from '@modules/vaccine-scheduling/validators/listVaccineSchedulingsValidator';
-import { getDate, getStartOfDay } from '@shared/helpers/timeHelper';
+import { getDate } from '@shared/helpers/timeHelper';
 import type { VaccineSchedulingFilterParams } from '@shared/interfaces/vaccineScheduling';
 import type {
   CreateVaccineSchedulingDTO,
