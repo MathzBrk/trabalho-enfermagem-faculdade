@@ -193,8 +193,8 @@ export const createNurseChangedNotification = async (
         vaccineName: scheduling.vaccine.name,
         scheduledDate: scheduling.scheduledDate,
         doseNumber: scheduling.doseNumber,
-        newNurseName: scheduling.assignedNurse!.name,
-        newNurseEmail: scheduling.assignedNurse!.email,
+        newNurseName: newNurse.name,
+        newNurseEmail: newNurse.email,
       },
     }),
   ]);
