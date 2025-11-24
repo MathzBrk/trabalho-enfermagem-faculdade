@@ -65,20 +65,8 @@ export type VaccineScheduledEvent =
  */
 export interface NurseChangedEventData {
   schedulingId: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  vaccineId: string;
-  vaccineName: string;
-  scheduledDate: Date;
-  doseNumber: number;
-  oldNurseId?: string;
-  oldNurseName?: string;
-  oldNurseEmail?: string;
-  newNurseId?: string;
-  newNurseName?: string;
-  newNurseEmail?: string;
-  reason?: string; // Why the nurse was changed (e.g., "Substituição por falta")
+  oldNurseId: string;
+  newNurseId: string;
 }
 
 /**

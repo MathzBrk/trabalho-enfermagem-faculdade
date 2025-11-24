@@ -1,10 +1,13 @@
-import { Router } from "express";
-import { AuthController } from "@modules/user/controllers/authController";
-import { validateRequest } from "@shared/middlewares/validateRequest";
-import { loginRateLimiter, registerRateLimiter } from "@shared/middlewares/rateLimiter";
-import { LoginSchema } from "@modules/user/validators/loginValidator";
-import { RegisterSchema } from "@modules/user/validators/registerValidator";
-import { container } from "@infrastructure/di/container";
+import { container } from '@infrastructure/di/container';
+import { AuthController } from '@modules/user/controllers/authController';
+import { LoginSchema } from '@modules/user/validators/loginValidator';
+import { RegisterSchema } from '@modules/user/validators/registerValidator';
+import {
+  loginRateLimiter,
+  registerRateLimiter,
+} from '@shared/middlewares/rateLimiter';
+import { validateRequest } from '@shared/middlewares/validateRequest';
+import { Router } from 'express';
 
 /**
  * Authentication Routes
@@ -40,10 +43,10 @@ const authController = container.resolve(AuthController);
  * }
  */
 authRoutes.post(
-  "/login",
+  '/login',
   loginRateLimiter,
   validateRequest(LoginSchema),
-  authController.login.bind(authController)
+  authController.login.bind(authController),
 );
 
 /**
@@ -72,10 +75,10 @@ authRoutes.post(
  * }
  */
 authRoutes.post(
-  "/register",
+  '/register',
   registerRateLimiter,
   validateRequest(RegisterSchema),
-  authController.register.bind(authController)
+  authController.register.bind(authController),
 );
 
 export default authRoutes;

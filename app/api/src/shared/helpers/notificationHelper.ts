@@ -13,6 +13,7 @@ import type { Vaccine } from '@shared/models/vaccine';
 import type { VaccineApplication } from '@shared/models/vaccineApplication';
 import type { VaccineBatch } from '@shared/models/vaccineBatch';
 import type { VaccineScheduledEventData } from '@shared/models/vaccineNotificationEvents';
+import type { VaccineSchedulingWithRelations } from '@shared/models/vaccineScheduling';
 import { formatDate } from './timeHelper';
 
 /**
@@ -134,4 +135,71 @@ export const createVaccineAppliedNotification = async (
       },
     }),
   ]);
+};
+
+export const createNurseChangedNotification = async (
+  store: INotificationStore,
+  scheduling: VaccineSchedulingWithRelations,
+  oldNurse: User,
+  newNurse: User,
+): Promise<void> => {
+  console.log(
+    '[createNurseChangedNotification] Creating nurse changed notifications',
+  );
+  const formattedDate = formatDate(
+    scheduling.scheduledDate,
+    'DD/MM/YYYY HH:mm',
+  );
+
+  await Promise.all([
+    store.create({
+      userId: oldNurse.id,
+      type: 'GENERAL',
+      title: 'Remoção de Agendamento',
+      message: `Você foi removido(a) do agendamento da vacina ${scheduling.vaccine.name} para ${scheduling.user.name}, que estava marcado para ${formattedDate}.`,
+      metadata: {
+        schedulingId: scheduling.id,
+        vaccineId: scheduling.vaccine.id,
+        vaccineName: scheduling.vaccine.name,
+        scheduledDate: scheduling.scheduledDate,
+        doseNumber: scheduling.doseNumber,
+        patientName: scheduling.user.name,
+        patientEmail: scheduling.user.email,
+      },
+    }),
+    store.create({
+      userId: newNurse.id,
+      type: 'GENERAL',
+      title: 'Novo Agendamento',
+      message: `Você foi designado(a) para aplicar ${scheduling.vaccine.name} em ${scheduling.user.name} no dia ${formattedDate}.`,
+      metadata: {
+        schedulingId: scheduling.id,
+        vaccineId: scheduling.vaccine.id,
+        vaccineName: scheduling.vaccine.name,
+        scheduledDate: scheduling.scheduledDate,
+        doseNumber: scheduling.doseNumber,
+        patientName: scheduling.user.name,
+        patientEmail: scheduling.user.email,
+      },
+    }),
+    store.create({
+      userId: scheduling.user.id,
+      type: 'GENERAL',
+      title: 'Alteração de Enfermagem',
+      message: `Seu(a) enfermeiro(a) responsável pela aplicação da vacina ${scheduling.vaccine.name} foi alterado(a). O novo enfermeiro(a) é ${newNurse.name}.`,
+      metadata: {
+        schedulingId: scheduling.id,
+        vaccineId: scheduling.vaccine.id,
+        vaccineName: scheduling.vaccine.name,
+        scheduledDate: scheduling.scheduledDate,
+        doseNumber: scheduling.doseNumber,
+        newNurseName: newNurse.name,
+        newNurseEmail: newNurse.email,
+      },
+    }),
+  ]);
+
+  console.log(
+    '[createNurseChangedNotification] Nurse changed notifications created successfully',
+  );
 };
