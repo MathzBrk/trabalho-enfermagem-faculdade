@@ -115,6 +115,7 @@ export const UserFormModal = ({
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateUserFormData | EditUserFormData>({
     resolver: zodResolver(isEditMode ? EditUserSchema : CreateUserSchema),
@@ -194,7 +195,7 @@ export const UserFormModal = ({
             required
           />
 
-          {!isEditMode && 'email' in register && (
+          {!isEditMode && (
             <FormInput
               label="Email"
               type="email"
@@ -218,6 +219,7 @@ export const UserFormModal = ({
                 'cpf' as keyof (CreateUserFormData | EditUserFormData),
               )}
               error={'cpf' in errors ? errors.cpf?.message : undefined}
+              setValue={(value) => setValue('cpf' as keyof (CreateUserFormData | EditUserFormData), value)}
               required
             />
 
@@ -227,6 +229,7 @@ export const UserFormModal = ({
               placeholder="(00) 00000-0000"
               register={register('phone')}
               error={errors.phone?.message}
+              setValue={(value) => setValue('phone', value)}
             />
           </div>
         )}
@@ -239,6 +242,7 @@ export const UserFormModal = ({
               placeholder="(00) 00000-0000"
               register={register('phone')}
               error={errors.phone?.message}
+              setValue={(value) => setValue('phone', value)}
             />
           </div>
         )}

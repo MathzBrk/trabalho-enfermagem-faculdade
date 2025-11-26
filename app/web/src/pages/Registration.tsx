@@ -29,6 +29,7 @@ export const Registration = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(RegisterFormSchema),
@@ -116,6 +117,7 @@ export const Registration = () => {
                     placeholder="000.000.000-00"
                     register={register('cpf')}
                     error={errors.cpf?.message}
+                    setValue={(value) => setValue('cpf', value)}
                     required
                   />
 
@@ -125,6 +127,7 @@ export const Registration = () => {
                     placeholder="(00) 00000-0000"
                     register={register('phone')}
                     error={errors.phone?.message}
+                    setValue={(value) => setValue('phone', value)}
                     required
                   />
                 </div>

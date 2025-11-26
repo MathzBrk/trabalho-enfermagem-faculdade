@@ -1,24 +1,25 @@
-import React, { useEffect, useState } from 'react';
 import {
-  Users,
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  Package,
+  RefreshCw,
   Syringe,
   TrendingUp,
-  AlertTriangle,
-  Package,
-  Calendar,
-  RefreshCw,
-  CheckCircle,
+  Users,
 } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { AlertCard } from '../../components/alerts/AlertCard';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '../../components/ui/Card';
+import { useAlerts } from '../../hooks/useAlerts';
 import { userService } from '../../services/user.service';
 import { vaccineService } from '../../services/vaccine.service';
-import { useAlerts } from '../../hooks/useAlerts';
-import { AlertCard } from '../../components/alerts/AlertCard';
 import type {
   User,
   Vaccine,
@@ -38,7 +39,12 @@ export const ManagerDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch real-time alerts from API
-  const { alerts, loading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useAlerts();
+  const {
+    alerts,
+    loading: alertsLoading,
+    error: alertsError,
+    refetch: refetchAlerts,
+  } = useAlerts();
 
   useEffect(() => {
     const loadData = async () => {
@@ -46,13 +52,13 @@ export const ManagerDashboard: React.FC = () => {
       try {
         const [usersData, vaccinesData, applicationsData, schedulingsData] =
           await Promise.all([
-            userService.list({ page: 1, limit: 100 }),
+            userService.listUsers(),
             vaccineService.listVaccines(),
             vaccineService.listApplications(),
             vaccineService.listSchedulings(),
           ]);
 
-        setUsers(usersData.data);
+        setUsers(usersData);
         setVaccines(vaccinesData);
         setApplications(applicationsData);
         setSchedulings(schedulingsData);
@@ -66,16 +72,21 @@ export const ManagerDashboard: React.FC = () => {
     loadData();
   }, []);
 
+  console.log(`Users loaded: ${users.length}`);
+
   // Calculate stats - count all active users (employees, nurses, managers)
   const totalEmployees = users.filter((u) => u.isActive).length;
   const thisMonth = new Date();
   thisMonth.setDate(1);
   const monthlyApplications = applications.filter(
-    (a) => new Date(a.applicationDate) >= thisMonth
+    (a) => new Date(a.applicationDate) >= thisMonth,
   ).length;
 
   // Get total alerts count from API instead of calculating locally
-  const totalAlertsCount = alerts.reduce((sum, alert) => sum + alert.objects.length, 0);
+  const totalAlertsCount = alerts.reduce(
+    (sum, alert) => sum + alert.objects.length,
+    0,
+  );
 
   if (isLoading) {
     return (
@@ -89,9 +100,7 @@ export const ManagerDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome message */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Painel do Gerente
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Painel do Gerente</h1>
         <p className="text-gray-600 mt-1">
           Visão geral do sistema de vacinação
         </p>
@@ -103,7 +112,9 @@ export const ManagerDashboard: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Funcionários</p>
+                <p className="text-sm text-gray-600">
+                  Total de Funcionários Ativos
+                </p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {totalEmployees}
                 </p>
@@ -168,7 +179,9 @@ export const ManagerDashboard: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Alertas do Sistema</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Alertas do Sistema
+            </h2>
             <p className="text-sm text-gray-600 mt-1">
               Monitoramento em tempo real de estoque e validade
             </p>
@@ -180,7 +193,9 @@ export const ManagerDashboard: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Atualizar alertas"
           >
-            <RefreshCw className={`h-4 w-4 ${alertsLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${alertsLoading ? 'animate-spin' : ''}`}
+            />
             Atualizar
           </button>
         </div>
@@ -229,7 +244,8 @@ export const ManagerDashboard: React.FC = () => {
                 <CheckCircle className="h-12 w-12 mb-3" />
                 <p className="font-medium text-lg">Nenhum alerta ativo</p>
                 <p className="text-sm text-success-600 mt-1">
-                  Sistema operando normalmente. Todos os indicadores estão dentro dos parâmetros.
+                  Sistema operando normalmente. Todos os indicadores estão
+                  dentro dos parâmetros.
                 </p>
               </div>
             </CardContent>
@@ -259,9 +275,7 @@ export const ManagerDashboard: React.FC = () => {
                 <p className="text-sm text-gray-500">
                   Gráfico de cobertura vacinal
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Em desenvolvimento
-                </p>
+                <p className="text-xs text-gray-400 mt-1">Em desenvolvimento</p>
               </div>
             </div>
           </CardContent>
