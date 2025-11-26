@@ -1,19 +1,19 @@
-import type { User, Prisma } from '@infrastructure/database';
-import { BaseStore } from '@shared/stores/baseStore';
-import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
-import { injectable } from 'tsyringe';
-import type {
-  UserDelegate,
-  UserUpdateInput,
-  UserCreateInput,
-} from '@shared/models/user';
+import type { Prisma, User } from '@infrastructure/database';
+import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import {
-  type PaginationParams,
   type PaginatedResponse,
+  type PaginationParams,
   calculatePaginationMetadata,
 } from '@shared/interfaces/pagination';
+import type { IUserStore, UserFilterParams } from '@shared/interfaces/user';
+import type {
+  UserCreateInput,
+  UserDelegate,
+  UserUpdateInput,
+} from '@shared/models/user';
+import { BaseStore } from '@shared/stores/baseStore';
+import { injectable } from 'tsyringe';
 import { allowedUserSortFields } from '../constants';
-import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 
 /**
  * UserStore - Prisma-based implementation of IUserStore
@@ -248,7 +248,6 @@ export class UserStore
    * - Defaults to createdAt DESC if sortBy is invalid or not provided
    *
    * Default Behavior (backward compatible):
-   * - isActive: true (only active users)
    * - excludeDeleted: true (exclude soft-deleted users)
    * - role: undefined (all roles)
    *
@@ -285,7 +284,7 @@ export class UserStore
     // Default filters for backward compatibility
     const {
       role,
-      isActive = true, // Default: only active users
+      isActive,
       excludeDeleted = true, // Default: exclude soft-deleted
     } = filters;
 

@@ -56,23 +56,27 @@ export const MaskedInput = React.forwardRef<HTMLInputElement, MaskedInputProps>(
       const { format, unformat } = formatters[mask];
 
       // Get unformatted value
-      const unmasked = unformat(value);
+      let unmasked = unformat(value);
+
+      // Limit the number of digits based on mask type
+      const maxLengths = {
+        cpf: 11,
+        phone: 11,
+      };
+
+      // Truncate if exceeds max length
+      if (unmasked.length > maxLengths[mask]) {
+        unmasked = unmasked.slice(0, maxLengths[mask]);
+      }
 
       // Format the value for display
       const formatted = format(unmasked);
-
-      console.log('MaskedInput handleChange:', {
-        rawValue: value,
-        unmasked,
-        formatted
-      });
 
       // Update display value
       setDisplayValue(formatted);
 
       // Update the form value using setValue if provided (preferred method)
       if (setValue) {
-        console.log('Using setValue to update form:', unmasked);
         setValue(unmasked);
       } else if (hiddenInputRef.current) {
         // Fallback: Update hidden input value

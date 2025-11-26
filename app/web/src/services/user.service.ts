@@ -1,4 +1,11 @@
-import type { User, PaginationParams, PaginatedResponse, UpdateUserData, RegisterData, UserRole } from '../types';
+import type {
+  PaginatedResponse,
+  PaginationParams,
+  RegisterData,
+  UpdateUserData,
+  User,
+  UserRole,
+} from '../types';
 import { api } from './api';
 
 export interface ListUsersParams extends PaginationParams {
@@ -28,7 +35,9 @@ export const userService = {
    * List users with pagination and filters
    */
   list: async (params?: ListUsersParams): Promise<PaginatedResponse<User>> => {
-    const response = await api.get<PaginatedResponse<User>>('/users', { params });
+    const response = await api.get<PaginatedResponse<User>>('/users', {
+      params,
+    });
     return response.data;
   },
 
@@ -37,7 +46,10 @@ export const userService = {
    * Uses the /auth/register endpoint
    */
   create: async (data: RegisterData): Promise<User> => {
-    const response = await api.post<{ success: boolean; data: { user: User; token: string; expiresIn: string } }>('/auth/register', data);
+    const response = await api.post<{
+      success: boolean;
+      data: { user: User; token: string; expiresIn: string };
+    }>('/auth/register', data);
     // Return only the user data, not the token (since it's created by a manager)
     return response.data.data.user;
   },
@@ -72,11 +84,15 @@ export const userService = {
     const formData = new FormData();
     formData.append('photo', file);
 
-    const response = await api.post<{ url: string }>(`/users/${id}/photo`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const response = await api.post<{ url: string }>(
+      `/users/${id}/photo`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
-    });
+    );
     return response.data;
   },
 
@@ -85,7 +101,7 @@ export const userService = {
    */
   listUsers: async (): Promise<User[]> => {
     const response = await api.get<PaginatedResponse<User>>('/users', {
-      params: { page: 1, limit: 1000 },
+      params: { page: '1', perPage: '100' },
     });
     return response.data.data;
   },
