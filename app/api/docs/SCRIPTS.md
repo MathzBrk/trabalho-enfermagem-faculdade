@@ -101,6 +101,7 @@ npm run prisma:reset
 
 ---
 
+
 ## 🔧 Combined Scripts (Useful Shortcuts)
 
 ### Complete Database Setup
@@ -115,6 +116,8 @@ npm run db:setup
 **When to use:**
 - First time cloning the project
 - After resetting everything
+
+
 
 ### Total Reset
 ```bash
@@ -171,6 +174,7 @@ npm run test:watch      # Watch mode
 npm run test:push       # With coverage (CI/CD)
 ```
 
+
 ---
 
 ## 📋 Recomendado Workflow
@@ -192,6 +196,7 @@ npm run dev
 ```bash
 npx prisma migrate dev --name description_of_change
 ```
+
 
 ### 4️⃣ Database got messed up
 ```bash
