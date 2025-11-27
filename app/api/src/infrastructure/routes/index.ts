@@ -11,6 +11,7 @@ import alertsRoutes from './alerts.routes';
 import vaccinationCoverageRoutes from './vaccinationCoverage.routes';
 
 /**
+ * 
  * Main Routes Index
  *
  * Combines all application routes with their respective prefixes

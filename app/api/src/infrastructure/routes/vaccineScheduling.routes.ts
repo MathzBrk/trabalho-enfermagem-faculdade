@@ -65,6 +65,7 @@ vaccineSchedulingRoutes.get(
   vaccineSchedulingController.list.bind(vaccineSchedulingController),
 );
 
+
 // PATCH /vaccine-schedulings/:id - Update a vaccine scheduling
 vaccineSchedulingRoutes.patch(
   '/:id',

@@ -7,6 +7,7 @@ import { validateRequest } from '@shared/middlewares/validateRequest';
 import { Router } from 'express';
 
 /**
+ * 
  * Authentication Routes
  *
  * Defines all HTTP endpoints for authentication operations.
