@@ -399,11 +399,11 @@ export class VaccineSchedulingService {
       this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse),
     ]);
 
-    const allSchedullings = [...nurseSchedulings, ...allSchedulingsToToday];
+    const allSchedulings = [...nurseSchedulings, ...allSchedulingsToToday];
 
     const allSchedulingsMap = new Map<string, VaccineSchedulingWithRelations>();
 
-    for (const scheduling of allSchedullings) {
+    for (const scheduling of allSchedulings) {
       if (
         scheduling.assignedNurseId === userId ||
         scheduling.assignedNurseId === undefined
