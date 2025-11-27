@@ -220,7 +220,7 @@ npm run prisma:generate
 ```bash
 sudo service postgresql stop
 
-# Option 2: Change port in .env
+
 POSTGRES_PORT=5433
 ```
 
