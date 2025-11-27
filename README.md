@@ -27,7 +27,7 @@ univas-enfermagem/
 
 ## 🚀 Tecnologias
 
-### Backend ([app/api](./app/api))
+### Back-end ([app/api](./app/api))
 - **Node.js** + **Express** - Runtime e framework web
 - **TypeScript** - Tipagem estática
 - **Prisma ORM** - Gerenciamento de banco de dados
@@ -37,7 +37,7 @@ univas-enfermagem/
 - **tsyringe** - Injeção de dependências
 - **Docker** - Containerização
 
-### Frontend ([app/web](./app/web))
+### Front-end ([app/web](./app/web))
 - **React 19** - Biblioteca UI
 - **TypeScript** - Tipagem estática
 - **Vite** - Build tool e dev server
@@ -61,7 +61,7 @@ git clone <repository-url>
 cd univas-enfermagem
 ```
 
-### 2. Backend Setup
+### 2. Back-end Setup
 
 ```bash
 cd app/api
@@ -175,7 +175,7 @@ npm run lint           # Lint e formatação (Biome)
 npm run prisma:studio  # Interface visual do banco
 ```
 
-### Frontend (app/web)
+### Front-end (app/web)
 ```bash
 npm run dev            # Desenvolvimento com hot reload
 npm run build          # Build de produção
@@ -210,7 +210,7 @@ app/api/src/
     └── middlewares/
 ```
 
-### Frontend (Feature-based)
+### Front-end (Feature-based)
 ```
 app/web/src/
 ├── components/
@@ -262,11 +262,11 @@ GET    /api/notifications           # Listar notificações
 ## 🧪 Testes
 
 ```bash
-# Backend
+# Back-end
 cd app/api
 npm run test
 
-# Frontend (quando implementado)
+# Front-end (quando implementado)
 cd app/web
 npm run test
 ```
