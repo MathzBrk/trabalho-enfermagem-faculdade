@@ -224,7 +224,7 @@ HTTP Request
     ↓
 [Store] Devolve o registro obtido
     ↓
-[Service] Ajusta e higieniza os dados (ex.: remove campos sensíveis)
+[Service] Ajusta e higieniza os dados (ex: remove campos sensíveis)
     ↓
 [Controller] Monta a resposta HTTP final
     ↓
