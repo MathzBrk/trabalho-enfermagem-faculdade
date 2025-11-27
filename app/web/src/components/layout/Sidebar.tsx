@@ -38,12 +38,6 @@ const navItems: NavItem[] = [
     icon: Calendar,
   },
   {
-    label: 'Minhas Vacinas',
-    path: '/my-vaccines',
-    icon: Syringe,
-    roles: ['EMPLOYEE'],
-  },
-  {
     label: 'Minha Agenda',
     path: '/nurse-schedule',
     icon: Calendar,

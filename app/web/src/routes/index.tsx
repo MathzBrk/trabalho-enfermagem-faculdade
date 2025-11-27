@@ -5,22 +5,19 @@ import { NotificationsPage } from '../pages/Notifications';
 import { NurseSchedulePage } from '../pages/NurseSchedule/NurseSchedulePage';
 import { Profile } from '../pages/Profile';
 import { Registration } from '../pages/Registration';
+import { UsersManagementPage } from '../pages/Users/UsersManagementPage';
 import { VaccinationCardPage } from '../pages/VaccineApplications/VaccinationCardPage';
 import { VaccineApplicationsPage } from '../pages/VaccineApplications/VaccineApplicationsPage';
+import {
+  CreateSchedulingPage,
+  SchedulingsListPage,
+} from '../pages/VaccineScheduling';
 import { VaccineDetailsPage } from '../pages/Vaccines/VaccineDetailsPage';
 import { VaccinesListPage } from '../pages/Vaccines/VaccinesListPage';
-import { CreateSchedulingPage, SchedulingsListPage } from '../pages/VaccineScheduling';
-import { UsersManagementPage } from '../pages/Users/UsersManagementPage';
 import { UserRole } from '../types';
 import { ProtectedRoute } from './ProtectedRoute';
 
 // Placeholder components for future pages
-const MyVaccinesPage: React.FC = () => (
-  <div className="p-6">
-    <h1 className="text-2xl font-bold">Minhas Vacinas</h1>
-    <p className="text-gray-600 mt-2">Página em desenvolvimento</p>
-  </div>
-);
 
 const ReportsPage: React.FC = () => (
   <div className="p-6">
@@ -45,16 +42,6 @@ export const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute>
               <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Employee routes */}
-        <Route
-          path="/my-vaccines"
-          element={
-            <ProtectedRoute allowedRoles={[UserRole.EMPLOYEE]}>
-              <MyVaccinesPage />
             </ProtectedRoute>
           }
         />

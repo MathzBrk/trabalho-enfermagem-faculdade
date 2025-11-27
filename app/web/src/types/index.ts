@@ -478,9 +478,14 @@ export interface VaccinationHistory {
   vaccinesByType: VaccineWithDoses[];
   applied: AppliedVaccine[];
   mandatoryNotTaken: MandatoryVaccineNotTaken[];
+  optionalNotTaken: MandatoryVaccineNotTaken[];
   pendingDoses: PendingDose[];
 }
 
 // ==================== Alert Types ====================
 
 export * from './alerts';
+
+// ==================== Vaccination Coverage Types ====================
+
+export * from './vaccinationCoverage';
