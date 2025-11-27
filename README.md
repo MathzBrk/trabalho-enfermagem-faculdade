@@ -37,7 +37,7 @@ univas-enfermagem/
 - **tsyringe** - Injeção de dependências
 - **Docker** - Containerização
 
-### Frontend ([app/web](./app/web))
+### Front-end ([app/web](./app/web))
 - **React 19** - Biblioteca UI
 - **TypeScript** - Tipagem estática
 - **Vite** - Build tool e dev server
@@ -266,7 +266,7 @@ GET    /api/notifications           # Listar notificações
 cd app/api
 npm run test
 
-# Frontend (quando implementado)
+# Front-end (quando implementado)
 cd app/web
 npm run test
 ```
