@@ -5,6 +5,7 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 
+
 /**
  * Express Application Setup
  *
@@ -19,6 +20,7 @@ export class App {
     this.routes();
     this.errorHandling();
   }
+
 
   /**
    * Configure global middlewares
@@ -35,6 +37,8 @@ export class App {
       }),
     );
 
+
+    
     // Parse JSON bodies (limit payload size to prevent DoS)
     this.server.use(express.json({ limit: '10mb' }));
 
@@ -51,6 +55,8 @@ export class App {
     // Security: Disable X-Powered-By header
     this.server.disable('x-powered-by');
   }
+
+  
 
   /**
    * Configure application routes
@@ -86,6 +92,7 @@ export class App {
       });
     });
   }
+
 
   /**
    * Configure error handling middleware
