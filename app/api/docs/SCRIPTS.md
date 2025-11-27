@@ -216,16 +216,16 @@ git commit -m "feat: your feature"
 
 ## 🆘 Troubleshooting
 
-### Error: "Prisma Client not found"
+### Erro: "Prisma Client not found"
 ```bash
 npm run prisma:generate
 ```
 
-### Error: "Port 5432 already in use"
+### Erro: "Porta 5432 already in use"
 ```bash
 sudo service postgresql stop
 
-# Option 2: Change port in .env
+
 POSTGRES_PORT=5433
 ```
 
