@@ -173,28 +173,24 @@ npm run test:push       # With coverage (CI/CD)
 
 ---
 
-## 📋 Recommended Workflow
+## 📋 Recomendado Workflow
 
 ### 1️⃣ First time in the project
 ```bash
 npm install
 npm run db:setup
-npm run prisma:seed  # (optional - if you have seed)
+npm run prisma:seed  
 npm run dev
 ```
 
 ### 2️⃣ Working normally
 ```bash
 npm run dev
-# Develop...
-# Save the file (automatic hot-reload)
 ```
 
 ### 3️⃣ Changed schema.prisma
 ```bash
-# Edit src/infrastructure/database/prisma/schema.prisma
 npx prisma migrate dev --name description_of_change
-# Prisma Client is regenerated automatically
 ```
 
 ### 4️⃣ Database got messed up
@@ -205,8 +201,8 @@ npm run prisma:seed
 
 ### 5️⃣ Before committing
 ```bash
-npm run check        # Format code
-npm test            # Test
+npm run check        
+npm test            
 git add .
 git commit -m "feat: your feature"
 ```
@@ -222,8 +218,6 @@ npm run prisma:generate
 
 ### Error: "Port 5432 already in use"
 ```bash
-# You already have PostgreSQL running
-# Option 1: Stop local PostgreSQL
 sudo service postgresql stop
 
 # Option 2: Change port in .env
