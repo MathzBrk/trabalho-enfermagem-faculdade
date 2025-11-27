@@ -13,7 +13,7 @@ cp .env.example .env
 # The .env has already been configured, but you can adjust it if necessary
 ```
 
-### 3. Start PostgreSQL
+### 3. Start Postgre-SQL
 ```bash
 npm run docker:up
 ```
@@ -61,7 +61,7 @@ npm run docker:logs
 4. Implement JWT authentication
 5. Create tests
 
-## Useful commands
+## Useful commandos Docker
 
 ```bash
 # Stop containers
