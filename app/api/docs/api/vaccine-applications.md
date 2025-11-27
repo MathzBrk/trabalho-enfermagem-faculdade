@@ -379,16 +379,12 @@ Retrieve a paginated list of vaccine applications with optional filtering and so
 #### Request Examples
 
 ```bash
-# List all applications (role-filtered)
 GET /api/vaccine-applications
 
-# List applications for specific user
 GET /api/vaccine-applications?userId=770g0622-g40d-63f6-c938-668877662222
 
-# List first doses of a specific vaccine
 GET /api/vaccine-applications?vaccineId=880h1733-h51e-74g7-d049-779988773333&doseNumber=1
 
-# List with pagination and sorting
 GET /api/vaccine-applications?page=2&perPage=20&sortBy=applicationDate&sortOrder=asc
 ```
 

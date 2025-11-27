@@ -70,7 +70,6 @@ import { env } from './envHelper';
 
 export class TokenValidationError extends Error {
   public readonly originalError?: Error;
-  // ... proper error class implementation
 }
 
 export const verifyToken = (token: string): TokenPayload => {
@@ -118,11 +117,10 @@ export const generateToken = (
 
 **Critical Security Fix**:
 ```typescript
-// BEFORE (VULNERABLE):
-req.body.user = decoded;  // ❌ Client can override via POST body!
 
-// AFTER (SECURE):
-req.user = decoded;  // ✅ Server-controlled property
+req.body.user = decoded;  
+
+req.user = decoded;  
 ```
 
 **Why This Was Critical**:
