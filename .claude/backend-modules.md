@@ -210,29 +210,26 @@ export class EmailAlreadyExistsError extends AppError {
 }
 ```
 
-## 🔄 Fluxo de uma Requisição
-
-```
 HTTP Request
     ↓
-[Middleware] validateRequest (Zod validation)
+[Middleware] validateRequest (validação via Zod)
     ↓
-[Controller] Recebe req/res, extrai dados
+[Controller] Recebe req/res e interpreta os dados enviados
     ↓
-[Service] Aplica regras de negócio, orquestra
+[Service] Executa a lógica de negócio e coordena as operações
     ↓
-[Store] Acessa banco via Prisma
+[Store] Interage com o banco usando Prisma
     ↓
 [Database] PostgreSQL
     ↓
-[Store] Retorna entidade
+[Store] Devolve o registro obtido
     ↓
-[Service] Transforma/sanitiza dados (remove password)
+[Service] Ajusta e higieniza os dados (ex.: remove campos sensíveis)
     ↓
-[Controller] Formata resposta HTTP
+[Controller] Monta a resposta HTTP final
     ↓
 HTTP Response (JSON)
-```
+
 
 ## 📝 Exports Públicos (index.ts)
 
