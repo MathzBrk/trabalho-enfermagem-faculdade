@@ -271,14 +271,6 @@ export class VaccineSchedulingService {
 
     const { year, month } = intervalDate;
 
-    const currentYear = getCurrentDate().getFullYear();
-
-    if (year > currentYear) {
-      throw new ValidationError(
-        `The year must not be in the future. Year received ${year} - Actual Year ${currentYear}`,
-      );
-    }
-
     const daysInMonth = getMonthDays(month, year);
 
     const response: Record<string, VaccineSchedulingWithRelations[]> = {};
@@ -400,13 +392,27 @@ export class VaccineSchedulingService {
     }
     const dateToUse = date || getCurrentDate();
 
-    if (requestingUser.role === 'NURSE') {
-      return this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse, {
-        nurseId: userId,
-      });
+    const [nurseSchedulings, allSchedulingsToToday] = await Promise.all([
+      this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse, {
+        nurseId: requestingUser.role === 'NURSE' ? userId : undefined,
+      }),
+      this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse),
+    ]);
+
+    const allSchedulings = [...nurseSchedulings, ...allSchedulingsToToday];
+
+    const allSchedulingsMap = new Map<string, VaccineSchedulingWithRelations>();
+
+    for (const scheduling of allSchedulings) {
+      if (
+        scheduling.assignedNurseId === userId ||
+        scheduling.assignedNurseId === undefined
+      ) {
+        allSchedulingsMap.set(scheduling.id, scheduling);
+      }
     }
 
-    return this.vaccineSchedulingStore.getSchedulingsByDate(dateToUse);
+    return Array.from(allSchedulingsMap.values());
   }
 
   /**

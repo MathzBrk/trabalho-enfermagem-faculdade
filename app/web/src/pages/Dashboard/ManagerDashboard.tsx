@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   Calendar,
   CheckCircle,
-  Package,
   RefreshCw,
   Syringe,
   TrendingUp,
@@ -17,7 +16,9 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/Card';
+import { VaccinationCoverage } from '../../components/vaccination-coverage/VaccinationCoverage';
 import { useAlerts } from '../../hooks/useAlerts';
+import { useVaccinationCoverage } from '../../hooks/useVaccinationCoverage';
 import { userService } from '../../services/user.service';
 import { vaccineService } from '../../services/vaccine.service';
 import type {
@@ -45,6 +46,14 @@ export const ManagerDashboard: React.FC = () => {
     error: alertsError,
     refetch: refetchAlerts,
   } = useAlerts();
+
+  // Fetch vaccination coverage data from API
+  const {
+    coverage,
+    loading: coverageLoading,
+    error: coverageError,
+    refetch: refetchCoverage,
+  } = useVaccinationCoverage();
 
   useEffect(() => {
     const loadData = async () => {
@@ -262,92 +271,48 @@ export const ManagerDashboard: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Vaccination coverage chart placeholder */}
+      {/* Vaccination Coverage Section */}
+      {coverageLoading && (
         <Card>
-          <CardHeader>
-            <CardTitle>Cobertura Vacinal</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-              <div className="text-center">
-                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">
-                  Gráfico de cobertura vacinal
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Em desenvolvimento</p>
-              </div>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-gray-500">
+              <RefreshCw className="h-8 w-8 animate-spin mb-3" />
+              <p>Carregando dados de cobertura vacinal...</p>
             </div>
           </CardContent>
         </Card>
+      )}
 
-        {/* Recent activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Syringe className="h-4 w-4 text-success-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    {applications[applications.length - 1]?.vaccine?.name}{' '}
-                    aplicada
-                  </p>
-                  <p className="text-xs text-gray-500">Há 30 minutos</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Calendar className="h-4 w-4 text-primary-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    Novo agendamento realizado
-                  </p>
-                  <p className="text-xs text-gray-500">Há 1 hora</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Package className="h-4 w-4 text-warning-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    Novo lote de vacinas registrado
-                  </p>
-                  <p className="text-xs text-gray-500">Há 3 horas</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-danger-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="h-4 w-4 text-danger-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    Alerta de estoque baixo gerado
-                  </p>
-                  <p className="text-xs text-gray-500">Ontem</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Users className="h-4 w-4 text-primary-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    Novo funcionário cadastrado
-                  </p>
-                  <p className="text-xs text-gray-500">Há 2 dias</p>
-                </div>
+      {!coverageLoading && coverageError && (
+        <Card className="border-danger-200 bg-danger-50">
+          <CardContent className="py-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-danger-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-danger-900">
+                  Erro ao carregar dados de cobertura vacinal
+                </p>
+                <p className="text-sm text-danger-700 mt-1">{coverageError}</p>
+                <button
+                  type="button"
+                  onClick={refetchCoverage}
+                  className="mt-3 text-sm font-medium text-danger-600 hover:text-danger-700 underline"
+                >
+                  Tentar novamente
+                </button>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {!coverageLoading && !coverageError && coverage && (
+        <VaccinationCoverage
+          data={coverage}
+          onRefresh={refetchCoverage}
+          isRefreshing={coverageLoading}
+        />
+      )}
 
       {/* Upcoming schedulings */}
       <Card>

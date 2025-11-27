@@ -8,6 +8,7 @@ import vaccineApplicationRoutes from './vaccineApplication.routes';
 import vaccineSchedulingRoutes from './vaccineScheduling.routes';
 import notificationRoutes from './notification.routes';
 import alertsRoutes from './alerts.routes';
+import vaccinationCoverageRoutes from './vaccinationCoverage.routes';
 
 /**
  * Main Routes Index
@@ -88,5 +89,19 @@ routes.use('/notifications', notificationRoutes);
  * - GET /api/alerts - Get all alerts (MANAGER only)
  */
 routes.use('/alerts', alertsRoutes);
+
+/**
+ * Vaccination Coverage routes
+ * Prefix: /api/vaccination-coverage
+ *
+ * Provides comprehensive vaccination coverage statistics for managers:
+ * - Overall coverage summary and averages
+ * - Individual vaccine coverage with status
+ * - Critical vaccines requiring attention
+ * - User vaccination completion rates
+ *
+ * - GET /api/vaccination-coverage - Get coverage statistics (MANAGER only)
+ */
+routes.use('/vaccination-coverage', vaccinationCoverageRoutes);
 
 export default routes;

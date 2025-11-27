@@ -138,9 +138,7 @@ export const SchedulingsListPage: React.FC = () => {
               Meus Agendamentos
             </h1>
             <p className="text-gray-600 mt-2">
-              {isManager
-                ? 'Visualize e gerencie todos os agendamentos do sistema'
-                : 'Visualize e gerencie seus agendamentos de vacinas'}
+              Visualize e gerencie seus agendamentos de vacinas
             </p>
           </div>
           <Button

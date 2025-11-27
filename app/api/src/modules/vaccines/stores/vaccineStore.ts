@@ -1,4 +1,5 @@
 import type { Prisma, Vaccine } from '@infrastructure/database';
+import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import type {
   PaginatedResponse,
   PaginationParams,
@@ -13,7 +14,6 @@ import type {
   VaccineDelegate,
   VaccineUpdateInput,
 } from '@shared/models/vaccine';
-import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
 import { BaseStore } from '@shared/stores/baseStore';
 import { injectable } from 'tsyringe';
 import { allowedVaccineSortFields } from '../constants';
@@ -65,7 +65,7 @@ export class VaccineStore
         isObligatory: data.isObligatory,
         minStockLevel: data.minStockLevel,
         createdBy: {
-          connect: { id: data.createdById },  // Store handles Prisma conversion
+          connect: { id: data.createdById }, // Store handles Prisma conversion
         },
       },
     });
@@ -102,10 +102,21 @@ export class VaccineStore
   async findMandatoryVaccinesNotTakenByUser(
     userId: string,
   ): Promise<Vaccine[]> {
+    return this.findAllVaccinesNotTakenByUser(userId, true);
+  }
+
+  async findOptionalVaccinesNotTakenByUser(userId: string): Promise<Vaccine[]> {
+    return this.findAllVaccinesNotTakenByUser(userId, false);
+  }
+
+  private async findAllVaccinesNotTakenByUser(
+    userId: string,
+    isObligatory?: boolean,
+  ): Promise<Vaccine[]> {
     return this.model.findMany({
       where: {
-        isObligatory: true,
         deletedAt: null,
+        isObligatory,
         applications: {
           none: {
             userId,

@@ -1,4 +1,5 @@
 import type { VaccineApplication } from '@infrastructure/database';
+import type { Vaccine } from '@shared/models/vaccine';
 import type {
   VaccineApplicationCreateInput,
   VaccineApplicationUpdateInput,
@@ -44,4 +45,6 @@ export interface IVaccineApplicationStore
     userId: string,
     vaccineId: string,
   ): Promise<VaccineApplication | null>;
+  countCompletedDosesByVaccine(vaccine: Vaccine): Promise<number>;
+  countPartialDosesByVaccine(vaccine: Vaccine): Promise<number>;
 }

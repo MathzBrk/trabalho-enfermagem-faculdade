@@ -7,6 +7,7 @@ import { VaccineHistoryStats } from '../../components/vaccineApplications/Vaccin
 import { VaccinesByTypeList } from '../../components/vaccineApplications/VaccinesByTypeList';
 import { PendingDosesList } from '../../components/vaccineApplications/PendingDosesList';
 import { MandatoryVaccinesList } from '../../components/vaccineApplications/MandatoryVaccinesList';
+import { OptionalVaccinesList } from '../../components/vaccineApplications/OptionalVaccinesList';
 import { useVaccinationHistory } from '../../hooks/useVaccinationHistory';
 import { useAuthStore } from '../../store/authStore';
 
@@ -174,6 +175,11 @@ export const VaccinationCardPage: React.FC = () => {
             {/* Mandatory Vaccines Not Taken */}
             {history.mandatoryNotTaken.length > 0 && (
               <MandatoryVaccinesList mandatoryNotTaken={history.mandatoryNotTaken} />
+            )}
+
+            {/* Optional Vaccines Not Taken */}
+            {history.optionalNotTaken.length > 0 && (
+              <OptionalVaccinesList optionalNotTaken={history.optionalNotTaken} />
             )}
 
             {/* Pending Doses */}

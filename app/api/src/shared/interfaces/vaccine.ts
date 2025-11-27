@@ -29,6 +29,7 @@ export interface IVaccineStore
     filters?: VaccineFilterParams,
   ): Promise<PaginatedResponse<Vaccine>>;
   findMandatoryVaccinesNotTakenByUser(userId: string): Promise<Vaccine[]>;
+  findOptionalVaccinesNotTakenByUser(userId: string): Promise<Vaccine[]>;
 
   /**
    * Atomically increments the vaccine's total stock

@@ -7,6 +7,7 @@ import { VaccineHistoryStats } from './VaccineHistoryStats';
 import { VaccinesByTypeList } from './VaccinesByTypeList';
 import { PendingDosesList } from './PendingDosesList';
 import { MandatoryVaccinesList } from './MandatoryVaccinesList';
+import { OptionalVaccinesList } from './OptionalVaccinesList';
 import { useVaccinationHistory } from '../../hooks/useVaccinationHistory';
 import { userService } from '../../services/user.service';
 import type { User } from '../../types';
@@ -200,6 +201,11 @@ export const VaccinationCardModal: React.FC<VaccinationCardModalProps> = ({
             {/* Mandatory Vaccines Not Taken */}
             {history.mandatoryNotTaken.length > 0 && (
               <MandatoryVaccinesList mandatoryNotTaken={history.mandatoryNotTaken} />
+            )}
+
+            {/* Optional Vaccines Not Taken */}
+            {history.optionalNotTaken.length > 0 && (
+              <OptionalVaccinesList optionalNotTaken={history.optionalNotTaken} />
             )}
 
             {/* Pending Doses */}

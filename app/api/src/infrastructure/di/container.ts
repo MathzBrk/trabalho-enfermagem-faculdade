@@ -2,6 +2,8 @@ import { AlertsController } from '@modules/alerts/controllers/alertsController';
 import { AlertsService } from '@modules/alerts/services/alertsService';
 import { UserService } from '@modules/user/services/userService';
 import { UserStore } from '@modules/user/stores/userStore';
+import { VaccinationCoverageController } from '@modules/vaccination-coverage/controllers/vaccinationCoverageController';
+import { VaccinationCoverageService } from '@modules/vaccination-coverage/services/vaccinationCoverage';
 import { VaccineApplicationService } from '@modules/vaccine-application/services/vaccineApplicationService';
 import { VaccineApplicationStore } from '@modules/vaccine-application/stores/vaccineApplicationStore';
 import { VaccineBatchService } from '@modules/vaccine-batch/services/vaccineBatchService';
@@ -88,6 +90,10 @@ export function setupContainer(): void {
     VaccineSchedulingService,
   );
   container.registerSingleton(TOKENS.AlertsService, AlertsService);
+  container.registerSingleton(
+    TOKENS.VaccinationCoverageService,
+    VaccinationCoverageService,
+  );
 
   // Register notification module services and infrastructure
   container.registerSingleton(TOKENS.IEventBus, NodeEventBus);
@@ -123,6 +129,7 @@ export function setupContainer(): void {
   // Register controllers
   container.registerSingleton(NotificationController);
   container.registerSingleton(AlertsController);
+  container.registerSingleton(VaccinationCoverageController);
 
   // Initialize notification system (register event handlers with event bus)
   const notificationBootstrap = container.resolve<NotificationBootstrap>(
@@ -156,6 +163,7 @@ export function setupContainer(): void {
   console.log('   └─ VaccineApplicationService → Registered as singleton');
   console.log('   └─ VaccineSchedulingService → Registered as singleton');
   console.log('   └─ AlertsService → Registered as singleton');
+  console.log('   └─ VaccinationCoverageService → Registered as singleton');
   console.log('   └─ NotificationService → Registered as singleton');
   console.log('   Infrastructure:');
   console.log('   └─ IEventBus → Using NodeEventBus (EventEmitter)');
