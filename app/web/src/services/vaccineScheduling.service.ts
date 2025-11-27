@@ -141,7 +141,7 @@ export const vaccineSchedulingService = {
    * This explicitly requests appointments where the authenticated user is the PATIENT.
    * By passing userId parameter, we tell the backend to show patient appointments only.
    *
-   * Backend behavior (schedulingsHelpert.ts):
+   * Backend behavior (schedulingsHelper.ts):
    * - When userId is provided: Returns appointments where userId === requesting user (as patient)
    * - Does NOT include nurse assignments
    *
