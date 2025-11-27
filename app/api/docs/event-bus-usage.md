@@ -51,6 +51,7 @@ Example logs you'll see:
   - Handler 'InAppVaccineScheduledHandler' failed: Error: Database connection lost
 ```
 
+
 ## Handler Isolation
 
 Each handler is wrapped in an error boundary:
@@ -58,13 +59,17 @@ Each handler is wrapped in an error boundary:
 - Failed handlers are logged but don't throw
 - The emit() call **never throws** due to handler errors
 
+
 ```typescript
 // Even if some handlers fail, this code continues normally
 await eventBus.emit(EventNames.VACCINE_SCHEDULED, payload);
 await otherService.doSomething(); // ✅ Always executes
 ```
 
+
+
 ## Use Cases
+
 
 ### Perfect For:
 - User notifications (in-app, email, SMS)
@@ -74,9 +79,12 @@ await otherService.doSomething(); // ✅ Always executes
 - Sending webhooks
 - All async side effects that shouldn't block the main flow
 
+
+
 ## Type Safety
 
 The Event Bus is fully typed. TypeScript will provide autocomplete for event data:
+
 
 ```typescript
 // Type parameter tells TypeScript what the event payload looks like
@@ -99,7 +107,9 @@ await eventBus.emit<VaccineScheduledEvent>(
 
 ## Future: Dead Letter Queue & Retry
 
+
 The current implementation logs all failures. In the future, you can extend `executeHandlersInBackground()` to:
+
 
 ```typescript
 // Inside NodeEventBus.executeHandlersInBackground()
@@ -125,9 +135,11 @@ This pattern allows you to:
 - Track failure rates in monitoring systems
 - Build a self-healing event system
 
+
 ## Migration to BullMQ
 
 When you're ready to scale, you can migrate to BullMQ without changing your service code:
+
 
 1. Create `BullMQEventBus.ts` implementing `IEventBus`
 2. Update DI container to use `BullMQEventBus` instead of `NodeEventBus`
