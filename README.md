@@ -27,7 +27,7 @@ univas-enfermagem/
 
 ## 🚀 Tecnologias
 
-### Backend ([app/api](./app/api))
+### Back-end ([app/api](./app/api))
 - **Node.js** + **Express** - Runtime e framework web
 - **TypeScript** - Tipagem estática
 - **Prisma ORM** - Gerenciamento de banco de dados
@@ -262,7 +262,7 @@ GET    /api/notifications           # Listar notificações
 ## 🧪 Testes
 
 ```bash
-# Backend
+# Back-end
 cd app/api
 npm run test
 
