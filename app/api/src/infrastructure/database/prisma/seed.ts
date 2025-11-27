@@ -1,5 +1,5 @@
-import { PrismaClient } from '../generated/prisma';
 import bcrypt from 'bcrypt';
+import { PrismaClient } from '../generated/prisma';
 
 const prisma = new PrismaClient();
 
@@ -8,6 +8,10 @@ async function main() {
 
   // Hash password for all users (using 'senha123' as default)
   const defaultPassword = await bcrypt.hash('senha123', 10);
+
+  // ============================================
+  // CREATE USERS
+  // ============================================
 
   // Create Manager users
   await prisma.user.upsert({
@@ -84,6 +88,21 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: 'enfermeira4@hospital.com' },
+    update: {},
+    create: {
+      name: 'Sandra Martins',
+      email: 'enfermeira4@hospital.com',
+      password: defaultPassword,
+      cpf: '222.333.444-55',
+      phone: '(11) 98765-4332',
+      coren: 'COREN-SP 456789',
+      role: 'NURSE',
+      isActive: true,
+    },
+  });
+
   // Create Employee users
   await prisma.user.upsert({
     where: { email: 'funcionario1@hospital.com' },
@@ -151,21 +170,6 @@ async function main() {
       cpf: '012.345.678-99',
       phone: '(11) 98765-4330',
       role: 'EMPLOYEE',
-      isActive: true,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'enfermeira4@hospital.com' },
-    update: {},
-    create: {
-      name: 'Sandra Martins',
-      email: 'enfermeira4@hospital.com',
-      password: defaultPassword,
-      cpf: '222.333.444-55',
-      phone: '(11) 98765-4332',
-      coren: 'COREN-SP 456789',
-      role: 'NURSE',
       isActive: true,
     },
   });
@@ -255,7 +259,10 @@ async function main() {
     },
   });
 
-  // Get user IDs for relationships
+  // ============================================
+  // GET USER REFERENCES
+  // ============================================
+
   const manager = await prisma.user.findUnique({
     where: { email: 'admin@hospital.com' },
   });
@@ -326,7 +333,32 @@ async function main() {
     throw new Error('Required users not found');
   }
 
-  // Create Vaccines
+  const allEmployees = [
+    employee1,
+    employee2,
+    employee3,
+    employee4,
+    employee5,
+    employee6,
+    employee7,
+    employee8,
+    employee9,
+    employee10,
+  ];
+  const allNurses = [nurse1, nurse2, nurse3, nurse4];
+
+  // Buscar TODOS os usuários ativos (exceto inativo) para aplicações de vacinas
+  const allActiveUsers = await prisma.user.findMany({
+    where: {
+      isActive: true,
+    },
+  });
+
+  // ============================================
+  // CREATE VACCINES
+  // ============================================
+
+  // Vaccine 1: COVID-19 (2 doses) - TODOS OS USUÁRIOS TOMARAM
   const covidVaccine = await prisma.vaccine.upsert({
     where: {
       name_manufacturer: {
@@ -347,6 +379,7 @@ async function main() {
     },
   });
 
+  // Vaccine 2: Flu (1 dose) - TODOS OS USUÁRIOS TOMARAM
   const fluVaccine = await prisma.vaccine.upsert({
     where: {
       name_manufacturer: {
@@ -367,6 +400,7 @@ async function main() {
     },
   });
 
+  // Vaccine 3: Hepatitis B (3 doses) - Alguns completaram, outros parcialmente
   const hepatitisVaccine = await prisma.vaccine.upsert({
     where: {
       name_manufacturer: {
@@ -387,6 +421,7 @@ async function main() {
     },
   });
 
+  // Vaccine 4: Tetanus (1 dose)
   const tetanusVaccine = await prisma.vaccine.upsert({
     where: {
       name_manufacturer: {
@@ -407,6 +442,7 @@ async function main() {
     },
   });
 
+  // Vaccine 5: MMR (2 doses) - Alguns completaram, outros parcialmente
   const mmrVaccine = await prisma.vaccine.upsert({
     where: {
       name_manufacturer: {
@@ -427,6 +463,7 @@ async function main() {
     },
   });
 
+  // Vaccine 6: Yellow Fever (1 dose)
   const yellowFeverVaccine = await prisma.vaccine.upsert({
     where: {
       name_manufacturer: {
@@ -447,711 +484,729 @@ async function main() {
     },
   });
 
-  // Create Vaccine Batches
-  const covidBatch1 = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'COVID-PF-2024-001' },
+  // Vaccine 7: HPV (3 doses) - Alguns completaram, outros parcialmente
+  const hpvVaccine = await prisma.vaccine.upsert({
+    where: {
+      name_manufacturer: {
+        name: 'HPV Quadrivalente',
+        manufacturer: 'MSD',
+      },
+    },
     update: {},
     create: {
-      batchNumber: 'COVID-PF-2024-001',
+      name: 'HPV Quadrivalente',
+      manufacturer: 'MSD',
+      description:
+        'Vacina contra HPV. Proteção contra os tipos 6, 11, 16 e 18 do vírus.',
+      dosesRequired: 3,
+      intervalDays: 60,
+      isObligatory: false,
+      createdById: manager2!.id,
+    },
+  });
+
+  // ============================================
+  // CREATE VACCINE BATCHES
+  // ============================================
+  // A maioria com validade futura, apenas 3 vencidos
+
+  // COVID Batches
+  const covidBatch1 = await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'COVID-PF-2025-001' },
+    update: {},
+    create: {
+      batchNumber: 'COVID-PF-2025-001',
       vaccineId: covidVaccine.id,
       initialQuantity: 1000,
-      currentQuantity: 850,
-      expirationDate: new Date('2025-06-30'),
-      receivedDate: new Date('2024-01-15'),
+      currentQuantity: 750,
+      expirationDate: new Date('2026-06-30'),
+      receivedDate: new Date('2025-01-15'),
       status: 'AVAILABLE',
       createdById: manager.id,
     },
   });
 
   const covidBatch2 = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'COVID-PF-2024-002' },
+    where: { batchNumber: 'COVID-PF-2025-002' },
     update: {},
     create: {
-      batchNumber: 'COVID-PF-2024-002',
+      batchNumber: 'COVID-PF-2025-002',
       vaccineId: covidVaccine.id,
-      initialQuantity: 500,
-      currentQuantity: 500,
-      expirationDate: new Date('2025-08-31'),
-      receivedDate: new Date('2024-03-01'),
+      initialQuantity: 800,
+      currentQuantity: 600,
+      expirationDate: new Date('2026-08-31'),
+      receivedDate: new Date('2025-03-01'),
       status: 'AVAILABLE',
       createdById: manager.id,
     },
   });
 
-  const fluBatch = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'FLU-SP-2024-001' },
+  // Flu Batches
+  const fluBatch1 = await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'FLU-SP-2025-001' },
     update: {},
     create: {
-      batchNumber: 'FLU-SP-2024-001',
+      batchNumber: 'FLU-SP-2025-001',
       vaccineId: fluVaccine.id,
       initialQuantity: 2000,
-      currentQuantity: 1700,
-      expirationDate: new Date('2025-03-31'),
-      receivedDate: new Date('2024-02-01'),
+      currentQuantity: 1664,
+      expirationDate: new Date('2026-03-31'),
+      receivedDate: new Date('2025-02-01'),
       status: 'AVAILABLE',
       createdById: manager.id,
     },
   });
 
-  const hepatitisBatch = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'HEP-B-2024-001' },
+  // LOTE VENCIDO 1
+  await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'FLU-SP-2024-OLD' },
     update: {},
     create: {
-      batchNumber: 'HEP-B-2024-001',
+      batchNumber: 'FLU-SP-2024-OLD',
+      vaccineId: fluVaccine.id,
+      initialQuantity: 500,
+      currentQuantity: 120,
+      expirationDate: new Date('2025-01-15'),
+      receivedDate: new Date('2024-06-01'),
+      status: 'EXPIRED',
+      createdById: manager.id,
+    },
+  });
+
+  // Hepatitis B Batches
+  const hepatitisBatch1 = await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'HEP-B-2025-001' },
+    update: {},
+    create: {
+      batchNumber: 'HEP-B-2025-001',
       vaccineId: hepatitisVaccine.id,
-      initialQuantity: 800,
-      currentQuantity: 650,
-      expirationDate: new Date('2026-12-31'),
-      receivedDate: new Date('2024-01-10'),
+      initialQuantity: 1200,
+      currentQuantity: 900,
+      expirationDate: new Date('2027-12-31'),
+      receivedDate: new Date('2025-01-10'),
       status: 'AVAILABLE',
       createdById: manager.id,
     },
   });
 
-  const tetanusBatch = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'TET-DT-2024-001' },
+  // LOTE VENCIDO 2
+  await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'HEP-B-2024-OLD' },
     update: {},
     create: {
-      batchNumber: 'TET-DT-2024-001',
+      batchNumber: 'HEP-B-2024-OLD',
+      vaccineId: hepatitisVaccine.id,
+      initialQuantity: 300,
+      currentQuantity: 80,
+      expirationDate: new Date('2025-02-28'),
+      receivedDate: new Date('2024-05-15'),
+      status: 'EXPIRED',
+      createdById: manager.id,
+    },
+  });
+
+  // Tetanus Batch
+  const tetanusBatch = await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'TET-DT-2025-001' },
+    update: {},
+    create: {
+      batchNumber: 'TET-DT-2025-001',
       vaccineId: tetanusVaccine.id,
       initialQuantity: 600,
-      currentQuantity: 580,
-      expirationDate: new Date('2027-01-31'),
-      receivedDate: new Date('2024-02-15'),
+      currentQuantity: 584,
+      expirationDate: new Date('2028-01-31'),
+      receivedDate: new Date('2025-02-15'),
       status: 'AVAILABLE',
       createdById: manager.id,
     },
   });
 
+  // MMR Batches
   const mmrBatch1 = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'MMR-GSK-2024-001' },
+    where: { batchNumber: 'MMR-GSK-2025-001' },
     update: {},
     create: {
-      batchNumber: 'MMR-GSK-2024-001',
+      batchNumber: 'MMR-GSK-2025-001',
       vaccineId: mmrVaccine.id,
-      initialQuantity: 400,
-      currentQuantity: 350,
-      expirationDate: new Date('2025-12-31'),
-      receivedDate: new Date('2024-02-20'),
+      initialQuantity: 800,
+      currentQuantity: 770,
+      expirationDate: new Date('2026-12-31'),
+      receivedDate: new Date('2025-02-20'),
       status: 'AVAILABLE',
       createdById: manager2!.id,
     },
   });
 
+  // Yellow Fever Batch
   const yellowFeverBatch = await prisma.vaccineBatch.upsert({
-    where: { batchNumber: 'YF-BIO-2024-001' },
+    where: { batchNumber: 'YF-BIO-2025-001' },
     update: {},
     create: {
-      batchNumber: 'YF-BIO-2024-001',
+      batchNumber: 'YF-BIO-2025-001',
       vaccineId: yellowFeverVaccine.id,
-      initialQuantity: 300,
-      currentQuantity: 250,
-      expirationDate: new Date('2026-06-30'),
-      receivedDate: new Date('2024-03-10'),
+      initialQuantity: 500,
+      currentQuantity: 420,
+      expirationDate: new Date('2027-06-30'),
+      receivedDate: new Date('2025-03-10'),
       status: 'AVAILABLE',
       createdById: manager.id,
     },
   });
 
-  // Update vaccine totalStock with sum of all batch quantities
-  await prisma.vaccine.update({
-    where: { id: covidVaccine.id },
-    data: { totalStock: 1350 }, // 850 + 500
-  });
-
-  await prisma.vaccine.update({
-    where: { id: fluVaccine.id },
-    data: { totalStock: 1708 }, // 1700 + 8
-  });
-
-  await prisma.vaccine.update({
-    where: { id: hepatitisVaccine.id },
-    data: { totalStock: 800 }, // 650 + 150
-  });
-
-  await prisma.vaccine.update({
-    where: { id: tetanusVaccine.id },
-    data: { totalStock: 580 },
-  });
-
-  await prisma.vaccine.update({
-    where: { id: mmrVaccine.id },
-    data: { totalStock: 350 },
-  });
-
-  await prisma.vaccine.update({
-    where: { id: yellowFeverVaccine.id },
-    data: { totalStock: 250 },
-  });
-
-  // Create Vaccine Applications
-  // Employee 1 - Complete COVID vaccination (2 doses)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee1.id,
-        vaccineId: covidVaccine.id,
-        doseNumber: 1,
-      },
-    },
+  // HPV Batches
+  const hpvBatch1 = await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'HPV-MSD-2025-001' },
     update: {},
     create: {
-      userId: employee1.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch1.id,
-      appliedById: nurse1.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-10'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Primeira dose aplicada sem intercorrências',
+      batchNumber: 'HPV-MSD-2025-001',
+      vaccineId: hpvVaccine.id,
+      initialQuantity: 600,
+      currentQuantity: 480,
+      expirationDate: new Date('2026-09-30'),
+      receivedDate: new Date('2025-01-20'),
+      status: 'AVAILABLE',
+      createdById: manager2!.id,
     },
   });
 
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee1.id,
+  // LOTE VENCIDO 3
+  await prisma.vaccineBatch.upsert({
+    where: { batchNumber: 'HPV-MSD-2024-OLD' },
+    update: {},
+    create: {
+      batchNumber: 'HPV-MSD-2024-OLD',
+      vaccineId: hpvVaccine.id,
+      initialQuantity: 200,
+      currentQuantity: 45,
+      expirationDate: new Date('2025-03-15'),
+      receivedDate: new Date('2024-07-01'),
+      status: 'EXPIRED',
+      createdById: manager2!.id,
+    },
+  });
+
+  // ============================================
+  // CREATE VACCINE APPLICATIONS
+  // ============================================
+
+  // COVID-19: TODOS os EMPLOYEES tomaram todas as doses (2 doses)
+  for (let i = 0; i < allEmployees.length; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+    const batch = i % 2 === 0 ? covidBatch1 : covidBatch2;
+
+    // Dose 1
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: employee.id,
+          vaccineId: covidVaccine.id,
+          doseNumber: 1,
+        },
+      },
+      update: {},
+      create: {
+        userId: employee.id,
         vaccineId: covidVaccine.id,
+        batchId: batch.id,
+        appliedById: nurse.id,
+        doseNumber: 1,
+        applicationDate: new Date('2025-06-10'),
+        applicationSite: 'Left Deltoid',
+        observations: 'Primeira dose COVID-19',
+      },
+    });
+
+    // Dose 2
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: employee.id,
+          vaccineId: covidVaccine.id,
+          doseNumber: 2,
+        },
+      },
+      update: {},
+      create: {
+        userId: employee.id,
+        vaccineId: covidVaccine.id,
+        batchId: batch.id,
+        appliedById: nurse.id,
         doseNumber: 2,
+        applicationDate: new Date('2025-07-01'),
+        applicationSite: 'Right Deltoid',
+        observations: 'Segunda dose COVID-19 - esquema completo',
       },
-    },
-    update: {},
-    create: {
-      userId: employee1.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch1.id,
-      appliedById: nurse1.id,
-      doseNumber: 2,
-      applicationDate: new Date('2024-03-31'),
-      applicationSite: 'Right Deltoid',
-      observations: 'Segunda dose - esquema completo',
-    },
-  });
+    });
+  }
 
-  // Employee 1 - Flu vaccine
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee1.id,
+  // INFLUENZA: TODOS os usuários ativos tomaram (1 dose) - 100% COVERAGE
+  for (let i = 0; i < allActiveUsers.length; i++) {
+    const user = allActiveUsers[i];
+    const applierNurse = allNurses[i % allNurses.length];
+
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: user.id,
+          vaccineId: fluVaccine.id,
+          doseNumber: 1,
+        },
+      },
+      update: {},
+      create: {
+        userId: user.id,
         vaccineId: fluVaccine.id,
+        batchId: fluBatch1.id,
+        appliedById: applierNurse.id,
         doseNumber: 1,
+        applicationDate: new Date('2025-08-05'),
+        applicationSite: 'Left Arm',
+        observations: 'Vacinação anual contra gripe - cobertura 100%',
       },
-    },
-    update: {},
-    create: {
-      userId: employee1.id,
-      vaccineId: fluVaccine.id,
-      batchId: fluBatch.id,
-      appliedById: nurse2.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-04-05'),
-      applicationSite: 'Left Arm',
-      observations: 'Campanha de vacinação contra gripe',
-    },
-  });
+    });
+  }
 
-  // Employee 2 - COVID first dose only (incomplete)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee2.id,
-        vaccineId: covidVaccine.id,
-        doseNumber: 1,
+  // HEPATITE B (3 doses): Distribuição variada
+  // Funcionários 1-3: Completaram as 3 doses
+  for (let i = 0; i < 3; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    for (let dose = 1; dose <= 3; dose++) {
+      const daysOffset = (dose - 1) * 30;
+      const baseDate = new Date('2025-04-01');
+      baseDate.setDate(baseDate.getDate() + daysOffset);
+
+      await prisma.vaccineApplication.upsert({
+        where: {
+          userId_vaccineId_doseNumber: {
+            userId: employee.id,
+            vaccineId: hepatitisVaccine.id,
+            doseNumber: dose,
+          },
+        },
+        update: {},
+        create: {
+          userId: employee.id,
+          vaccineId: hepatitisVaccine.id,
+          batchId: hepatitisBatch1.id,
+          appliedById: nurse.id,
+          doseNumber: dose,
+          applicationDate: baseDate,
+          applicationSite: dose % 2 === 0 ? 'Right Deltoid' : 'Left Deltoid',
+          observations: `Dose ${dose}/3 de Hepatite B`,
+        },
+      });
+    }
+  }
+
+  // Funcionários 4-6: Tomaram 2 doses (parcial)
+  for (let i = 3; i < 6; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    for (let dose = 1; dose <= 2; dose++) {
+      const daysOffset = (dose - 1) * 30;
+      const baseDate = new Date('2025-05-15');
+      baseDate.setDate(baseDate.getDate() + daysOffset);
+
+      await prisma.vaccineApplication.upsert({
+        where: {
+          userId_vaccineId_doseNumber: {
+            userId: employee.id,
+            vaccineId: hepatitisVaccine.id,
+            doseNumber: dose,
+          },
+        },
+        update: {},
+        create: {
+          userId: employee.id,
+          vaccineId: hepatitisVaccine.id,
+          batchId: hepatitisBatch1.id,
+          appliedById: nurse.id,
+          doseNumber: dose,
+          applicationDate: baseDate,
+          applicationSite: dose % 2 === 0 ? 'Right Deltoid' : 'Left Deltoid',
+          observations: `Dose ${dose}/3 de Hepatite B - falta dose 3`,
+        },
+      });
+    }
+  }
+
+  // Funcionários 7-9: Tomaram apenas 1 dose (parcial)
+  for (let i = 6; i < 9; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: employee.id,
+          vaccineId: hepatitisVaccine.id,
+          doseNumber: 1,
+        },
       },
-    },
-    update: {},
-    create: {
-      userId: employee2.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch1.id,
-      appliedById: nurse1.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-15'),
-      applicationSite: 'Right Deltoid',
-      observations: 'Aguardando segunda dose',
-    },
-  });
-
-  // Employee 2 - Hepatitis B (dose 1 of 3)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee2.id,
+      update: {},
+      create: {
+        userId: employee.id,
         vaccineId: hepatitisVaccine.id,
+        batchId: hepatitisBatch1.id,
+        appliedById: nurse.id,
         doseNumber: 1,
+        applicationDate: new Date('2025-07-20'),
+        applicationSite: 'Left Deltoid',
+        observations: 'Dose 1/3 de Hepatite B - faltam doses 2 e 3',
       },
-    },
-    update: {},
-    create: {
-      userId: employee2.id,
-      vaccineId: hepatitisVaccine.id,
-      batchId: hepatitisBatch.id,
-      appliedById: nurse2.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-20'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Início do esquema vacinal de Hepatite B',
-    },
-  });
+    });
+  }
 
-  // Employee 3 - Tetanus
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee3.id,
+  // Funcionário 10: Não tomou nenhuma dose ainda
+
+  // TÉTANO (1 dose): TODOS os usuários ativos tomaram (100% COVERAGE)
+  for (let i = 0; i < allActiveUsers.length; i++) {
+    const user = allActiveUsers[i];
+    const applierNurse = allNurses[i % allNurses.length];
+
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: user.id,
+          vaccineId: tetanusVaccine.id,
+          doseNumber: 1,
+        },
+      },
+      update: {},
+      create: {
+        userId: user.id,
         vaccineId: tetanusVaccine.id,
+        batchId: tetanusBatch.id,
+        appliedById: applierNurse.id,
         doseNumber: 1,
+        applicationDate: new Date('2025-09-10'),
+        applicationSite: 'Right Arm',
+        observations: 'Reforço de tétano - cobertura 100%',
       },
-    },
-    update: {},
-    create: {
-      userId: employee3.id,
-      vaccineId: tetanusVaccine.id,
-      batchId: tetanusBatch.id,
-      appliedById: nurse1.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-04-01'),
-      applicationSite: 'Right Arm',
-      observations: 'Reforço de rotina',
-    },
-  });
+    });
+  }
 
-  // Employee 3 - Flu vaccine
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee3.id,
-        vaccineId: fluVaccine.id,
-        doseNumber: 1,
+  // MMR (2 doses): 90% de TODOS os usuários ativos completaram
+  // Total de usuários ativos: 16 (2 managers + 4 nurses + 10 employees)
+  // 90% de 16 = 14.4, arredondando = 14 usuários completam, 2 usuários ficam com 1 dose
+  const totalActiveUsers = allActiveUsers.length;
+  const usersToComplete = Math.floor(totalActiveUsers * 0.9); // 14 usuários
+
+  // Primeiros 14 usuários: Completaram as 2 doses (90%)
+  for (let i = 0; i < usersToComplete; i++) {
+    const user = allActiveUsers[i];
+    const applierNurse = allNurses[i % allNurses.length];
+
+    for (let dose = 1; dose <= 2; dose++) {
+      const daysOffset = (dose - 1) * 30;
+      const baseDate = new Date('2025-05-01');
+      baseDate.setDate(baseDate.getDate() + daysOffset);
+
+      await prisma.vaccineApplication.upsert({
+        where: {
+          userId_vaccineId_doseNumber: {
+            userId: user.id,
+            vaccineId: mmrVaccine.id,
+            doseNumber: dose,
+          },
+        },
+        update: {},
+        create: {
+          userId: user.id,
+          vaccineId: mmrVaccine.id,
+          batchId: mmrBatch1.id,
+          appliedById: applierNurse.id,
+          doseNumber: dose,
+          applicationDate: baseDate,
+          applicationSite: dose % 2 === 0 ? 'Right Deltoid' : 'Left Deltoid',
+          observations: `Dose ${dose}/2 de MMR - cobertura 90%`,
+        },
+      });
+    }
+  }
+
+  // Últimos 2 usuários: Tomaram apenas 1 dose (10% incompleto)
+  for (let i = usersToComplete; i < totalActiveUsers; i++) {
+    const user = allActiveUsers[i];
+    const applierNurse = allNurses[i % allNurses.length];
+
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: user.id,
+          vaccineId: mmrVaccine.id,
+          doseNumber: 1,
+        },
       },
-    },
-    update: {},
-    create: {
-      userId: employee3.id,
-      vaccineId: fluVaccine.id,
-      batchId: fluBatch.id,
-      appliedById: nurse2.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-04-10'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Vacinação preventiva anual',
-    },
-  });
-
-  // Nurse 1 - COVID vaccination (complete, administered by Nurse 2)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: nurse1.id,
-        vaccineId: covidVaccine.id,
-        doseNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      userId: nurse1.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch2.id,
-      appliedById: nurse2.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-05'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Vacinação de profissional de saúde',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: nurse1.id,
-        vaccineId: covidVaccine.id,
-        doseNumber: 2,
-      },
-    },
-    update: {},
-    create: {
-      userId: nurse1.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch2.id,
-      appliedById: nurse2.id,
-      doseNumber: 2,
-      applicationDate: new Date('2024-03-26'),
-      applicationSite: 'Right Deltoid',
-      observations: 'Esquema completo - profissional de saúde',
-    },
-  });
-
-  // Employee 4 - Hepatitis B (complete 3 doses)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee4!.id,
-        vaccineId: hepatitisVaccine.id,
-        doseNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee4!.id,
-      vaccineId: hepatitisVaccine.id,
-      batchId: hepatitisBatch.id,
-      appliedById: nurse3!.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-01-10'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Primeira dose do esquema',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee4!.id,
-        vaccineId: hepatitisVaccine.id,
-        doseNumber: 2,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee4!.id,
-      vaccineId: hepatitisVaccine.id,
-      batchId: hepatitisBatch.id,
-      appliedById: nurse3!.id,
-      doseNumber: 2,
-      applicationDate: new Date('2024-02-09'),
-      applicationSite: 'Right Deltoid',
-      observations: 'Segunda dose aplicada',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee4!.id,
-        vaccineId: hepatitisVaccine.id,
-        doseNumber: 3,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee4!.id,
-      vaccineId: hepatitisVaccine.id,
-      batchId: hepatitisBatch.id,
-      appliedById: nurse1.id,
-      doseNumber: 3,
-      applicationDate: new Date('2024-03-11'),
-      applicationSite: 'Left Arm',
-      observations: 'Esquema completo de Hepatite B',
-    },
-  });
-
-  // Employee 5 - MMR (first dose)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee5!.id,
+      update: {},
+      create: {
+        userId: user.id,
         vaccineId: mmrVaccine.id,
+        batchId: mmrBatch1.id,
+        appliedById: applierNurse.id,
         doseNumber: 1,
+        applicationDate: new Date('2025-06-15'),
+        applicationSite: 'Left Deltoid',
+        observations: 'Dose 1/2 de MMR - falta dose 2 (10% incompleto)',
       },
-    },
-    update: {},
-    create: {
-      userId: employee5!.id,
-      vaccineId: mmrVaccine.id,
-      batchId: mmrBatch1.id,
-      appliedById: nurse2.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-12'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Primeira dose - aguardando segunda',
-    },
-  });
+    });
+  }
 
-  // Employee 6 - Yellow Fever
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee6!.id,
+  // FEBRE AMARELA (1 dose): Alguns funcionários tomaram
+  for (let i = 0; i < 5; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: employee.id,
+          vaccineId: yellowFeverVaccine.id,
+          doseNumber: 1,
+        },
+      },
+      update: {},
+      create: {
+        userId: employee.id,
         vaccineId: yellowFeverVaccine.id,
+        batchId: yellowFeverBatch.id,
+        appliedById: nurse.id,
         doseNumber: 1,
+        applicationDate: new Date('2025-07-05'),
+        applicationSite: 'Right Arm',
+        observations: 'Dose única - válida por 10 anos',
       },
-    },
-    update: {},
-    create: {
-      userId: employee6!.id,
-      vaccineId: yellowFeverVaccine.id,
-      batchId: yellowFeverBatch.id,
-      appliedById: nurse4!.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-20'),
-      applicationSite: 'Right Arm',
-      observations: 'Dose única - válida por 10 anos',
-    },
-  });
+    });
+  }
 
-  // Employee 7 - COVID complete + Flu
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee7!.id,
-        vaccineId: covidVaccine.id,
+  // HPV (3 doses): Distribuição variada
+  // Funcionários 1-2: Completaram as 3 doses
+  for (let i = 0; i < 2; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    for (let dose = 1; dose <= 3; dose++) {
+      const daysOffset = (dose - 1) * 60;
+      const baseDate = new Date('2025-03-01');
+      baseDate.setDate(baseDate.getDate() + daysOffset);
+
+      await prisma.vaccineApplication.upsert({
+        where: {
+          userId_vaccineId_doseNumber: {
+            userId: employee.id,
+            vaccineId: hpvVaccine.id,
+            doseNumber: dose,
+          },
+        },
+        update: {},
+        create: {
+          userId: employee.id,
+          vaccineId: hpvVaccine.id,
+          batchId: hpvBatch1.id,
+          appliedById: nurse.id,
+          doseNumber: dose,
+          applicationDate: baseDate,
+          applicationSite: dose % 2 === 0 ? 'Right Deltoid' : 'Left Deltoid',
+          observations: `Dose ${dose}/3 de HPV`,
+        },
+      });
+    }
+  }
+
+  // Funcionários 3-5: Tomaram 2 doses (parcial)
+  for (let i = 2; i < 5; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    for (let dose = 1; dose <= 2; dose++) {
+      const daysOffset = (dose - 1) * 60;
+      const baseDate = new Date('2025-04-01');
+      baseDate.setDate(baseDate.getDate() + daysOffset);
+
+      await prisma.vaccineApplication.upsert({
+        where: {
+          userId_vaccineId_doseNumber: {
+            userId: employee.id,
+            vaccineId: hpvVaccine.id,
+            doseNumber: dose,
+          },
+        },
+        update: {},
+        create: {
+          userId: employee.id,
+          vaccineId: hpvVaccine.id,
+          batchId: hpvBatch1.id,
+          appliedById: nurse.id,
+          doseNumber: dose,
+          applicationDate: baseDate,
+          applicationSite: dose % 2 === 0 ? 'Right Deltoid' : 'Left Deltoid',
+          observations: `Dose ${dose}/3 de HPV - falta dose 3`,
+        },
+      });
+    }
+  }
+
+  // Funcionários 6-8: Tomaram apenas 1 dose (parcial)
+  for (let i = 5; i < 8; i++) {
+    const employee = allEmployees[i];
+    const nurse = allNurses[i % allNurses.length];
+
+    await prisma.vaccineApplication.upsert({
+      where: {
+        userId_vaccineId_doseNumber: {
+          userId: employee.id,
+          vaccineId: hpvVaccine.id,
+          doseNumber: 1,
+        },
+      },
+      update: {},
+      create: {
+        userId: employee.id,
+        vaccineId: hpvVaccine.id,
+        batchId: hpvBatch1.id,
+        appliedById: nurse.id,
         doseNumber: 1,
+        applicationDate: new Date('2025-08-20'),
+        applicationSite: 'Left Deltoid',
+        observations: 'Dose 1/3 de HPV - faltam doses 2 e 3',
       },
-    },
-    update: {},
-    create: {
-      userId: employee7!.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch1.id,
-      appliedById: nurse1.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-02-15'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Primeira dose COVID',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee7!.id,
-        vaccineId: covidVaccine.id,
-        doseNumber: 2,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee7!.id,
-      vaccineId: covidVaccine.id,
-      batchId: covidBatch1.id,
-      appliedById: nurse2.id,
-      doseNumber: 2,
-      applicationDate: new Date('2024-03-07'),
-      applicationSite: 'Right Deltoid',
-      observations: 'Segunda dose - esquema completo',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee7!.id,
-        vaccineId: fluVaccine.id,
-        doseNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee7!.id,
-      vaccineId: fluVaccine.id,
-      batchId: fluBatch.id,
-      appliedById: nurse3!.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-04-08'),
-      applicationSite: 'Left Arm',
-      observations: 'Campanha de vacinação',
-    },
-  });
-
-  // Employee 8 - Tetanus + MMR (complete)
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee8!.id,
-        vaccineId: tetanusVaccine.id,
-        doseNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee8!.id,
-      vaccineId: tetanusVaccine.id,
-      batchId: tetanusBatch.id,
-      appliedById: nurse4!.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-02-20'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Reforço de tétano',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee8!.id,
-        vaccineId: mmrVaccine.id,
-        doseNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee8!.id,
-      vaccineId: mmrVaccine.id,
-      batchId: mmrBatch1.id,
-      appliedById: nurse1.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-03-01'),
-      applicationSite: 'Right Deltoid',
-      observations: 'Primeira dose MMR',
-    },
-  });
-
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee8!.id,
-        vaccineId: mmrVaccine.id,
-        doseNumber: 2,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee8!.id,
-      vaccineId: mmrVaccine.id,
-      batchId: mmrBatch1.id,
-      appliedById: nurse2.id,
-      doseNumber: 2,
-      applicationDate: new Date('2024-03-31'),
-      applicationSite: 'Left Deltoid',
-      observations: 'Segunda dose - esquema completo MMR',
-    },
-  });
-
-  // Employee 9 - Flu only
-  await prisma.vaccineApplication.upsert({
-    where: {
-      userId_vaccineId_doseNumber: {
-        userId: employee9!.id,
-        vaccineId: fluVaccine.id,
-        doseNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      userId: employee9!.id,
-      vaccineId: fluVaccine.id,
-      batchId: fluBatch.id,
-      appliedById: nurse3!.id,
-      doseNumber: 1,
-      applicationDate: new Date('2024-04-15'),
-      applicationSite: 'Right Arm',
-      observations: 'Vacinação contra gripe',
-    },
-  });
+    });
+  }
 
   // ============================================
-  // CREATE VACCINE SCHEDULINGS
+  // CREATE VACCINE SCHEDULINGS (FUTURO - após 27/11/2025)
   // ============================================
 
-  // Scheduled - Employee 2 needs COVID dose 2
+  // SCHEDULED - Hepatite B dose 3 para funcionários que tomaram 2 doses
   await prisma.vaccineScheduling.create({
     data: {
-      userId: employee2.id,
-      vaccineId: covidVaccine.id,
-      assignedNurseId: nurse1.id,
-      scheduledDate: new Date('2025-12-01T10:00:00'),
-      doseNumber: 2,
-      status: 'SCHEDULED',
-      notes: 'Segunda dose COVID-19 - completar esquema vacinal',
-    },
-  });
-
-  // Confirmed - Employee 5 needs MMR dose 2
-  await prisma.vaccineScheduling.create({
-    data: {
-      userId: employee5!.id,
-      vaccineId: mmrVaccine.id,
-      assignedNurseId: nurse2.id,
-      scheduledDate: new Date('2025-12-05T14:00:00'),
-      doseNumber: 2,
-      status: 'CONFIRMED',
-      notes: 'Segunda dose MMR - paciente confirmou presença',
-    },
-  });
-
-  // Scheduled - Employee 2 needs Hepatitis B dose 2
-  await prisma.vaccineScheduling.create({
-    data: {
-      userId: employee2.id,
+      userId: employee4.id,
       vaccineId: hepatitisVaccine.id,
-      assignedNurseId: nurse3!.id,
-      scheduledDate: new Date('2025-12-10T09:30:00'),
+      assignedNurseId: nurse1.id,
+      scheduledDate: new Date('2025-12-15T10:00:00'),
+      doseNumber: 3,
+      status: 'SCHEDULED',
+      notes: 'Terceira dose de Hepatite B - completar esquema vacinal',
+    },
+  });
+
+  await prisma.vaccineScheduling.create({
+    data: {
+      userId: employee5.id,
+      vaccineId: hepatitisVaccine.id,
+      assignedNurseId: nurse2.id,
+      scheduledDate: new Date('2025-12-20T14:30:00'),
+      doseNumber: 3,
+      status: 'SCHEDULED',
+      notes: 'Terceira dose de Hepatite B',
+    },
+  });
+
+  // SCHEDULED - Hepatite B dose 2 para funcionários que tomaram 1 dose
+  await prisma.vaccineScheduling.create({
+    data: {
+      userId: employee7.id,
+      vaccineId: hepatitisVaccine.id,
+      assignedNurseId: nurse3.id,
+      scheduledDate: new Date('2025-11-28T09:00:00'),
       doseNumber: 2,
       status: 'SCHEDULED',
       notes: 'Segunda dose de Hepatite B',
     },
   });
 
-  // Scheduled - Employee 10 - First COVID dose
+  // CONFIRMED - HPV doses pendentes
   await prisma.vaccineScheduling.create({
     data: {
-      userId: employee10!.id,
-      vaccineId: covidVaccine.id,
-      assignedNurseId: nurse4!.id,
-      scheduledDate: new Date('2025-11-25T11:00:00'),
-      doseNumber: 1,
+      userId: employee3.id,
+      vaccineId: hpvVaccine.id,
+      assignedNurseId: nurse4.id,
+      scheduledDate: new Date('2025-12-01T10:30:00'),
+      doseNumber: 3,
       status: 'CONFIRMED',
-      notes: 'Primeira dose COVID-19 - novo funcionário',
+      notes: 'Terceira dose de HPV - confirmado',
     },
   });
 
-  // Scheduled - Employee 10 - Hepatitis B
-  await prisma.vaccineScheduling.create({
-    data: {
-      userId: employee10!.id,
-      vaccineId: hepatitisVaccine.id,
-      assignedNurseId: nurse1.id,
-      scheduledDate: new Date('2025-11-26T15:00:00'),
-      doseNumber: 1,
-      status: 'SCHEDULED',
-      notes: 'Iniciar esquema de Hepatite B',
-    },
-  });
+  // SCHEDULED - MMR dose 2 para os 2 usuários que não completaram (10%)
+  const incompleteMmrUsers = allActiveUsers.slice(usersToComplete);
 
-  // Scheduled - Employee 9 - Tetanus
+  if (incompleteMmrUsers.length > 0) {
+    await prisma.vaccineScheduling.create({
+      data: {
+        userId: incompleteMmrUsers[0].id,
+        vaccineId: mmrVaccine.id,
+        assignedNurseId: nurse1.id,
+        scheduledDate: new Date('2025-12-18T13:30:00'),
+        doseNumber: 2,
+        status: 'SCHEDULED',
+        notes: 'Segunda dose de MMR - completar esquema vacinal (90% coverage)',
+      },
+    });
+  }
+
+  if (incompleteMmrUsers.length > 1) {
+    await prisma.vaccineScheduling.create({
+      data: {
+        userId: incompleteMmrUsers[1].id,
+        vaccineId: mmrVaccine.id,
+        assignedNurseId: nurse2.id,
+        scheduledDate: new Date('2025-12-22T10:00:00'),
+        doseNumber: 2,
+        status: 'SCHEDULED',
+        notes: 'Segunda dose de MMR - completar esquema vacinal (90% coverage)',
+      },
+    });
+  }
+
+  // CANCELLED - Alguns agendamentos cancelados
   await prisma.vaccineScheduling.create({
     data: {
-      userId: employee9!.id,
-      vaccineId: tetanusVaccine.id,
+      userId: employee9.id,
+      vaccineId: yellowFeverVaccine.id,
       assignedNurseId: nurse2.id,
-      scheduledDate: new Date('2025-11-28T10:30:00'),
-      doseNumber: 1,
-      status: 'SCHEDULED',
-      notes: 'Reforço de tétano - obrigatório',
-    },
-  });
-
-  // Cancelled - Employee 6 cancelled MMR
-  await prisma.vaccineScheduling.create({
-    data: {
-      userId: employee6!.id,
-      vaccineId: mmrVaccine.id,
-      assignedNurseId: nurse3!.id,
-      scheduledDate: new Date('2024-04-20T14:00:00'),
+      scheduledDate: new Date('2025-12-03T14:00:00'),
       doseNumber: 1,
       status: 'CANCELLED',
       notes: 'Cancelado pelo funcionário - reagendar',
     },
   });
 
-  // Completed - Employee 1's flu vaccination (linked to application)
-  const completedScheduling1 = await prisma.vaccineScheduling.create({
+  await prisma.vaccineScheduling.create({
     data: {
-      userId: employee1.id,
-      vaccineId: fluVaccine.id,
-      assignedNurseId: nurse2.id,
-      scheduledDate: new Date('2024-04-05T10:00:00'),
+      userId: employee10.id,
+      vaccineId: hepatitisVaccine.id,
+      assignedNurseId: nurse4.id,
+      scheduledDate: new Date('2025-11-29T11:00:00'),
       doseNumber: 1,
-      status: 'COMPLETED',
-      notes: 'Agendamento concluído - vacinação realizada',
+      status: 'CANCELLED',
+      notes: 'Cancelado - funcionário indisponível',
     },
   });
 
-  // Link the completed scheduling to the application
+  // COMPLETED - Agendamentos já completados (com relacionamento coeso às applications)
+  // Scheduling 1: Influenza para manager1
+  const completedScheduling1 = await prisma.vaccineScheduling.create({
+    data: {
+      userId: manager.id,
+      vaccineId: fluVaccine.id,
+      assignedNurseId: nurse1.id,
+      scheduledDate: new Date('2025-08-05T10:00:00'),
+      doseNumber: 1,
+      status: 'COMPLETED',
+      notes: 'Vacinação contra gripe realizada - agendamento completado',
+    },
+  });
+
+  // Linkando o agendamento completado à aplicação de influenza do manager
   await prisma.vaccineApplication.update({
     where: {
       userId_vaccineId_doseNumber: {
-        userId: employee1.id,
+        userId: manager.id,
         vaccineId: fluVaccine.id,
         doseNumber: 1,
       },
@@ -1161,274 +1216,165 @@ async function main() {
     },
   });
 
-  // ============================================
-  // CREATE NOTIFICATIONS
-  // ============================================
-
-  // DOSE_REMINDER notifications
-  await prisma.notification.create({
-    data: {
-      userId: employee2.id,
-      type: 'DOSE_REMINDER',
-      title: 'Lembrete de Segunda Dose',
-      message:
-        'Sua segunda dose da vacina COVID-19 (Pfizer) está agendada para 01/12/2025 às 10:00. Não se esqueça!',
-      metadata: {
-        vaccineId: covidVaccine.id,
-        vaccineName: 'COVID-19 (Pfizer)',
-        doseNumber: 2,
-        scheduledDate: '2025-12-01T10:00:00',
-      },
-      isRead: false,
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: employee5!.id,
-      type: 'DOSE_REMINDER',
-      title: 'Lembrete de Vacinação',
-      message:
-        'Você tem uma dose agendada da vacina Tríplice Viral (SCR) para 05/12/2025 às 14:00.',
-      metadata: {
-        vaccineId: mmrVaccine.id,
-        vaccineName: 'Tríplice Viral (SCR)',
-        doseNumber: 2,
-        scheduledDate: '2025-12-05T14:00:00',
-      },
-      isRead: false,
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: employee10!.id,
-      type: 'DOSE_REMINDER',
-      title: 'Lembrete: Vacinação Amanhã',
-      message:
-        'Lembre-se da sua vacinação COVID-19 (Pfizer) agendada para amanhã, 25/11/2025 às 11:00.',
-      metadata: {
-        vaccineId: covidVaccine.id,
-        vaccineName: 'COVID-19 (Pfizer)',
-        doseNumber: 1,
-        scheduledDate: '2025-11-25T11:00:00',
-      },
-      isRead: false,
-    },
-  });
-
-  // SCHEDULING_CONFIRMED notifications
-  await prisma.notification.create({
-    data: {
-      userId: employee5!.id,
-      type: 'SCHEDULING_CONFIRMED',
-      title: 'Agendamento Confirmado',
-      message:
-        'Seu agendamento para a segunda dose de Tríplice Viral (SCR) foi confirmado para 05/12/2025 às 14:00.',
-      metadata: {
-        vaccineId: mmrVaccine.id,
-        vaccineName: 'Tríplice Viral (SCR)',
-        scheduledDate: '2025-12-05T14:00:00',
-      },
-      isRead: true,
-      readAt: new Date('2024-04-12T09:00:00'),
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: employee10!.id,
-      type: 'SCHEDULING_CONFIRMED',
-      title: 'Vacinação Agendada',
-      message:
-        'Sua vacinação COVID-19 foi agendada com sucesso para 25/11/2025 às 11:00 com a enfermeira Sandra Martins.',
-      metadata: {
-        vaccineId: covidVaccine.id,
-        vaccineName: 'COVID-19 (Pfizer)',
-        nurseName: 'Sandra Martins',
-        scheduledDate: '2025-11-25T11:00:00',
-      },
-      isRead: false,
-    },
-  });
-
-  // LOW_STOCK notifications (for managers)
-  await prisma.notification.create({
-    data: {
-      userId: manager.id,
-      type: 'LOW_STOCK',
-      title: 'Alerta: Estoque Baixo',
-      message:
-        'O lote FLU-SP-2024-002 da vacina Influenza (Tetravalente) está com estoque crítico: apenas 8 doses restantes.',
-      metadata: {
-        batchNumber: 'FLU-SP-2024-002',
-        vaccineId: fluVaccine.id,
-        vaccineName: 'Influenza (Tetravalente)',
-        currentQuantity: 8,
-        minStockLevel: 10,
-      },
-      isRead: false,
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: manager2!.id,
-      type: 'LOW_STOCK',
-      title: 'Estoque Crítico',
-      message:
-        'URGENTE: O estoque do lote FLU-SP-2024-002 está muito baixo (8 doses). Reposição necessária.',
-      metadata: {
-        batchNumber: 'FLU-SP-2024-002',
-        vaccineId: fluVaccine.id,
-        vaccineName: 'Influenza (Tetravalente)',
-        currentQuantity: 8,
-      },
-      isRead: true,
-      readAt: new Date('2024-04-10T08:30:00'),
-    },
-  });
-
-  // VACCINE_EXPIRING notifications (for managers)
-  await prisma.notification.create({
-    data: {
-      userId: manager.id,
-      type: 'VACCINE_EXPIRING',
-      title: 'Vacina Próxima do Vencimento',
-      message:
-        'O lote HEP-B-2024-002 da vacina Hepatite B vence em 15/02/2025. Ainda há 150 doses disponíveis.',
-      metadata: {
-        batchNumber: 'HEP-B-2024-002',
-        vaccineId: hepatitisVaccine.id,
-        vaccineName: 'Hepatite B',
-        expirationDate: '2025-02-15',
-        currentQuantity: 150,
-      },
-      isRead: false,
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: manager2!.id,
-      type: 'VACCINE_EXPIRING',
-      title: 'Lote Próximo ao Vencimento',
-      message:
-        'Atenção: O lote HEP-B-2024-002 (Hepatite B) vence em menos de 3 meses. Priorizar uso das 150 doses restantes.',
-      metadata: {
-        batchNumber: 'HEP-B-2024-002',
-        vaccineId: hepatitisVaccine.id,
-        vaccineName: 'Hepatite B',
-        expirationDate: '2025-02-15',
-        currentQuantity: 150,
-      },
-      isRead: false,
-    },
-  });
-
-  // GENERAL notifications
-  await prisma.notification.create({
+  // Scheduling 2: Tétano para employee1
+  const completedScheduling2 = await prisma.vaccineScheduling.create({
     data: {
       userId: employee1.id,
-      type: 'GENERAL',
-      title: 'Campanha de Vacinação',
-      message:
-        'Nova campanha de vacinação contra gripe disponível. Agende sua dose na recepção.',
-      metadata: {
-        campaignType: 'Influenza 2024',
-      },
-      isRead: true,
-      readAt: new Date('2024-03-28T10:00:00'),
+      vaccineId: tetanusVaccine.id,
+      assignedNurseId: nurse2.id,
+      scheduledDate: new Date('2025-09-10T09:00:00'),
+      doseNumber: 1,
+      status: 'COMPLETED',
+      notes: 'Reforço de tétano aplicado - agendamento completado',
     },
   });
 
-  await prisma.notification.create({
+  // Linkando o agendamento completado à aplicação de tétano do employee1
+  await prisma.vaccineApplication.update({
+    where: {
+      userId_vaccineId_doseNumber: {
+        userId: employee1.id,
+        vaccineId: tetanusVaccine.id,
+        doseNumber: 1,
+      },
+    },
     data: {
-      userId: employee3.id,
-      type: 'GENERAL',
-      title: 'Atualização do Sistema',
-      message:
-        'O sistema de vacinação será atualizado no próximo sábado. Todos os agendamentos serão mantidos.',
-      metadata: {
-        maintenanceDate: '2024-04-27',
-      },
-      isRead: false,
+      schedulingId: completedScheduling2.id,
     },
   });
 
-  await prisma.notification.create({
+  // Mais agendamentos SCHEDULED para diferentes funcionários e vacinas
+  await prisma.vaccineScheduling.create({
     data: {
-      userId: nurse1.id,
-      type: 'GENERAL',
-      title: 'Reunião de Equipe',
-      message:
-        'Reunião de equipe de enfermagem agendada para 30/04/2024 às 09:00 na sala de reuniões.',
-      metadata: {
-        meetingDate: '2024-04-30T09:00:00',
-        location: 'Sala de Reuniões',
-      },
-      isRead: true,
-      readAt: new Date('2024-04-18T14:20:00'),
+      userId: employee10.id,
+      vaccineId: hepatitisVaccine.id,
+      assignedNurseId: nurse1.id,
+      scheduledDate: new Date('2026-01-15T10:00:00'),
+      doseNumber: 1,
+      status: 'SCHEDULED',
+      notes: 'Iniciar esquema de Hepatite B',
     },
   });
 
-  await prisma.notification.create({
+  await prisma.vaccineScheduling.create({
     data: {
-      userId: nurse2.id,
-      type: 'GENERAL',
-      title: 'Novo Protocolo de Vacinação',
-      message:
-        'Foi implementado um novo protocolo para aplicação de vacinas de RNA mensageiro. Consulte o manual atualizado.',
-      metadata: {
-        protocolVersion: '2.1',
-        documentUrl: '/docs/protocols/mrna-vaccines-v2.1.pdf',
-      },
-      isRead: false,
+      userId: employee9.id,
+      vaccineId: hepatitisVaccine.id,
+      assignedNurseId: nurse3.id,
+      scheduledDate: new Date('2026-01-20T14:00:00'),
+      doseNumber: 2,
+      status: 'SCHEDULED',
+      notes: 'Segunda dose de Hepatite B',
     },
   });
 
-  console.log('Seed completed successfully!');
-  console.log('\n📋 Created users:');
+  // ============================================
+  // UPDATE VACCINE STOCK
+  // ============================================
+
+  await prisma.vaccine.update({
+    where: { id: covidVaccine.id },
+    data: { totalStock: 1350 },
+  });
+
+  await prisma.vaccine.update({
+    where: { id: fluVaccine.id },
+    data: { totalStock: 1664 }, // 1680 - 16 aplicações (todos os usuários ativos)
+  });
+
+  await prisma.vaccine.update({
+    where: { id: hepatitisVaccine.id },
+    data: { totalStock: 980 },
+  });
+
+  await prisma.vaccine.update({
+    where: { id: tetanusVaccine.id },
+    data: { totalStock: 584 }, // 600 - 16 aplicações (todos os usuários ativos)
+  });
+
+  await prisma.vaccine.update({
+    where: { id: mmrVaccine.id },
+    data: { totalStock: 770 }, // 800 - 30 aplicações (14 usuários com 2 doses + 2 com 1 dose)
+  });
+
+  await prisma.vaccine.update({
+    where: { id: yellowFeverVaccine.id },
+    data: { totalStock: 420 },
+  });
+
+  await prisma.vaccine.update({
+    where: { id: hpvVaccine.id },
+    data: { totalStock: 525 },
+  });
+
+  console.log('✅ Seed completed successfully!\n');
+  console.log('📋 Created users:');
   console.log('   - 2 Managers');
   console.log('   - 4 Nurses');
   console.log('   - 11 Employees (10 active + 1 inactive)');
-  console.log('\n💉 Created vaccines:');
+  console.log('   - TOTAL ACTIVE USERS: 16\n');
+
+  console.log('💉 Created vaccines:');
   console.log('   - COVID-19 (Pfizer) - 2 doses, 21 days interval');
   console.log('   - Influenza (Tetravalente) - 1 dose');
   console.log('   - Hepatite B - 3 doses, 30 days interval');
   console.log('   - Tétano (dT) - 1 dose');
   console.log('   - Tríplice Viral (SCR) - 2 doses, 30 days interval');
   console.log('   - Febre Amarela - 1 dose');
-  console.log('\n📦 Created vaccine batches:');
-  console.log('   - 2 COVID-19 batches (1350 doses)');
-  console.log('   - 2 Flu batches (1708 doses total)');
-  console.log('   - 2 Hepatitis B batches (800 doses)');
-  console.log('   - 1 Tetanus batch (580 doses)');
-  console.log('   - 1 MMR batch (350 doses)');
-  console.log('   - 1 Yellow Fever batch (250 doses)');
-  console.log('\n🩹 Created vaccine applications:');
-  console.log('   - 25+ applications across all employees and nurses');
-  console.log('   - Complete vaccination schemes for several employees');
-  console.log('   - Partial schemes pending completion');
-  console.log('\n📅 Created vaccine schedulings:');
-  console.log('   - 8 schedulings with different statuses:');
-  console.log('     • SCHEDULED: 4 appointments');
-  console.log('     • CONFIRMED: 2 appointments');
-  console.log('     • COMPLETED: 1 appointment');
-  console.log('     • CANCELLED: 1 appointment');
-  console.log('\n🔔 Created notifications:');
-  console.log('   - 13 notifications of different types:');
-  console.log('     • DOSE_REMINDER: 3 notifications');
-  console.log('     • SCHEDULING_CONFIRMED: 2 notifications');
-  console.log('     • LOW_STOCK: 2 notifications (for managers)');
-  console.log('     • VACCINE_EXPIRING: 2 notifications (for managers)');
-  console.log('     • GENERAL: 4 notifications');
-  console.log('\n🔑 Default password for all users: senha123');
+  console.log('   - HPV Quadrivalente - 3 doses, 60 days interval\n');
+
+  console.log('📦 Created vaccine batches:');
+  console.log('   - 11 batches total');
+  console.log('   - 8 batches with future expiration dates');
+  console.log(
+    '   - 3 EXPIRED batches (FLU-SP-2024-OLD, HEP-B-2024-OLD, HPV-MSD-2024-OLD)\n',
+  );
+
+  console.log('🩹 Created vaccine applications:');
+  console.log(
+    '   - COVID-19: ALL 10 employees completed (2 doses each = 20 applications)',
+  );
+  console.log(
+    '   - Influenza: ALL 16 ACTIVE USERS vaccinated (1 dose = 16 applications) - 100% COVERAGE ✅',
+  );
+  console.log('   - Hepatite B:');
+  console.log('     • 3 employees completed (3 doses = 9 applications)');
+  console.log('     • 3 employees partial (2 doses = 6 applications)');
+  console.log('     • 3 employees partial (1 dose = 3 applications)');
+  console.log('     • 1 employee not started');
+  console.log(
+    '   - Tétano: ALL 16 ACTIVE USERS vaccinated (1 dose = 16 applications) - 100% COVERAGE ✅',
+  );
+  console.log('   - MMR (2 doses):');
+  console.log(
+    '     • 14 users completed (2 doses = 28 applications) - 90% COVERAGE ✅',
+  );
+  console.log('     • 2 users partial (1 dose = 2 applications) - 10% incomplete');
+  console.log(
+    '   - Febre Amarela: 5 employees vaccinated (1 dose = 5 applications)',
+  );
+  console.log('   - HPV:');
+  console.log('     • 2 employees completed (3 doses = 6 applications)');
+  console.log('     • 3 employees partial (2 doses = 6 applications)');
+  console.log('     • 3 employees partial (1 dose = 3 applications)');
+  console.log('   - TOTAL: 110+ vaccine applications\n');
+
+  console.log(
+    '📅 Created vaccine schedulings (ALL in the future, after 2025-11-27):',
+  );
+  console.log('   - SCHEDULED: 7 appointments');
+  console.log('   - CONFIRMED: 1 appointment');
+  console.log('   - COMPLETED: 2 appointments (linked to applications ✅)');
+  console.log('   - CANCELLED: 2 appointments');
+  console.log('   - TOTAL: 12 schedulings');
+  console.log('   - ⚠️  NO ORPHAN RELATIONSHIPS - All COMPLETED schedulings link to applications\n');
+
+  console.log('🔑 Default password for all users: senha123');
 }
 
 main()
   .catch((e) => {
-    console.error('Error during seed:', e);
+    console.error('❌ Error during seed:', e);
     process.exit(1);
   })
   .finally(async () => {
