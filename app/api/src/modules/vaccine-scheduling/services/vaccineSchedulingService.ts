@@ -8,7 +8,7 @@ import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
 import { ForbiddenError, ValidationError } from '@modules/user/errors';
 import type { UserService } from '@modules/user/services/userService';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
-import { defineFilterParams } from '@shared/helpers/schedulingsHelpert';
+import { defineFilterParams } from '@shared/helpers/schedulingsHelper';
 import {
   createDate,
   formatDate,
