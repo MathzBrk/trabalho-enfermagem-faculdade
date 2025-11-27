@@ -5,6 +5,7 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 
+
 /**
  * Express Application Setup
  *
@@ -19,6 +20,7 @@ export class App {
     this.routes();
     this.errorHandling();
   }
+
 
   /**
    * Configure global middlewares
@@ -52,6 +54,7 @@ export class App {
     this.server.disable('x-powered-by');
   }
 
+
   /**
    * Configure application routes
    */
@@ -76,6 +79,7 @@ export class App {
       });
     });
 
+    
     // 404 handler for undefined routes
     this.server.use((req, res) => {
       res.status(404).json({
