@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { DaySchedulingsList } from '../../components/nurseSchedule/DaySchedulingsList';
 import { MonthlyCalendar } from '../../components/nurseSchedule/MonthlyCalendar';
@@ -33,6 +33,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 export const NurseSchedulePage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const { createApplication } = useVaccineApplications();
+  const [searchParams] = useSearchParams();
 
   // Month/Year state
   const currentDate = new Date();
@@ -48,6 +49,32 @@ export const NurseSchedulePage: React.FC = () => {
 
   // Selected day state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Handle date from URL parameter on mount
+  useEffect(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      try {
+        // Parse date in format YYYY-M-D or YYYY-MM-DD
+        const [yearStr, monthStr, dayStr] = dateParam.split('-');
+        const targetYear = Number.parseInt(yearStr, 10);
+        const targetMonth = Number.parseInt(monthStr, 10);
+        const targetDay = Number.parseInt(dayStr, 10);
+
+        if (!Number.isNaN(targetYear) && !Number.isNaN(targetMonth) && !Number.isNaN(targetDay)) {
+          // Set the month/year to match the target date
+          setYear(targetYear);
+          setMonth(targetMonth);
+
+          // Set the selected date
+          const date = new Date(targetYear, targetMonth - 1, targetDay);
+          setSelectedDate(date);
+        }
+      } catch (err) {
+        console.error('Error parsing date parameter:', err);
+      }
+    }
+  }, [searchParams]);
 
   // Application modal state
   const [showApplicationModal, setShowApplicationModal] = useState(false);
