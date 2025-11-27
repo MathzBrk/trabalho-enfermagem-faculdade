@@ -2,7 +2,7 @@
 
 ## Setup in 5 steps
 
-### 1. Install dependencies
+### 1. Instalação de dependencias 
 ```bash
 npm install
 ```
@@ -94,7 +94,7 @@ npm run docker:up
 # Wait 10 seconds and try again
 ```
 
-### Prisma error
+### Comando no prima se der erro
 ```bash
 # Regenerate the client
 npm run prisma:generate

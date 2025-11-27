@@ -21,7 +21,7 @@ npm run docker:up
 ```
 **What it does:** Starts the PostgreSQL container in background
 
-### Stop containers
+### Stop containers docker
 ```bash
 npm run docker:down
 ```
@@ -33,7 +33,7 @@ npm run docker:logs
 ```
 **What it does:** Shows logs in real-time (Ctrl+C to exit)
 
-### Reset PostgreSQL
+### Reset PostgreSQL banco de dados
 ```bash
 npm run docker:reset
 ```
@@ -46,7 +46,7 @@ npm run docker:reset
 
 ## 🗄️ Prisma Scripts
 
-### Generate Prisma Client
+### Generate Prisma Cliente
 ```bash
 npm run prisma:generate
 ```
@@ -154,7 +154,7 @@ npm start
 
 ---
 
-## ✅ Quality Scripts
+## ✅ Qualidade Scripts
 
 ### Format Code
 ```bash
@@ -164,7 +164,7 @@ npm run check
 - Formats code with Biome
 - Fixes issues automatically
 
-### Tests
+### Testes
 ```bash
 npm test                # Run all tests
 npm run test:watch      # Watch mode
