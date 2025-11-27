@@ -242,12 +242,18 @@ export const vaccineService = {
   },
 
   /**
-   * List vaccine schedulings for a user
+   * List vaccine schedulings for a user (as patient)
+   * USE CASE: My Appointments - Shows appointments where user is the PATIENT
+   * This explicitly passes userId to get user's personal appointments
    */
   listSchedulings: async (userId?: string): Promise<VaccineScheduling[]> => {
     try {
       const params = userId
-        ? { userId, page: '1', perPage: '100' }
+        ? {
+            userId, // Backend filters: appointments where userId === patient
+            page: '1',
+            perPage: '100'
+          }
         : { page: '1', perPage: '100' };
       const response = await api.get<PaginatedResponse<VaccineScheduling>>(
         '/vaccine-schedulings',
@@ -261,6 +267,8 @@ export const vaccineService = {
 
   /**
    * List vaccine schedulings for a nurse
+   * USE CASE: Nurse Dashboard - Shows schedulings assigned to nurse + unassigned ones
+   * This explicitly passes assignedNurseId to get nurse's work queue
    */
   listSchedulingsForNurse: async (
     nurseId: string,
@@ -269,7 +277,11 @@ export const vaccineService = {
       const response = await api.get<PaginatedResponse<VaccineScheduling>>(
         '/vaccine-schedulings',
         {
-          params: { assignedNurseId: nurseId, page: '1', perPage: '100' },
+          params: {
+            assignedNurseId: nurseId, // Backend filters: assigned to nurse OR unassigned
+            page: '1',
+            perPage: '100'
+          },
         },
       );
       return response.data.data;

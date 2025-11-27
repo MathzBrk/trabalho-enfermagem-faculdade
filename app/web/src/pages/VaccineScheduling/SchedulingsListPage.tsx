@@ -18,12 +18,21 @@ import { userService } from '../../services/user.service';
 import type { User } from '../../types';
 
 /**
- * Schedulings List Page
- * Displays all vaccine schedulings with filtering and actions
+ * Schedulings List Page - "Meus Agendamentos"
+ * Displays user's vaccine appointments where they are the PATIENT
+ *
+ * USE CASE: My Appointments (ALL ROLES)
+ * - Shows appointments where authenticated user is the PATIENT
+ * - Does NOT show nurse assignments
+ * - Available to: NURSE, EMPLOYEE, MANAGER
+ *
+ * Note: Nurses have TWO separate views:
+ * 1. This page (/schedulings) - Their personal appointments as patient
+ * 2. Nurse Dashboard/Schedule - Appointments they're assigned to handle
  */
 export const SchedulingsListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isManager } = useAuth();
+  const { isManager, user } = useAuth();
 
   const {
     schedulings,
@@ -65,14 +74,18 @@ export const SchedulingsListPage: React.FC = () => {
   }, [isManager, fetchVaccines]);
 
   // Fetch schedulings when page or filters change
+  // IMPORTANT: We pass userId to explicitly request patient appointments only
   useEffect(() => {
+    if (!user?.id) return;
+
     const params = {
       page: currentPage,
       limit: 12,
+      userId: user.id, // Explicit: Show appointments where user is PATIENT
       ...filters,
     };
     fetchSchedulings(params);
-  }, [currentPage, filters, fetchSchedulings]);
+  }, [currentPage, filters, fetchSchedulings, user?.id]);
 
   const handleFilterChange = useCallback((newFilters: FilterValues) => {
     setFilters(newFilters);
@@ -80,6 +93,8 @@ export const SchedulingsListPage: React.FC = () => {
   }, []);
 
   const handleConfirm = async (id: string) => {
+    if (!user?.id) return;
+
     setActionLoading(true);
     try {
       await confirmScheduling(id);
@@ -87,6 +102,7 @@ export const SchedulingsListPage: React.FC = () => {
       fetchSchedulings({
         page: currentPage,
         limit: 12,
+        userId: user.id, // Explicit: Show patient appointments only
         ...filters,
       });
     } catch (err) {
@@ -102,7 +118,7 @@ export const SchedulingsListPage: React.FC = () => {
   };
 
   const handleCancelConfirm = async () => {
-    if (!selectedSchedulingId) return;
+    if (!selectedSchedulingId || !user?.id) return;
 
     setActionLoading(true);
     try {
@@ -113,6 +129,7 @@ export const SchedulingsListPage: React.FC = () => {
       fetchSchedulings({
         page: currentPage,
         limit: 12,
+        userId: user.id, // Explicit: Show patient appointments only
         ...filters,
       });
     } catch (err) {

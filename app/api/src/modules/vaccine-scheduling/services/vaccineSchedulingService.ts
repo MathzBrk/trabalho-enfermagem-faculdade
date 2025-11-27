@@ -8,6 +8,7 @@ import { DEFAULT_USER_SYSTEM_ID } from '@modules/user/constants';
 import { ForbiddenError, ValidationError } from '@modules/user/errors';
 import type { UserService } from '@modules/user/services/userService';
 import { VaccineNotFoundError } from '@modules/vaccines/errors';
+import { defineFilterParams } from '@shared/helpers/schedulingsHelper';
 import {
   createDate,
   formatDate,
@@ -364,11 +365,10 @@ export class VaccineSchedulingService {
       DEFAULT_USER_SYSTEM_ID,
     );
 
-    // Apply row-level security for non-MANAGER users
-    const filterParams: VaccineSchedulingFilterParams = { ...filters };
-    if (requestingUser.role !== 'MANAGER') {
-      filterParams.userId = requestingUserId;
-    }
+    const filterParams: VaccineSchedulingFilterParams = defineFilterParams(
+      requestingUser,
+      filters,
+    );
 
     return this.vaccineSchedulingStore.findPaginatedSchedulings(
       { page, perPage: limit },
@@ -406,7 +406,7 @@ export class VaccineSchedulingService {
     for (const scheduling of allSchedulings) {
       if (
         scheduling.assignedNurseId === userId ||
-        scheduling.assignedNurseId === undefined
+        scheduling.assignedNurseId === null
       ) {
         allSchedulingsMap.set(scheduling.id, scheduling);
       }

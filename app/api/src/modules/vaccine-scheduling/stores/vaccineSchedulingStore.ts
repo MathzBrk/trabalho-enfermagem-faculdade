@@ -179,6 +179,16 @@ export class VaccineSchedulingStore
       }
     }
 
+    // When filtering by assignedNurseId, include schedulings where:
+    // 1. assignedNurseId matches the filter (assigned to this nurse)
+    // 2. assignedNurseId is null (available to all nurses)
+    if (filters?.assignedNurseId) {
+      where.OR = [
+        { assignedNurseId: filters.assignedNurseId },
+        { assignedNurseId: null },
+      ];
+    }
+
     const [data, total] = await Promise.all([
       this.model.findMany({
         where,

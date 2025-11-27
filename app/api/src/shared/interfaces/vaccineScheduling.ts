@@ -10,6 +10,7 @@ import type { PaginatedResponse, PaginationParams } from './pagination';
 // Filter parameters for vaccine scheduling queries
 export interface VaccineSchedulingFilterParams {
   userId?: string;
+  assignedNurseId?: string;
   vaccineId?: string;
   status?: string;
   startDate?: Date;

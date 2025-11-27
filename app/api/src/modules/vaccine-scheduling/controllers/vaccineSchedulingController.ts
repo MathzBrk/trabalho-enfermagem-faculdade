@@ -167,6 +167,7 @@ export class VaccineSchedulingController {
 
       const filters: VaccineSchedulingFilterParams = {
         userId: query.userId,
+        assignedNurseId: query.assignedNurseId,
         vaccineId: query.vaccineId,
         status: query.status,
         startDate: query.startDate ? getDate(query.startDate) : undefined,

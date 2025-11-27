@@ -115,6 +115,15 @@ export const vaccineSchedulingService = {
 
   /**
    * List schedulings with pagination and filters
+   *
+   * IMPORTANT: This method passes filters as-is to the backend.
+   * The backend automatically applies role-based filtering:
+   * - NURSE (no filters): Shows schedulings assigned to nurse + unassigned
+   * - EMPLOYEE/MANAGER (no filters): Shows their own appointments as patient
+   *
+   * For explicit behavior, use:
+   * - listMyAppointments() for patient view (all roles)
+   * - Pass assignedNurseId explicitly for nurse dashboard view
    */
   list: async (params?: ListVaccineSchedulingsParams): Promise<PaginatedResponse<VaccineScheduling>> => {
     try {
@@ -122,6 +131,38 @@ export const vaccineSchedulingService = {
       return response.data;
     } catch (error) {
       throw new Error(getErrorMessage(error, 'Erro ao listar agendamentos'));
+    }
+  },
+
+  /**
+   * List user's own appointments (as patient)
+   * USE CASE: My Appointments page - Works for ALL roles (NURSE, EMPLOYEE, MANAGER)
+   *
+   * This explicitly requests appointments where the authenticated user is the PATIENT.
+   * By passing userId parameter, we tell the backend to show patient appointments only.
+   *
+   * Backend behavior (schedulingsHelper.ts):
+   * - When userId is provided: Returns appointments where userId === requesting user (as patient)
+   * - Does NOT include nurse assignments
+   *
+   * @param userId - ID of the user (authenticated user)
+   * @param params - Optional pagination and filter parameters
+   */
+  listMyAppointments: async (
+    userId: string,
+    params?: Omit<ListVaccineSchedulingsParams, 'userId' | 'assignedNurseId'>
+  ): Promise<PaginatedResponse<VaccineScheduling>> => {
+    try {
+      const response = await api.get<PaginatedResponse<VaccineScheduling>>('/vaccine-schedulings', {
+        params: {
+          ...params,
+          userId, // Explicitly pass userId to get patient appointments
+          assignedNurseId: undefined, // Ensure we don't accidentally pass nurse filter
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Erro ao listar meus agendamentos'));
     }
   },
 

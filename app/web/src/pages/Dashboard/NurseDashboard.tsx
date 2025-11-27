@@ -193,30 +193,41 @@ export const NurseDashboard: React.FC = () => {
           <CardContent>
             {todaySchedulings.length > 0 ? (
               <div className="space-y-3">
-                {todaySchedulings.map((scheduling) => (
-                  <div
-                    key={scheduling.id}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-primary-300 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">
-                          {scheduling.user?.name}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {scheduling.vaccine?.name} - {scheduling.doseNumber}ª
-                          dose
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDateTime(scheduling.scheduledDate)}
-                        </p>
+                {todaySchedulings.map((scheduling) => {
+                  const scheduleDate = new Date(scheduling.scheduledDate);
+                  const year = scheduleDate.getFullYear();
+                  const month = scheduleDate.getMonth() + 1;
+                  const day = scheduleDate.getDate();
+
+                  return (
+                    <div
+                      key={scheduling.id}
+                      className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-primary-300 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            {scheduling.user?.name}
+                          </p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {scheduling.vaccine?.name} - {scheduling.doseNumber}ª
+                            dose
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatDateTime(scheduling.scheduledDate)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => navigate(`/nurse-schedule?date=${year}-${month}-${day}`)}
+                        >
+                          Ver
+                        </Button>
                       </div>
-                      <Button size="sm" variant="primary">
-                        Ver
-                      </Button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
