@@ -61,7 +61,7 @@ git clone <repository-url>
 cd univas-enfermagem
 ```
 
-### 2. Backend Setup
+### 2. Back-end Setup
 
 ```bash
 cd app/api
@@ -175,7 +175,7 @@ npm run lint           # Lint e formatação (Biome)
 npm run prisma:studio  # Interface visual do banco
 ```
 
-### Frontend (app/web)
+### Front-end (app/web)
 ```bash
 npm run dev            # Desenvolvimento com hot reload
 npm run build          # Build de produção
@@ -210,7 +210,7 @@ app/api/src/
     └── middlewares/
 ```
 
-### Frontend (Feature-based)
+### Front-end (Feature-based)
 ```
 app/web/src/
 ├── components/
