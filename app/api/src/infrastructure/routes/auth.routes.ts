@@ -2,10 +2,7 @@ import { container } from '@infrastructure/di/container';
 import { AuthController } from '@modules/user/controllers/authController';
 import { LoginSchema } from '@modules/user/validators/loginValidator';
 import { RegisterSchema } from '@modules/user/validators/registerValidator';
-import {
-  loginRateLimiter,
-  registerRateLimiter,
-} from '@shared/middlewares/rateLimiter';
+import { registerRateLimiter } from '@shared/middlewares/rateLimiter';
 import { validateRequest } from '@shared/middlewares/validateRequest';
 import { Router } from 'express';
 
@@ -44,7 +41,6 @@ const authController = container.resolve(AuthController);
  */
 authRoutes.post(
   '/login',
-  loginRateLimiter,
   validateRequest(LoginSchema),
   authController.login.bind(authController),
 );

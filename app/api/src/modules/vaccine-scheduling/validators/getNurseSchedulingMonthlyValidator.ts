@@ -26,8 +26,7 @@ export const GetNurseSchedulingMonthlyQuerySchema = z.object({
       z
         .number()
         .int('Year must be an integer')
-        .min(2000, 'Year must be 2000 or later')
-        .max(currentYear, `Year must not be in the future (max: ${currentYear})`),
+        .min(2000, 'Year must be 2000 or later'),
     ),
 });
 

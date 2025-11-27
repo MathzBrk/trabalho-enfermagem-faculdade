@@ -1,5 +1,7 @@
 import type { VaccineApplication } from '@infrastructure/database';
 import type { Prisma } from '@infrastructure/database/generated/prisma';
+import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
+import { getCurrentDate } from '@shared/helpers/timeHelper';
 import {
   type PaginatedResponse,
   type PaginationParams,
@@ -9,6 +11,7 @@ import type {
   IVaccineApplicationStore,
   VaccineApplicationFilterParams,
 } from '@shared/interfaces/vaccineApplication';
+import type { Vaccine } from '@shared/models/vaccine';
 import type {
   VaccineApplicationCreateInput,
   VaccineApplicationDelegate,
@@ -16,10 +19,8 @@ import type {
   VaccineApplicationWithRelations,
 } from '@shared/models/vaccineApplication';
 import { BaseStore } from '@shared/stores/baseStore';
-import { buildPaginationArgs } from '@shared/helpers/prismaHelper';
-import { allowedVaccineApplicationSortFields } from '../constants';
 import { injectable } from 'tsyringe';
-import { getCurrentDate } from '@shared/helpers/timeHelper';
+import { allowedVaccineApplicationSortFields } from '../constants';
 
 @injectable()
 export class VaccineApplicationStore
@@ -57,6 +58,28 @@ export class VaccineApplicationStore
             email: true,
           },
         },
+      },
+    });
+  }
+
+  async countCompletedDosesByVaccine(vaccine: Vaccine): Promise<number> {
+    return this.model.count({
+      where: {
+        vaccineId: vaccine.id,
+        doseNumber: vaccine.dosesRequired,
+        deletedAt: null,
+      },
+    });
+  }
+
+  async countPartialDosesByVaccine(vaccine: Vaccine): Promise<number> {
+    return this.model.count({
+      where: {
+        vaccineId: vaccine.id,
+        doseNumber: {
+          lt: vaccine.dosesRequired,
+        },
+        deletedAt: null,
       },
     });
   }

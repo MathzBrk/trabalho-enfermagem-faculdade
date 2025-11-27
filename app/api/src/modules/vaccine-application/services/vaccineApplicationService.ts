@@ -97,6 +97,7 @@ export interface VaccinationHistoryResponse {
 
   /** Mandatory vaccines that have not been started */
   mandatoryNotTaken: Vaccine[];
+  optionalNotTaken: Vaccine[];
 
   /** Vaccines with incomplete dose schedules */
   pendingDoses: Array<{
@@ -616,9 +617,14 @@ export class VaccineApplicationService {
     }
 
     // Fetch all necessary data in parallel
-    const [appliedVaccines, mandatoryNotTakenVaccines] = await Promise.all([
+    const [
+      appliedVaccines,
+      mandatoryNotTakenVaccines,
+      optionalNotTakenVaccines,
+    ] = await Promise.all([
       this.vaccineApplicationStore.findByUserId(userId),
       this.vaccineStore.findMandatoryVaccinesNotTakenByUser(userId),
+      this.vaccineStore.findOptionalVaccinesNotTakenByUser(userId),
     ]);
 
     // Build a map of vaccines with their current dose status
@@ -762,6 +768,7 @@ export class VaccineApplicationService {
       vaccinesByType,
       applied: appliedVaccines,
       mandatoryNotTaken: mandatoryNotTakenVaccines,
+      optionalNotTaken: optionalNotTakenVaccines,
       pendingDoses,
     };
   }
