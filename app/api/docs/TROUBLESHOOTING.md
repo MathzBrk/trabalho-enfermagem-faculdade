@@ -1,38 +1,29 @@
 ### Initial Setup (first time only)
 
 ```bash
-# 1. Install dependencies
 npm install
 
-# 2. Start PostgreSQL
+
 npm run docker:up
 
-# 3. Generate Prisma Client
 npm run prisma:generate
 
-# 4. Create initial migration
 npx prisma migrate dev --name init
 
-# 5. Start application
 npm run start:dev
 ```
 
 ### Daily Usage
 
 ```bash
-# Start database
 npm run docker:up
 
-# Develop
 npm run start:dev
 
-# View database
 npm run prisma:studio
 
-# Stop database
 npm run docker:down
 ```
-
 ---
 
 ## Other Common Issues
@@ -56,13 +47,10 @@ npm run docker:up
 ### Database connection error
 
 ```bash
-# Check if container is running
 docker ps
 
-# View logs
 npm run docker:logs
 
-# Restart
 npm run docker:down
 npm run docker:up
 ```
@@ -70,17 +58,14 @@ npm run docker:up
 ### Completely reset database
 
 ```bash
-# WARNING: Deletes all data!
 npm run docker:reset
 
-# Recreate schema
 npx prisma migrate dev --name init
 ```
 
 ### Outdated Prisma Client
 
 ```bash
-# Whenever you change schema.prisma
 npm run prisma:generate
 ```
 
@@ -91,13 +76,10 @@ npm run prisma:generate
 Example usage in code:
 
 ```typescript
-// Option 1: Direct import from database module
 import prisma from "@infrastructure/database";
 
-// Option 2: Import using relative path
 import prisma from "@/infrastructure/database";
 
-// Find by email
 const user = await prisma.employee.findUnique({
   where: { email: "joao@example.com" },
 });
@@ -106,11 +88,11 @@ const user = await prisma.employee.findUnique({
 ## Useful Commands
 
 ```bash
-# Docker
-npm run docker:up          # Start PostgreSQL
-npm run docker:down        # Stop containers
-npm run docker:logs        # View logs
-npm run docker:reset       # Reset everything (deletes data!)
+
+npm run docker:up         
+npm run docker:down        
+npm run docker:logs       
+npm run docker:reset       
 
 # Prisma
 npm run prisma:generate    # Generate client

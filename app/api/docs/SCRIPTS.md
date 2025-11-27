@@ -232,17 +232,14 @@ npm run prisma:seed
 
 ### Docker container won't start
 ```bash
-# See what's wrong
 npm run docker:logs
 
-# Reset everything
 npm run docker:reset
 ```
 
 ### TypeScript with type errors
 ```bash
 npm run prisma:generate
-# Restart VS Code
 ```
 
 ---
@@ -252,7 +249,6 @@ npm run prisma:generate
 ### Quick seed
 Create aliases in your shell:
 ```bash
-# Add to ~/.bashrc or ~/.zshrc
 alias dbseed="npm run prisma:seed"
 alias dbreset="npm run db:reset && npm run prisma:seed"
 ```
