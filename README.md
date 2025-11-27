@@ -90,7 +90,7 @@ O backend estará disponível em `http://localhost:3000`
 
 📚 **Documentação completa**: [app/api/README.md](./app/api/README.md)
 
-### 3. Frontend Setup
+### 3. Front-end Setup
 
 ```bash
 cd app/web
