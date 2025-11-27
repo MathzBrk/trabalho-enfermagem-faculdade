@@ -23,6 +23,7 @@ vaccineApplicationRoutes.post(
   vaccineApplicationController.create.bind(vaccineApplicationController),
 );
 
+
 // GET /vaccine-applications/users/:id/history - Get user's vaccination history
 vaccineApplicationRoutes.get(
   '/users/:id/history',

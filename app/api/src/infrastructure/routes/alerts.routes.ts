@@ -4,6 +4,7 @@ import { authMiddleware } from '@shared/middlewares/authMiddleware';
 import { Router } from 'express';
 
 /**
+ * 
  * Alerts Routes
  *
  * Defines all HTTP endpoints for alerts-related operations.

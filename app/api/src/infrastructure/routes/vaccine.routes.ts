@@ -31,6 +31,7 @@ vaccineRoutes.get(
   vaccineController.getPaginatedVaccines.bind(vaccineController),
 );
 
+
 // GET /vaccines/:id/batches - Get paginated batches for a specific vaccine
 // IMPORTANT: This route MUST be before /:id to avoid route conflicts
 vaccineRoutes.get(

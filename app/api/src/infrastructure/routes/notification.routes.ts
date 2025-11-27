@@ -7,6 +7,7 @@ import { ListNotificationsQuerySchema } from '@modules/notifications/validators/
 import { NotificationIdParamSchema } from '@modules/notifications/validators/idParamValidator';
 
 /**
+ * 
  * Notification Routes
  *
  * Defines all HTTP endpoints for notification-related operations.
