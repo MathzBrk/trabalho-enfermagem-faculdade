@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Role } from '@prisma/client';
+import { Role } from '@infrastructure/database/generated/prisma';
 
 /**
  * Validation schema for updating user information

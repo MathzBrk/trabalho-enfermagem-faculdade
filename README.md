@@ -27,7 +27,7 @@ univas-enfermagem/
 
 ## 🚀 Tecnologias
 
-### Back-end ([app/api](./app/api))
+### Backend ([app/api](./app/api))
 - **Node.js** + **Express** - Runtime e framework web
 - **TypeScript** - Tipagem estática
 - **Prisma ORM** - Gerenciamento de banco de dados
@@ -37,7 +37,7 @@ univas-enfermagem/
 - **tsyringe** - Injeção de dependências
 - **Docker** - Containerização
 
-### Front-end ([app/web](./app/web))
+### Frontend ([app/web](./app/web))
 - **React 19** - Biblioteca UI
 - **TypeScript** - Tipagem estática
 - **Vite** - Build tool e dev server
@@ -53,62 +53,98 @@ univas-enfermagem/
 ### Pré-requisitos
 - Node.js 18+
 - npm ou yarn
-- PostgreSQL 16+ (ou Docker)
+- Docker (recomendado para o banco de dados PostgreSQL)
 
-### 1. Clone o repositório
+### 🚀 Instalação Rápida (Projeto Zipado)
+
+Se você recebeu o projeto em arquivo ZIP sem as dependências, siga estes passos:
+
+#### 1. Extrair o projeto
 ```bash
-git clone <repository-url>
+unzip univas-enfermagem.zip
 cd univas-enfermagem
 ```
 
-### 2. Back-end Setup
+#### 2. Backend Setup
 
 ```bash
 cd app/api
 
-# Instalar dependências
+# Instalar todas as dependências
 npm install
 
 # Configurar variáveis de ambiente
 cp .env.example .env
-# Edite o .env com suas configurações
+# O .env.example já vem com as configurações padrão, não precisa editar
 
-# Iniciar banco de dados (Docker)
+# Subir o banco de dados PostgreSQL via Docker
 docker-compose up -d
 
-# Executar migrações
-npx prisma migrate dev
+# Aguarde alguns segundos para o banco iniciar, depois execute:
 
-# (Opcional) Popular banco com dados de exemplo
-npx prisma db seed
+# Gerar o Prisma Client (IMPORTANTE!)
+npm run prisma:generate
 
-# Iniciar servidor de desenvolvimento
-npm run start:dev
+# Executar as migrations do banco de dados
+npm run prisma:migrate
+
+# Popular o banco com dados de exemplo (usuários, vacinas, etc.)
+npm run prisma:seed
+
+# Iniciar o servidor de desenvolvimento
+npm run dev
 ```
 
 O backend estará disponível em `http://localhost:3000`
 
-📚 **Documentação completa**: [app/api/README.md](./app/api/README.md)
-
-### 3. Front-end Setup
+#### 3. Frontend Setup (em outro terminal)
 
 ```bash
+# A partir da raiz do projeto
 cd app/web
 
-# Instalar dependências
+# Instalar todas as dependências
 npm install
 
 # Configurar variáveis de ambiente
 cp .env.example .env
-# VITE_API_URL=http://localhost:3000/api
+# O .env.example já vem configurado: VITE_API_URL=http://localhost:3000/api
 
-# Iniciar servidor de desenvolvimento
+# Iniciar o servidor de desenvolvimento
 npm run dev
 ```
 
 O frontend estará disponível em `http://localhost:5173`
 
-📚 **Documentação completa**: [app/web/README.md](./app/web/README.md)
+#### 4. Acessar o Sistema
+
+Abra o navegador em `http://localhost:5173` e faça login com uma das credenciais de teste (veja seção "Credenciais de Teste" abaixo).
+
+---
+
+### 📝 Resumo dos Comandos (Copie e Cole)
+
+**Backend:**
+```bash
+cd app/api
+npm install
+cp .env.example .env
+docker compose up -d
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
+npm run dev
+```
+
+**Frontend (em outro terminal):**
+```bash
+cd app/web
+npm install
+cp .env.example .env
+npm run dev
+```
+
+---
 
 ## 👥 Roles e Permissões
 
@@ -140,16 +176,16 @@ O sistema vem com dados mockados para desenvolvimento do frontend:
 
 ```
 Funcionário:
-  Email: employee@test.com
-  Senha: password123
+  Email: funcionario1@hospital.com
+  Senha: senha123
 
 Enfermeiro:
-  Email: nurse@test.com
-  Senha: password123
+  Email: enfermeira3@hospital.com
+  Senha: senha123
 
 Gestor:
-  Email: manager@test.com
-  Senha: password123
+  Email: admin@hospital.com
+  Senha: senha123
 ```
 
 ## 🎨 Design System
@@ -175,7 +211,7 @@ npm run lint           # Lint e formatação (Biome)
 npm run prisma:studio  # Interface visual do banco
 ```
 
-### Front-end (app/web)
+### Frontend (app/web)
 ```bash
 npm run dev            # Desenvolvimento com hot reload
 npm run build          # Build de produção
@@ -210,7 +246,7 @@ app/api/src/
     └── middlewares/
 ```
 
-### Front-end (Feature-based)
+### Frontend (Feature-based)
 ```
 app/web/src/
 ├── components/
@@ -262,11 +298,11 @@ GET    /api/notifications           # Listar notificações
 ## 🧪 Testes
 
 ```bash
-# Back-end
+# Backend
 cd app/api
 npm run test
 
-# Front-end (quando implementado)
+# Frontend (quando implementado)
 cd app/web
 npm run test
 ```
