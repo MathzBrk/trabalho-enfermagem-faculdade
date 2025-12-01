@@ -55,17 +55,7 @@ univas-enfermagem/
 - npm ou yarn
 - Docker (recomendado para o banco de dados PostgreSQL)
 
-### 🚀 Instalação Rápida (Projeto Zipado)
-
-Se você recebeu o projeto em arquivo ZIP sem as dependências, siga estes passos:
-
-#### 1. Extrair o projeto
-```bash
-unzip univas-enfermagem.zip
-cd univas-enfermagem
-```
-
-#### 2. Backend Setup
+### 2️⃣ Backend Setup
 
 ```bash
 cd app/api
@@ -78,7 +68,7 @@ cp .env.example .env
 # O .env.example já vem com as configurações padrão, não precisa editar
 
 # Subir o banco de dados PostgreSQL via Docker
-docker-compose up -d
+docker compose up -d
 
 # Aguarde alguns segundos para o banco iniciar, depois execute:
 
@@ -97,7 +87,7 @@ npm run dev
 
 O backend estará disponível em `http://localhost:3000`
 
-#### 3. Frontend Setup (em outro terminal)
+### 3️⃣ Frontend Setup (em outro terminal)
 
 ```bash
 # A partir da raiz do projeto
@@ -116,9 +106,9 @@ npm run dev
 
 O frontend estará disponível em `http://localhost:5173`
 
-#### 4. Acessar o Sistema
+### 4️⃣ Acessar o Sistema
 
-Abra o navegador em `http://localhost:5173` e faça login com uma das credenciais de teste (veja seção "Credenciais de Teste" abaixo).
+Abra o navegador em `http://localhost:5173` e faça login com uma das credenciais de teste (veja seção "🧪 Credenciais de Teste" abaixo).
 
 ---
 
@@ -129,7 +119,7 @@ Abra o navegador em `http://localhost:5173` e faça login com uma das credenciai
 cd app/api
 npm install
 cp .env.example .env
-docker compose up -d
+docker-compose up -d
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
